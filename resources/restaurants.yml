@@ -1,0 +1,86 @@
+restaurants:
+  nepal:
+    cls: rhlp
+    display_name: Nepal
+    url: Nepal
+    tags: ['rh', 'india', 'rhlp', asia]
+
+  globus:
+    cls: rhlp
+    display_name: Globus
+    selector: '.restaurant__menu-table-row--active'
+    url: Globus
+    tags: ['rh', 'fast', 'rhlp']
+
+  kocka:
+    cls: rhlp
+    display_name: Zelena Kocka
+    selector: '#dnesni-menu'
+    url: ZelenaKocka
+    tags: ['rh', 'cz', 'rhlp']
+
+  purkynka:
+    cls: rhlp
+    display_name: Purkynka
+    url: ZelenaKocka
+    tags: ['rh', 'cz', 'rhlp']
+
+  asport:
+    cls: rhlp
+    display_name: A-sport hotel
+    url: Sporthotel
+    tags: ['rh', 'cz', 'rhlp']
+
+  padthai:
+    cls: rhlp
+    display_name: Pad Thai
+    url: PadThai
+    tags: ['rh', 'rhlp', 'asia']
+
+  buddha:
+    display_name: Buddha
+    url: 'http://www.indian-restaurant-buddha.cz/index.html'
+    selector: '#jidelnilisteklong'
+    tags: ['city', 'india', 'asia']
+
+  himalaya:
+    display_name: Himalaya
+    url: 'http://www.indian-restaurant-buddha.cz/index.html'
+    selector: '#jidelnilisteklong'
+    tags: ['city', 'india', 'asia']
+
+  kytnerka:
+    display_name: Na Kytnerce
+    url: 'https://nakytnerce.cz/jidlo/#poledni'
+    selector: '#features-1'
+    tags: ['rh', 'cz']
+
+  krava:
+    display_name: Monte Bu
+    url: 'https://www.monte-bu.cz/menu.php#poledni-section'
+    selector: 'li.today'
+    tags: ['rh', 'cz']
+
+  sabaidy:
+    display_name: 'Sabaidy'
+    url: 'http://www.amphone.eu/restaurace'
+    selector: 'li:first-child'
+    tags: ['city', 'asia']
+
+  capone:
+    display_name: Al Capone
+    url: http://www.pizzaalcapone.cz/brno/poledni-menu
+    selector: 'p.active-day'
+    tags: ['fi', 'italian', 'pizza']
+
+  beranek:
+    display_name: Beranek
+    url: https://www.ubilehoberanka.cz/menu-dne
+    selector: 'div.menu-card'
+    tags: ['fi', 'cz']
+
+  seminar:
+    display_name: U seminaru
+    url: 'http://www.useminaru.cz/menu.php'
+    selector: '.maintab .bold'
+    tags: ['city', 'cz']

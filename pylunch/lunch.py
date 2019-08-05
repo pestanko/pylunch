@@ -3,10 +3,12 @@ from typing import List, Optional, Mapping, Tuple
 
 import html2text
 import requests
+import yaml
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 
 from fuzzywuzzy import fuzz, process
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ class LunchEntity:
 
     @property
     def display_name(self) -> str:
-        return self._display_name
+        return self._display_name or self.name
 
     @property
     def url(self) -> str:
@@ -91,6 +93,8 @@ class RHLPLunch(LunchEntity):
 
 
 class LunchService:
+    PROVIDERS = dict(default=LunchEntity, rhlp=RHLPLunch)
+
     def __init__(self):
         self._instances: Mapping[str, LunchEntity] = {}
     
@@ -149,6 +153,19 @@ class LunchService:
         self.register('capone', url='http://www.pizzaalcapone.cz/brno/poledni-menu', selector="p.active-day", cls=LunchEntity)
         self.register('beranek', url='https://www.ubilehoberanka.cz/menu-dne', selector="div.menu-card", cls=LunchEntity)
         self.register('seminar', url='http://www.useminaru.cz/menu.php', selector=".maintab .bold", cls=LunchEntity)
+
+    def register_from_file(self, file: Tuple[Path, str]):
+        file = Path(file)
+        with open(file) as fp:
+            restaurants = yaml.safe_load(file)
+            instances = dict()
+            for (name, restaurant) in restaurants['restaurants'].items():
+                cls_name = restaurant.get('cls') or 'default'
+                cls = PROVIDERS.get(cls_name) or PROVIDERS['default']
+                restaurant['name'] = name
+                instances[name] = cls(**restaurant)
+                    
+                
 
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
