@@ -137,35 +137,18 @@ class LunchService:
         log.info(f"[REG] Register: {instance}")
         self.instances[name] = instance
 
-    def register_instances(self):
-        # TODO - Load from file
-        globus_selector = ".restaurant__menu-table-row--active"
-        self.register('nepal', url='Nepal', selector=None, cls=RHLPLunch)
-        self.register('globus', url='Globus', selector=globus_selector, cls=RHLPLunch)
-        self.register('kocka', url='ZelenaKocka', selector="#dnesni-menu", cls=RHLPLunch)
-        self.register('purkynka', url='Purkynka', cls=RHLPLunch)
-        self.register('a-sport', url='Sporthotel', cls=RHLPLunch)
-        self.register('pad-thai', url='PadThai', cls=RHLPLunch)
-        self.register('buddha', url='http://www.indian-restaurant-buddha.cz/index.html', selector="#jidelnilisteklong", cls=LunchEntity)
-        self.register('kytnerka', url='https://nakytnerce.cz/jidlo/#poledni', selector="#features-1", cls=LunchEntity)
-        self.register('krava', url='https://www.monte-bu.cz/menu.php#poledni-section', selector="li.today", cls=LunchEntity)
-        self.register('sabaidy', url='http://www.amphone.eu/restaurace', selector="li:first-child", cls=LunchEntity)
-        self.register('capone', url='http://www.pizzaalcapone.cz/brno/poledni-menu', selector="p.active-day", cls=LunchEntity)
-        self.register('beranek', url='https://www.ubilehoberanka.cz/menu-dne', selector="div.menu-card", cls=LunchEntity)
-        self.register('seminar', url='http://www.useminaru.cz/menu.php', selector=".maintab .bold", cls=LunchEntity)
-
+    
     def register_from_file(self, file: Tuple[Path, str]):
         file = Path(file)
         with file.open("r") as fp:
             restaurants = yaml.safe_load(fp)
-            instances = dict()
             for (name, restaurant) in restaurants['restaurants'].items():
                 cls_name = restaurant.get('cls') or 'default'
                 cls = PROVIDERS.get(cls_name) or PROVIDERS['default']
                 restaurant['name'] = name
                 if 'cls' in restaurant:
                     del restaurant['cls']
-                instances[name] = cls(**restaurant)
+                self.instances[name] = cls(**restaurant)
                     
             
     def process_lunch_name(self, name: str) -> str:

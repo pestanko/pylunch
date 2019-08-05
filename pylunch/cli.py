@@ -46,12 +46,14 @@ def cli_menu(obj: CliApplication, name: str=None, fuzzy=False):
             print(f"Not found instance for: \"{rest_name}\"")
         else:
             result = instance.invoke()
-            print(f"\n-------  {instance.name}  -------\n")
+            print(f"\n-------  {instance.display_name}  -------\n")
             print(result)
 
     if name.lower().strip() == "all":
         for key in obj.service.instances.keys():
             _once(key, False)
+    else:
+        _once(name, fuzzy)
 
 
 @main_cli.command(name='info', help='Get info for the restaurant')
@@ -68,6 +70,8 @@ def cli_info(obj: CliApplication, name=None, fuzzy=False):
     if name.lower().strip() == "all":
         for key in obj.service.instances.keys():
             _once(key, False)
+    else:
+        _once(name, fuzzy)
 
 
 

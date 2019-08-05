@@ -76,7 +76,7 @@ restaurants:
   beranek:
     display_name: Beranek
     url: https://www.ubilehoberanka.cz/menu-dne
-    selector: 'div.menu-card'
+    selector: 'div.menu-card.napoje'
     tags: ['fi', 'cz']
 
   seminar:
