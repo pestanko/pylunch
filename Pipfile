@@ -16,6 +16,7 @@ beautifulsoup4 = "*"
 lxml = "*"
 fuzzywuzzy = "*"
 click = "*"
+python-levenshtein = "*"
 
 [requires]
 python_version = "3.7"

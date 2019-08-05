@@ -8,13 +8,14 @@ from pylunch import log_config, lunch, __version__
 
 log = logging.getLogger(__name__)
 
-base_dir = Path(__file__).parent.parent.parent
+base_dir = Path(__file__).parent.parent
+RESOURCES = base_dir / 'resources'
 
 
 class CliApplication:
     def __init__(self, service: lunch.LunchService):
         self.service = service
-        self.service.register_instances()
+        self.service.register_from_file(RESOURCES / 'restaurants.yml')
 
 
 @click.group(help='DPMB CLI tool')

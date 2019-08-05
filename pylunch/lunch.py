@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 RHLP_URL="http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com"
 
 class LunchEntity:
-    def __init__(self, name: str, url=None, display_name=None, tags=None, selector=None, request_params=None):
+    def __init__(self, name: str, url: str=None, display_name: str=None, tags: List[str]=None, selector: str=None, request_params: List[str]=None):
         self._name = name
         self._url = url
         self._selector = selector
@@ -70,7 +70,7 @@ class LunchEntity:
         result = f"{self.__class__.__name__} \"{self._name}\""
 
         if self.display_name:
-            result += f" ({display_name})"
+            result += f" ({self.display_name})"
         if self.tags:
             result += f" - {self.tags}"
         
@@ -92,9 +92,9 @@ class RHLPLunch(LunchEntity):
         super().__init__(name, url=f"{RHLP_URL}/{url_name}", **kwargs)
 
 
-class LunchService:
-    PROVIDERS = dict(default=LunchEntity, rhlp=RHLPLunch)
+PROVIDERS = dict(default=LunchEntity, rhlp=RHLPLunch)
 
+class LunchService:
     def __init__(self):
         self._instances: Mapping[str, LunchEntity] = {}
     
@@ -156,17 +156,18 @@ class LunchService:
 
     def register_from_file(self, file: Tuple[Path, str]):
         file = Path(file)
-        with open(file) as fp:
-            restaurants = yaml.safe_load(file)
+        with file.open("r") as fp:
+            restaurants = yaml.safe_load(fp)
             instances = dict()
             for (name, restaurant) in restaurants['restaurants'].items():
                 cls_name = restaurant.get('cls') or 'default'
                 cls = PROVIDERS.get(cls_name) or PROVIDERS['default']
                 restaurant['name'] = name
+                if 'cls' in restaurant:
+                    del restaurant['cls']
                 instances[name] = cls(**restaurant)
                     
-                
-
+            
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
             return self.to_string()
