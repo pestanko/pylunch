@@ -4,6 +4,7 @@ from typing import List, Optional, Mapping, Tuple
 import html2text
 import requests
 import yaml
+import datetime
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 
@@ -92,16 +93,19 @@ class RHLPLunch(LunchEntity):
         super().__init__(name, url=f"{RHLP_URL}/{url_name}", **kwargs)
 
 
-PROVIDERS = dict(default=LunchEntity, rhlp=RHLPLunch)
-
 class LunchService:
     def __init__(self):
         self._instances: Mapping[str, LunchEntity] = {}
+        self._providers: Mapping[str, type] = dict(default=LunchEntity, rhlp=RHLPLunch)
     
     @property
     def instances(self) -> Mapping[str, LunchEntity]:
         return self._instances
 
+    @property
+    def register_provider(self, name: str, cls: type):
+        log.info(f"[ADD] Provider [{name}]: {cls.__name__}")
+        self._providers[name] = cls
 
     def get(self, name: str) -> Optional[LunchEntity]:
         if name in self.instances.keys():
@@ -143,14 +147,17 @@ class LunchService:
         with file.open("r") as fp:
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
-                cls_name = restaurant.get('cls') or 'default'
-                cls = PROVIDERS.get(cls_name) or PROVIDERS['default']
-                restaurant['name'] = name
-                if 'cls' in restaurant:
-                    del restaurant['cls']
-                self.instances[name] = cls(**restaurant)
+                self.instances[name] = self.create_restaurant(name, restaurant)
+
+    def create_restaurant(self, name: str, restaurant: dict) -> LunchEntity:
+        cls_name = 'default'
+        if 'cls' in restaurant:
+            cls_name = restaurant['cls']
+            del restaurant['cls']
+        cls = self._get_provider(cls_name)
+        restaurant['name'] = name
+        return cls(**restaurant)
                     
-            
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
             return self.to_string()
@@ -173,6 +180,54 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
+    def resolve(self, entity: LunchEntity) -> str:
+        return entity.invoke()
+
+
+    def _get_provider(self, name: str) -> type:
+        return self._providers.get(name) or self._providers['default']
+
+
+class CachedLunchService(LunchService):
+    def __init__(self, cache_base=None):
+        super().__init__()
+        self.cache_base = Path(cache_base) if cache_base else None
+    
+    def _create_cache_for_day(self, day: str=None) -> Path:
+        """
+        Expected format: YYYY-MM-DD
+        """
+        if not self._cache().exists():
+            self._cache().mkdir(parents=True)
+        return self._cache
+
+    @property
+    def _today_date(self) -> str:
+        return datetime.datetime.today().strftime('%Y-%m-%d')
+
+    def _cache(self, date=None) -> Optional[Path]:
+        if self.cache_base is None:
+            return None
+        return self.cache_base / (self._today_date if date is None else date)
+
+    def _entity_file(self, entity: LunchEntity) -> Path:
+        if self.cache_base is None:
+            return None
+        return self._cache() / f"{entity.name}.lec"
+
+    def resolve(self, entity: LunchEntity) -> str:
+        file = self._entity_file(entity)
+        if file is not None and file.exists():
+            log.debug(f"[CACHE] Cache hit for {entity.name}: {file}")
+            return file.read_text(encoding='utf-8')
+            
+        content = entity.invoke()
+        if self.cache_base is not None:
+            self._create_cache_for_day()
+            log.debug(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
+            file.write_text(content, encoding='utf-8')
+        return content
+               
 
 def to_text(content):
     h = html2text.HTML2Text()

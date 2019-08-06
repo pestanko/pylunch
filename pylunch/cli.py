@@ -1,4 +1,5 @@
 import logging
+import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -10,6 +11,9 @@ log = logging.getLogger(__name__)
 
 base_dir = Path(__file__).parent.parent
 RESOURCES = base_dir / 'resources'
+APP_NAME = 'PyLunch'
+CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
+CACHE_DIR = Path(tempfile.gettempdir()) / APP_NAME.lower()
 
 
 class CliApplication:
@@ -18,14 +22,14 @@ class CliApplication:
         self.service.register_from_file(RESOURCES / 'restaurants.yml')
 
 
-@click.group(help='DPMB CLI tool')
+@click.group(help=f'{APP_NAME} CLI tool')
 @click.version_option(version=__version__)
 @click.option('-v', '--verbose', help=f'Set verbose', is_flag=True, default=False)
 @click.pass_context
 def main_cli(ctx=None, verbose=False, **kwargs):
     if verbose:
         log_config.load()
-    service = lunch.LunchService()
+    service = lunch.CachedLunchService(CACHE_DIR)
     ctx.obj = CliApplication(service)
 
 @main_cli.command(name='ls', help='List restaurants')
@@ -45,7 +49,7 @@ def cli_menu(obj: CliApplication, name: str=None, fuzzy=False):
         if instance is None:
             print(f"Not found instance for: \"{rest_name}\"")
         else:
-            result = instance.invoke()
+            result = obj.service.resolve(instance)
             print(f"\n-------  {instance.display_name}  -------\n")
             print(result)
 
@@ -62,6 +66,7 @@ def cli_menu(obj: CliApplication, name: str=None, fuzzy=False):
 def cli_info(obj: CliApplication, name=None, fuzzy=False):
     def _once(rest_name, fuzz):
         instance = obj.service.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
+
         if instance is None:
             print(f"Not found instance for: \"{rest_name}\"")
         else:
@@ -72,7 +77,6 @@ def cli_info(obj: CliApplication, name=None, fuzzy=False):
             _once(key, False)
     else:
         _once(name, fuzzy)
-
 
 
 if __name__ == '__main__':
