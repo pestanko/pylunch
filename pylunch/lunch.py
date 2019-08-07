@@ -83,7 +83,7 @@ class LunchEntity(collections.MutableMapping):
 
 
 class LunchResolver:
-    def __init__(self, service: LunchService, entity: LunchEntity):
+    def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.service = service
         self.entity = entity
 
@@ -123,13 +123,26 @@ class LunchResolver:
             return parsed.extract()
 
 
-
-
-
-class Resolvers(collections.MutableMapping):
+class LunchCollection(collections.MutableMapping):
     def __init__(self, **kwargs):
         self._collection = {**kwargs}
 
+    @property
+    def collection(self) -> MuttableMapping[str, Any]:
+        return self._collection
+
+    def __getitem__(self, k):
+         return self.collection.get(k)
+    def __setitem__(self, k, v):
+         self.collection[k] = v
+    def __delitem__(self, k):
+         del self.collection[k]
+    def __iter__(self):
+        return iter(self.collection)
+    def __len__(self):
+         return len(self.collection) 
+
+class Resolvers(LunchCollection):
     @property
     def collection(self) -> MutableMapping:
         return self._collection
@@ -145,16 +158,12 @@ class Resolvers(collections.MutableMapping):
         return self.get(entity.resolver)
 
 
-class Entities(collections.MutableMapping):
-    def __init__(self):
-        self._collection: MuttableMapping[str, LunchEntity] = {}
-
+class Entities(LunchCollection):
     @property
     def entities(self) -> MuttableMapping[str, LunchEntity]:
-        return self._collection
+        return self.collection
 
-    
-    def get(self, name: str) -> Optional[LunchEntity]:
+    def __getitem__(self, name) -> Optional[LunchEntity]:
         if name in self.entities.keys():
             instance = self.instances[name]
             log.info(f"[LUNCH] Found in instances {name}: {instance}")
@@ -162,6 +171,9 @@ class Entities(collections.MutableMapping):
         else:
             log.warning(f"[LUNCH] Not found in instances {name}")
             return None
+
+    def __setitem__(self, name, config):
+        self.register(name=name, **config)
 
     def find_one(self, name: str):
         items = self._get_from_alias(name)
