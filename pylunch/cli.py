@@ -29,7 +29,7 @@ class CliApplication:
 def main_cli(ctx=None, verbose=False, **kwargs):
     if verbose:
         log_config.load()
-    service = lunch.CachedLunchService(CACHE_DIR)
+    service = lunch.CachedLunchService(CONFIG_DIR, CACHE_DIR)
     ctx.obj = CliApplication(service)
 
 @main_cli.command(name='ls', help='List restaurants')

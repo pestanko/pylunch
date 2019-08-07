@@ -12,6 +12,8 @@ from requests import Response
 from fuzzywuzzy import fuzz, process
 from pathlib import Path
 
+from .tags_evaluator import TagsEvaluator
+
 log = logging.getLogger(__name__)
 
 
@@ -21,12 +23,16 @@ class LunchEntity(collections.MutableMapping):
 
     def __getitem__(self, k):
          return self._config.get(k)
+
     def __setitem__(self, k, v):
          self.config[k] = v
+    
     def __delitem__(self, k):
          del self.config[k]
+    
     def __iter__(self):
         return iter(self._config)
+    
     def __len__(self):
          return len(self.config)
 
@@ -201,6 +207,18 @@ class Entities(LunchCollection):
         log.info(f"[REG] Register: {instance}")
         self.entities[name] = instance
 
+    def all_tags(self) -> List[str]:
+        accumulator = set()
+        for entity in entities.values():
+            accumulator.update(entity.tags)
+        return accumulator
+    
+    def find_by_tags(self, expression: str):
+        tags = TagsEvaluator(expression, self.all_tags())
+        return [ entity for entity in entities if tags.evaluate(entity.tags) ]
+        
+        
+
 class LunchService:
     def __init__(self, config_dir: Union[str, Path]):
         self._instances: Entities = Entities()
@@ -317,7 +335,7 @@ class CachedLunchService(LunchService):
         content = func(entity)
         if self.cache_base is not None:
             self._create_cache_for_day()
-            log.debug(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
+            log.info(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
             file.write_text(content, encoding='utf-8')
         return content
 
@@ -343,6 +361,7 @@ class CachedLunchService(LunchService):
         if self.cache_base is None:
             return None
         return self._cache() / f"{entity.name}.{ext}"
+
 
 def to_text(content):
     h = html2text.HTML2Text()
