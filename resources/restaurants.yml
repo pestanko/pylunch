@@ -65,7 +65,7 @@ restaurants:
     display_name: Al Capone
     url: http://www.pizzaalcapone.cz/brno/poledni-menu
     selector: 'p.active-day'
-    tags: ['fi', 'italian', 'pizza']
+    tags: ['fi', 'italian', 'pizza', 'ita']
 
   beranek:
     display_name: Beranek
@@ -78,3 +78,9 @@ restaurants:
     url: 'http://www.useminaru.cz/menu.php'
     selector: '.maintab .bold'
     tags: ['city', 'cz']
+
+  tripoli:
+    display_name: Tripoli Vankovka
+    url: http://www.tripolivankovka.cz/denni-menu
+    selector: 'section.menu-list > menu:first-of-type'
+    tags: ['city', 'ita', 'pizza', 'vankovka']
