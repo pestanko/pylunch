@@ -74,8 +74,8 @@ class LunchEntity(collections.MutableMapping):
 
         if self.selector:
             result += f" ({self.selector})"
-        if self._request_params:
-            result += f" - req_params={self._request_params}"
+        if self.request_params:
+            result += f" - req_params={self.request_params}"
         return result
 
     def __repr__(self) -> str:
@@ -100,7 +100,7 @@ class LunchResolver:
 
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
-        sub = soap.select(self.selector) if self.selector else soap
+        sub = soap.select(self.entity.selector) if self.entity.selector else soap
         log.info(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
@@ -109,7 +109,7 @@ class LunchResolver:
         return to_text(html_string)
 
     def resolve_html(self) -> str:
-        response = self._make_request(**self._request_params)
+        response = self._make_request(**(self.entity.request_params or {}))
         parsed = self._parse_response(response=response)
         return self.to_string(parsed)
         
@@ -128,7 +128,7 @@ class LunchCollection(collections.MutableMapping):
         self._collection = {**kwargs}
 
     @property
-    def collection(self) -> MuttableMapping[str, Any]:
+    def collection(self) -> MutableMapping[str, Any]:
         return self._collection
 
     def __getitem__(self, k):
@@ -160,16 +160,16 @@ class Resolvers(LunchCollection):
 
 class Entities(LunchCollection):
     @property
-    def entities(self) -> MuttableMapping[str, LunchEntity]:
+    def entities(self) -> MutableMapping[str, LunchEntity]:
         return self.collection
 
     def __getitem__(self, name) -> Optional[LunchEntity]:
         if name in self.entities.keys():
-            instance = self.instances[name]
-            log.info(f"[LUNCH] Found in instances {name}: {instance}")
+            instance = self.entities[name]
+            log.info(f"[LUNCH] Found in entities {name}: {instance}")
             return instance
         else:
-            log.warning(f"[LUNCH] Not found in instances {name}")
+            log.warning(f"[LUNCH] Not found in entities {name}")
             return None
 
     def __setitem__(self, name, config):
@@ -237,6 +237,7 @@ class LunchService:
         with file.open("r") as fp:
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
+                restaurant['name'] = name
                 self.instances.register(**restaurant)
     
     def load_config(self, file: Path):
@@ -302,7 +303,7 @@ class CachedLunchService(LunchService):
 
     
     def resolve_text(self, entity: LunchEntity) -> str:
-        return self._resolve_any(entity, super().resolve_html, ext='txt')
+        return self._resolve_any(entity, super().resolve_text, ext='txt')
 
     def resolve_html(self, entity: LunchEntity) -> str:
         return self._resolve_any(entity, super().resolve_html, ext='html')

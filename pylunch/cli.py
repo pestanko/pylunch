@@ -19,7 +19,7 @@ CACHE_DIR = Path(tempfile.gettempdir()) / APP_NAME.lower()
 class CliApplication:
     def __init__(self, service: lunch.LunchService):
         self.service = service
-        self.service.register_from_file(RESOURCES / 'restaurants.yml')
+        self.service.import_file(RESOURCES / 'restaurants.yml')
 
 
 @click.group(help=f'{APP_NAME} CLI tool')
@@ -45,11 +45,11 @@ def cli_list(obj: CliApplication, limit=None):
 @click.pass_obj
 def cli_menu(obj: CliApplication, name: str=None, fuzzy=False):
     def _once(rest_name, fuzz):
-        instance = obj.service.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
+        instance = obj.service.instances.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
         if instance is None:
             print(f"Not found instance for: \"{rest_name}\"")
         else:
-            result = obj.service.resolve(instance)
+            result = obj.service.resolve_text(instance)
             print(f"\n-------  {instance.display_name}  -------\n")
             print(result)
 
@@ -65,7 +65,7 @@ def cli_menu(obj: CliApplication, name: str=None, fuzzy=False):
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 def cli_info(obj: CliApplication, name=None, fuzzy=False):
     def _once(rest_name, fuzz):
-        instance = obj.service.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
+        instance = obj.service.instances.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
 
         if instance is None:
             print(f"Not found instance for: \"{rest_name}\"")
