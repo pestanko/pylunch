@@ -1,40 +1,34 @@
 restaurants:
   nepal:
-    cls: rhlp
     display_name: Nepal
-    url: Nepal
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Nepal
     tags: ['rh', 'india', 'rhlp', asia]
 
   globus:
-    cls: rhlp
     display_name: Globus
     selector: '.restaurant__menu-table-row--active'
-    url: Globus
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Globus
     tags: ['rh', 'fast', 'rhlp']
 
   kocka:
-    cls: rhlp
     display_name: Zelena Kocka
     selector: '#dnesni-menu'
-    url: ZelenaKocka
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/ZelenaKocka
     tags: ['rh', 'cz', 'rhlp']
 
   purkynka:
-    cls: rhlp
     display_name: Purkynka
-    url: ZelenaKocka
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Purkynka
     tags: ['rh', 'cz', 'rhlp']
 
   asport:
-    cls: rhlp
     display_name: A-sport hotel
-    url: Sporthotel
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Sporthotel
     tags: ['rh', 'cz', 'rhlp']
 
   padthai:
-    cls: rhlp
     display_name: Pad Thai
-    url: PadThai
+    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/PadThai
     tags: ['rh', 'rhlp', 'asia']
 
   buddha:

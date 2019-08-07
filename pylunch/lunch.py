@@ -5,7 +5,7 @@ import html2text
 import requests
 import yaml
 import datetime
-import collections.abc
+import collections
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 
@@ -14,12 +14,10 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-RHLP_URL="http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com"
 
-class LunchEntity:
+class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
-        self.tags = tags or []
 
     def __getitem__(self, k):
          return self._config.get(k)
@@ -35,6 +33,10 @@ class LunchEntity:
     @property
     def config(self) -> MutableMapping['str', Any]:
         return self._config
+
+    @property
+    def resolver(self) -> str:
+        return self._config.get('resolver', 'default')
 
     @property
     def name(self) -> str:
@@ -85,25 +87,32 @@ class LunchResolver:
         self.service = service
         self.entity = entity
 
-    def make_request(self, **kwargs) -> requests.Response:
-        response = requests.get(self.entity.url, **kwargs)
+    @property
+    def request_url(self) -> str:
+        return self.entity.url
+
+    def _make_request(self, **kwargs) -> requests.Response:
+        response = requests.get(self.request_url, **kwargs)
         if not response.ok:
             log.warning(f"[LUNCH] Error[{response.status_code}]: {response.content}")
             print(f"Error[{response.status_code}]: ", response.content)
         return response
 
-    def parse_response(self, response: Response) -> List[Tag]:
+    def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
         sub = soap.select(self.selector) if self.selector else soap
+        log.info(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
-    def invoke(self) -> str:
-        response = self.make_request(**self._request_params)
-        parsed = self.parse_response(response=response)
-        log.info(f"[LUNCH] Parsed[{self.entity.name}]: {parsed}")
-        string = self.to_string(parsed)
-        return to_text(string)
+    def resolve_text(self) -> str:
+        html_string = self.resolve_html()
+        return to_text(html_string)
 
+    def resolve_html(self) -> str:
+        response = self._make_request(**self._request_params)
+        parsed = self._parse_response(response=response)
+        return self.to_string(parsed)
+        
     @classmethod
     def to_string(cls, parsed) -> str:
         if isinstance(parsed, list):
@@ -112,17 +121,18 @@ class LunchResolver:
             return "".join(items)
         else:
             return parsed.extract()
-    
-
-class RHLPLunch(LunchEntity):
-    def __init__(self, name: str, url: str = None, selector=None, request_params=None, **kwargs):
-        url_name = url or name
-        super().__init__(name, url=f"{RHLP_URL}/{url_name}", **kwargs)
 
 
-class Resolvers:
+
+
+
+class Resolvers(collections.MutableMapping):
     def __init__(self, **kwargs):
         self._collection = {**kwargs}
+
+    @property
+    def collection(self) -> MutableMapping:
+        return self._collection
     
     def register(self, name: str, cls: type):
         log.info(f"[ADD] Resolver [{name}]: {cls.__name__}")
@@ -131,13 +141,17 @@ class Resolvers:
     def get(self, name: str) -> type:
         return self._collection.get(name, LunchResolver)
 
-class Entities:
+    def for_entity(self, entity: LunchEntity) -> LunchResolver:
+        return self.get(entity.resolver)
+
+
+class Entities(collections.MutableMapping):
     def __init__(self):
-        self._entities: MuttableMapping[str, LunchEntity] = {}
+        self._collection: MuttableMapping[str, LunchEntity] = {}
 
     @property
     def entities(self) -> MuttableMapping[str, LunchEntity]:
-        return self._entities
+        return self._collection
 
     
     def get(self, name: str) -> Optional[LunchEntity]:
@@ -178,10 +192,14 @@ class Entities:
 class LunchService:
     def __init__(self, config_dir: Union[str, Path]):
         self._instances: Entities = Entities()
-        self._resolvers: Resolvers = Resolvers(default=LunchResolver, rhlp=RHLPLunch)
+        self._resolvers: Resolvers = Resolvers(default=LunchResolver)
         self._config_dir: Path = Path(config_dir) if config_dir is not None else None
         self.config: Optional[str, Any] = None
     
+    @property
+    def resolvers(self) -> Resolvers:
+        return self._resolvers
+
     @property
     def instances(self) -> Entities:
         return self._instances
@@ -256,15 +274,40 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
-    def resolve(self, entity: LunchEntity) -> str:
-        return entity.invoke()
+    def resolve_text(self, entity: LunchEntity) -> str:
+        resolver = self.resolvers.for_entity(entity)
+        return resolver(self, entity).resolve_text()
+    
+    def resolve_html(self, entity: LunchEntity) -> str:
+        resolver = self.resolvers.for_entity(entity)
+        return resolver(self, entity).resolve_html()
 
 
 class CachedLunchService(LunchService):
     def __init__(self, config_dir: Union[str, Path], cache_base=None):
         super().__init__(config_dir)
         self.cache_base = Path(cache_base) if cache_base else None
+
     
+    def resolve_text(self, entity: LunchEntity) -> str:
+        return self._resolve_any(entity, super().resolve_html, ext='txt')
+
+    def resolve_html(self, entity: LunchEntity) -> str:
+        return self._resolve_any(entity, super().resolve_html, ext='html')
+
+    def _resolve_any(self, entity: LunchEntity, func, ext: str = None):
+        file = self._entity_file(entity, ext=ext)
+        if file is not None and file.exists():
+            log.debug(f"[CACHE] Cache hit for {entity.name}: {file}")
+            return file.read_text(encoding='utf-8')
+
+        content = func(entity)
+        if self.cache_base is not None:
+            self._create_cache_for_day()
+            log.debug(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
+            file.write_text(content, encoding='utf-8')
+        return content
+
     def _create_cache_for_day(self, day: str=None) -> Path:
         """
         Expected format: YYYY-MM-DD
@@ -282,24 +325,11 @@ class CachedLunchService(LunchService):
             return None
         return self.cache_base / (self._today_date if date is None else date)
 
-    def _entity_file(self, entity: LunchEntity) -> Path:
+    def _entity_file(self, entity: LunchEntity, ext=None) -> Path:
+        ext = ext if ext is not None else 'txt'
         if self.cache_base is None:
             return None
-        return self._cache() / f"{entity.name}.lec"
-
-    def resolve(self, entity: LunchEntity) -> str:
-        file = self._entity_file(entity)
-        if file is not None and file.exists():
-            log.debug(f"[CACHE] Cache hit for {entity.name}: {file}")
-            return file.read_text(encoding='utf-8')
-
-        content = entity.invoke()
-        if self.cache_base is not None:
-            self._create_cache_for_day()
-            log.debug(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
-            file.write_text(content, encoding='utf-8')
-        return content
-               
+        return self._cache() / f"{entity.name}.{ext}"
 
 def to_text(content):
     h = html2text.HTML2Text()
