@@ -79,6 +79,13 @@ restaurants:
     selector: '.maintab .bold'
     tags: ['city', 'cz']
 
+  padowetz:
+    display_name: Padowetz
+    url: http://restaurant-padowetz.cz/poledni-menu.htm
+    selector: '.columns > div.tydeniMenu:not(.skryte)'
+    tags: ['city', 'cz']
+
+
   tripoli:
     display_name: Tripoli Vankovka
     url: http://www.tripolivankovka.cz/denni-menu

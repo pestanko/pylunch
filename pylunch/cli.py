@@ -60,6 +60,7 @@ def cli_menu(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
+@click.pass_obj
 def cli_info(obj: CliApplication, selectors=None, fuzzy=False, tags=False):
     instances = select_instances(obj.service, selectors, fuzzy=fuzzy, tags=tags)
     print_instances(obj.service, instances, printer=lambda _, x: print(x))
@@ -88,12 +89,12 @@ def print_text(service, instance):
 
 def select_instances(service: lunch.LunchService, selectors, fuzzy=False, tags=False) -> List[lunch.LunchEntity]:
     if selectors is None or len(selectors) == 0:
-        return service.instances
+        return list(service.instances.collection.values())
     if tags:
         full = " ".join(selectors)
         return service.instances.find_by_tags(full)
     if fuzzy:
-        return [ service.fuz_find_one(select) for select in selectors ]
+        return [ service.instances.fuz_find_one(select) for select in selectors ]
     return [ service.instances.get(select) for select in selectors ]
 
 if __name__ == '__main__':
