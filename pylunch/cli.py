@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import click
 
-from pylunch import log_config, lunch, __version__
+from pylunch import log_config, lunch, __version__, config
 
 log = logging.getLogger(__name__)
 
@@ -17,9 +17,19 @@ CACHE_DIR = Path(tempfile.gettempdir()) / APP_NAME.lower()
 
 
 class CliApplication:
-    def __init__(self, service: lunch.LunchService):
-        self.service = service
+    def __init__(self):
+        self.service = None
+        self.config_loader = config.YamlLoader(CONFIG_DIR, 'config.yaml')
+        self.restaurants_loader = config.YamlLoader(CONFIG_DIR, 'restaurants.yaml')
+
+    def init(self) -> 'CliApplication':
+        cfg = config.AppConfig(**self.config_loader.load())
+        ent = lunch.Entities(**self.restaurants_loader.load())
+        self.service = lunch.CachedLunchService(config, ent, CACHE_DIR)
         self.service.import_file(RESOURCES / 'restaurants.yml')
+        return self
+
+
 
 
 @click.group(help=f'{APP_NAME} CLI tool')
@@ -29,8 +39,9 @@ class CliApplication:
 def main_cli(ctx=None, verbose=False, **kwargs):
     if verbose:
         log_config.load()
-    service = lunch.CachedLunchService(CONFIG_DIR, CACHE_DIR)
-    ctx.obj = CliApplication(service)
+    
+    app = CliApplication()
+    ctx.obj = app.init()
 
 @main_cli.command(name='ls', help='List restaurants')
 @click.option('-l', '--limit', help="Limits number of restaurants to be shown", required=False, default=None)

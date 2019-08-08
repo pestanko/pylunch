@@ -13,6 +13,7 @@ from fuzzywuzzy import fuzz, process
 from pathlib import Path
 
 from .tags_evaluator import TagsEvaluator
+from .config import AppConfig, YamlLoader
 
 log = logging.getLogger(__name__)
 
@@ -217,36 +218,25 @@ class Entities(LunchCollection):
         tags = TagsEvaluator(expression, self.all_tags())
         return [ entity for entity in entities if tags.evaluate(entity.tags) ]
         
-        
 
 class LunchService:
-    def __init__(self, config_dir: Union[str, Path]):
-        self._instances: Entities = Entities()
+    def __init__(self, config: AppConfig, entities: Entities):
+        self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=LunchResolver)
-        self._config_dir: Path = Path(config_dir) if config_dir is not None else None
-        self.config: Optional[str, Any] = None
+        self._config: AppConfig = config
     
+    @property
+    def config(self) -> AppConfig:
+        return self._config
+
     @property
     def resolvers(self) -> Resolvers:
         return self._resolvers
 
     @property
     def instances(self) -> Entities:
-        return self._instances
-
-    @property
-    def restaurants_file(self) -> Path:
-        return self.config_dir / 'restaurants.yaml'
-
-    @property
-    def config_file(self) -> Path:
-        return self.config_dir / 'config.yaml'
-    
-    @property
-    def config_dir(self) -> Mapping[str, Any]:
-        return self._config_dir
-
-    
+        return self._entities
+  
     def import_file(self, file: Tuple[Path, str]):
         file = Path(file)
         if not file.exists():
@@ -256,32 +246,7 @@ class LunchService:
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
                 restaurant['name'] = name
-                self.instances.register(**restaurant)
-    
-    def load_config(self, file: Path):
-        file = Path(file)
-        if not file.exists():
-            log.warning(f"[LOAD] Config file not exists: {file}")
-            return
-        with file.open("r") as fp:
-            self.config.update()
-            
-
-    def load(self):
-        self.import_file(self.restaurants_file)
-        self.load_config(self.config_file)    
-
-    def save(self):
-        if self.config_dir and not self.config_dir.exists():
-            self.config_dir.mkdir(parents=True)
-
-        with self.config_file.open("w") as fp:
-            yaml.safe_dump(self.config, fp)
-
-        with self.restaurants_file.open("w") as fp:
-            data = dict()
-            for (name, entity) in self.instances:
-                yaml.safe_dump(dict(restaurants=data), fp)
+                self.instances.register(**restaurant)  
                     
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
@@ -315,8 +280,8 @@ class LunchService:
 
 
 class CachedLunchService(LunchService):
-    def __init__(self, config_dir: Union[str, Path], cache_base=None):
-        super().__init__(config_dir)
+    def __init__(self, config: AppConfig, entities: Entities, cache_base=None):
+        super().__init__(config, entities)
         self.cache_base = Path(cache_base) if cache_base else None
 
     
