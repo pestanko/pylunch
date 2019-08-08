@@ -84,4 +84,8 @@ class AppConfig(collections.MutableMapping):
     @property
     def cache_dir(self) -> Path:
         return Path(self.config.get('cache_dir', os.getenv('PYLUNCH_CACHE_DIR', CACHE_DIR)))
+
+    @property
+    def format(self) -> str:
+        return self.config.get('format', 'text')
     

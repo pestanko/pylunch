@@ -17,9 +17,6 @@ from .config import AppConfig, YamlLoader
 
 log = logging.getLogger(__name__)
 
-
-
-
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
@@ -304,7 +301,7 @@ class CachedLunchService(LunchService):
         if self.cache_base is not None:
             self._create_cache_for_day()
             log.info(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
-            file.write_text(content, encoding='utf-8')
+            file.write_text(str(content), encoding='utf-8')
         return content
 
     def _create_cache_for_day(self, day: str=None) -> Path:

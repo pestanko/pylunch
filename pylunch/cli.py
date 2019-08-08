@@ -15,10 +15,11 @@ APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 
 class CliApplication:
-    def __init__(self):
+    def __init__(self, config_dir=None):
         self.service: lunch.LunchService = None
-        self.config_loader = config.YamlLoader(CONFIG_DIR, 'config.yaml')
-        self.restaurants_loader = config.YamlLoader(CONFIG_DIR, 'restaurants.yaml')
+        config_dir = config_dir if config_dir is not None else CONFIG_DIR
+        self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
+        self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
 
     def init(self, **kwargs) -> 'CliApplication':
         cfg_dict = {**self.config_loader.load(), **kwargs}
@@ -32,12 +33,14 @@ class CliApplication:
 @click.group(help=f'{APP_NAME} CLI tool')
 @click.version_option(version=__version__)
 @click.option('-L', '--log-level', help=f'Set log level (d|i|w|e) - default=w', default=None)
-@click.option('-C', '--no-cache', help=f'disable cache', is_flag=True, default=False)
+@click.option('-C', '--no-cache', help=f'Disable cache', is_flag=True, default=False)
+@click.option('-c', '--config-dir', help=f'Location to the configuration directory', default=None)
+@click.option('-F', '--format', help='Set output format', default=None)
 @click.pass_context
-def main_cli(ctx=None, log_level=None, no_cache=False, **kwargs):
+def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, **kwargs):
     log_config.load(log_level)
-    app = CliApplication()
-    ctx.obj = app.init(no_cache=no_cache)
+    app = CliApplication(config_dir=config_dir)
+    ctx.obj = app.init(no_cache=no_cache, format=format)
 
 @main_cli.command(name='ls', help='List restaurants')
 @click.option('-l', '--limit', help="Limits number of restaurants to be shown", required=False, default=None)
@@ -81,11 +84,40 @@ def print_instances(service: lunch.LunchService, instances, printer=None):
     else:
         printer(service, instances)
 
-def print_text(service, instance):
-    result = service.resolve_text(instance)
-    print(f"\n-------  {instance.display_name} ({instance.name})  -------\n")
-    print(result)
+def print_text(service: lunch.LunchEntity, instance):
+    result = None
+    if service.config.format == 'html':
+        result = service.resolve_html(instance)
+    else:
+        result = service.resolve_text(instance)
+    
+    print_nice_delim(instance)
+    print("\n")
+    print(result)   
 
+
+def print_nice_delim(instance):
+    def _for_print(max_l, curr, char='='):
+        for i in range(max_l - curr): 
+            print(char, end='')
+
+    def _print_text(max_l, text):
+        print(f"\n===  {text}", end='')
+        _for_print(max_l, len(text), char=' ') 
+        print("  ===", end='')
+
+    def _beg_end_line(max_l):
+        print("")
+        _for_print(max_l + 10, 0)
+
+    name_str = f"{instance.display_name} ({instance.name})"
+    tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
+    max_len = max(len(name_str), len(instance.url), len(tags_str))
+    _beg_end_line(max_len)
+    _print_text(max_len, name_str)
+    _print_text(max_len, instance.url)
+    _print_text(max_len, tags_str)
+    _beg_end_line(max_len)
 
 def select_instances(service: lunch.LunchService, selectors, fuzzy=False, tags=False) -> List[lunch.LunchEntity]:
     if selectors is None or len(selectors) == 0:
