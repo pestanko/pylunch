@@ -49,6 +49,11 @@ restaurants:
     selector: '#features-1'
     tags: ['rh', 'cz']
 
+  rubin:
+    display_name: Rubin
+    url: http://restauracerubin.cz/obedova-menu/
+    selector: '#content #center_pannel'
+
   krava:
     display_name: Monte Bu
     url: 'https://www.monte-bu.cz/menu.php#poledni-section'
@@ -72,6 +77,18 @@ restaurants:
     url: https://www.ubilehoberanka.cz/menu-dne
     selector: 'div.menu-card.napoje'
     tags: ['fi', 'cz']
+
+  drevak:
+    display_name: Drevak
+    url: https://www.udrevaka.cz/
+    selector: '#menu .special-menu'
+    tags: ['fi', 'cz']
+
+  padagali:
+    display_name: Padagali
+    url: http://padagali.cz/denni-menu/
+    selector: '#main .row__wrapper > div.row'
+    tags: ['fi', 'india', 'asia']
 
   seminar:
     display_name: U seminaru
