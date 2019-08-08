@@ -91,12 +91,17 @@ def print_text(service: lunch.LunchEntity, instance):
     else:
         result = service.resolve_text(instance)
     
-    print_nice_delim(instance)
+    _header_print(instance)
     print("\n")
     print(result)   
 
+def _header_print(instance):
+    name_str = f"{instance.display_name} ({instance.name})"
+    tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
+    print_nice_header(name_str, instance.url, tags_str)
 
-def print_nice_delim(instance):
+
+def print_nice_header(*strings):
     def _for_print(max_l, curr, char='='):
         for i in range(max_l - curr): 
             print(char, end='')
@@ -110,13 +115,10 @@ def print_nice_delim(instance):
         print("")
         _for_print(max_l + 10, 0)
 
-    name_str = f"{instance.display_name} ({instance.name})"
-    tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
-    max_len = max(len(name_str), len(instance.url), len(tags_str))
+    max_len = max(len(text) for text in strings)
     _beg_end_line(max_len)
-    _print_text(max_len, name_str)
-    _print_text(max_len, instance.url)
-    _print_text(max_len, tags_str)
+    for text in strings:
+        _print_text(max_len, text)
     _beg_end_line(max_len)
 
 def select_instances(service: lunch.LunchService, selectors, fuzzy=False, tags=False) -> List[lunch.LunchEntity]:
