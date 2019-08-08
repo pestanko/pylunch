@@ -44,45 +44,30 @@ def main_cli(ctx=None, log_level=None, no_cache=False, **kwargs):
 @click.pass_obj
 def cli_list(obj: CliApplication, limit=None):
     print(obj.service.to_string())
-
-
-@main_cli.command(name='sel', help='Select menu for restaurants by tags')
-@click.argument('select')
-@click.pass_obj
-def cli_select(obj: CliApplication, select=None):
-    selected = obj.service.instances.find_by_tags(select)
-    print_instances(obj.service, selected)
     
 
 @main_cli.command(name='menu', help='Get menu for a restaurant')
-@click.argument('name', nargs=-1)
+@click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
+@click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
 @click.pass_obj
-def cli_menu(obj: CliApplication, name: Tuple[str], fuzzy=False):
-    def _once(rest_name, fuzz):
-        instance = obj.service.instances.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
-        print_instances(obj.service, instance)
-
-    if name.lower().strip() == "all":
-        for key in obj.service.instances.keys():
-            _once(key, False)
-    else:
-        _once(name, fuzzy)
+def cli_menu(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+    instances = select_instances(obj.service, selectors, fuzzy=fuzzy, tags=tags)
+    print_instances(obj.service, instances)
 
 
 @main_cli.command(name='info', help='Get info for the restaurant')
-@click.argument('name')
+@click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
-def cli_info(obj: CliApplication, name=None, fuzzy=False):
-    def _once(rest_name, fuzz):
-        instance = obj.service.instances.get(rest_name) if not fuzz else obj.service.fuz_find_one(rest_name)
-        print_instances(obj.service, instance, printer=lambda _, x: print(x))
+@click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
+def cli_info(obj: CliApplication, selectors=None, fuzzy=False, tags=False):
+    instances = select_instances(obj.service, selectors, fuzzy=fuzzy, tags=tags)
+    print_instances(obj.service, instances, printer=lambda _, x: print(x))
 
-    if name is None or name == '':
-        for key in obj.service.instances.keys():
-            _once(key, False)
-    else:
-        _once(name, fuzzy)
+
+"""
+" Helper tools
+"""
 
 def print_instances(service: lunch.LunchService, instances, printer=None):
     printer = printer if printer is not None else print_text
@@ -100,6 +85,16 @@ def print_text(service, instance):
     print(f"\n-------  {instance.display_name} ({instance.name})  -------\n")
     print(result)
 
+
+def select_instances(service: lunch.LunchService, selectors, fuzzy=False, tags=False) -> List[lunch.LunchEntity]:
+    if selectors is None or len(selectors) == 0:
+        return service.instances
+    if tags:
+        full = " ".join(selectors)
+        return service.instances.find_by_tags(full)
+    if fuzzy:
+        return [ service.fuz_find_one(select) for select in selectors ]
+    return [ service.instances.get(select) for select in selectors ]
 
 if __name__ == '__main__':
     main_cli()
