@@ -84,3 +84,9 @@ restaurants:
     url: http://www.tripolivankovka.cz/denni-menu
     selector: 'section.menu-list > menu:first-of-type'
     tags: ['city', 'ita', 'pizza', 'vankovka']
+
+  drindy:
+    display_name: Dr Indy
+    url: http://www.drindy.cz/
+    selector: 'div#day-menu .menu-food'
+    tags: ['city', 'india', 'truck']

@@ -14,17 +14,20 @@ class TagsEvaluator:
     def build_dict(self, *tags):
         result = {}
         for tag in self.registered_tags:
-            result[tag] = tag in tags
+            eval_res = tag in tags
+            result[tag] = eval_res
         return result
 
-    def evaluate(self, *test_tags) -> bool:
+    def evaluate(self, test_tags) -> bool:
         expression = self.expression
         if not expression:
             return True
         tags = self.build_dict(*test_tags)
-        log.trace(f"[TAGS] Eval: \"{expression}\": {tags}")
+        log.debug(f"[TAGS] Eval: \"{expression}\": {tags}")
+        result = False
         try:
-            return eval(expression, {'__builtins__': None}, tags)
+            result = eval(expression, {'__builtins__': None}, tags)
         except Exception as ex:
-            log.warning(f"There is some error: {ex}")
+            log.debug(f"[EVAL] Expr Error - \"{expression}\": {ex}")
             return False
+        return result

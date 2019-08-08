@@ -1,10 +1,14 @@
 import collections
 from typing import MutableMapping, Union, Any
 from pathlib import Path
+import tempfile
 import logging
 import yaml
+import os
 
 log = logging.getLogger(__name__)
+CACHE_DIR = Path(tempfile.gettempdir()) / 'pylunch'
+
 
 def load_yaml(file: Union[Path, str]) -> MutableMapping[str, Any]:
     file = Path(file)
@@ -73,4 +77,11 @@ class AppConfig(collections.MutableMapping):
     def restaurants(self) -> Path:
         return Path(self.config.get('restaurants', './restaurants.yml'))
 
+    @property
+    def use_cache(self) -> bool:
+        return not self.config.get('no_cache', False)
+
+    @property
+    def cache_dir(self) -> Path:
+        return Path(self.config.get('cache_dir', os.getenv('PYLUNCH_CACHE_DIR', CACHE_DIR)))
     

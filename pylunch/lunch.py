@@ -18,6 +18,8 @@ from .config import AppConfig, YamlLoader
 log = logging.getLogger(__name__)
 
 
+
+
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
@@ -210,13 +212,15 @@ class Entities(LunchCollection):
 
     def all_tags(self) -> List[str]:
         accumulator = set()
-        for entity in entities.values():
+        for entity in self.entities.values():
             accumulator.update(entity.tags)
-        return accumulator
+        return list(accumulator)
     
     def find_by_tags(self, expression: str):
         tags = TagsEvaluator(expression, self.all_tags())
-        return [ entity for entity in entities if tags.evaluate(entity.tags) ]
+        result = [ entity for entity in self.entities.values() if tags.evaluate(entity.tags) ]
+        log.info(f"[FIND] Found by tags {expression}: {result}")
+        return result
         
 
 class LunchService:
@@ -280,11 +284,10 @@ class LunchService:
 
 
 class CachedLunchService(LunchService):
-    def __init__(self, config: AppConfig, entities: Entities, cache_base=None):
-        super().__init__(config, entities)
-        self.cache_base = Path(cache_base) if cache_base else None
+    def __init__(self, cfg: AppConfig, entities: Entities):
+        super().__init__(cfg, entities)
+        self.cache_base = Path(self.config.cache_dir)
 
-    
     def resolve_text(self, entity: LunchEntity) -> str:
         return self._resolve_any(entity, super().resolve_text, ext='txt')
 

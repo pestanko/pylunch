@@ -1,10 +1,16 @@
 import logging.config
 import os
 
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG')
-LOG_LEVEL_DPMB = os.getenv('LOG_LEVEL_PYLUNCH', LOG_LEVEL)
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'WARNING')
+LVL_MAP = dict(w='WARNING', d='DEBUG', i='INFO', e='ERROR')
 
-LOGGING = {
+def make_cfg(level=None):
+    lvl = LOG_LEVEL
+    if level is not None:
+        lvl = LVL_MAP.get(level.lower(), LOG_LEVEL)
+
+    
+    return {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
@@ -23,10 +29,11 @@ LOGGING = {
         },
     },
     'loggers': {
-        'pylunch': {'handlers': ['console'], 'level': LOG_LEVEL_DPMB},
+        'pylunch': {'handlers': ['console'], 'level': lvl},
     }
 }
 
 
-def load():
-    logging.config.dictConfig(LOGGING)
+def load(level: str = None):
+    cfg = make_cfg(level)
+    logging.config.dictConfig(cfg)
