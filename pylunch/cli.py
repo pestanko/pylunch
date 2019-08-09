@@ -62,7 +62,9 @@ class CliApplication:
 
         instances = _get()
         return [ item for item in instances if item and not item.disabled]
-        
+ 
+
+pass_app = click.make_pass_decorator(CliApplication)
 
 @click.group(help=f'{APP_NAME} CLI tool')
 @click.version_option(version=__version__)
@@ -79,56 +81,56 @@ def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=N
 
 @main_cli.command(name='ls', help='List restaurants')
 @click.option('-l', '--limit', help="Limits number of restaurants to be shown", required=False, default=None)
-@click.pass_obj
-def cli_list(obj: CliApplication, limit=None):
-    print(obj.service.to_string())
+@pass_app
+def cli_list(app: CliApplication, limit=None):
+    print(app.service.to_string())
     
 
 @main_cli.command(name='menu', help='Get menu for a restaurant')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.pass_obj
-def cli_menu(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
-    instances = obj.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
-    print_instances(obj.service, instances)
+@pass_app
+def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
+    print_instances(app.service, instances)
 
 
 @main_cli.command(name='info', help='Get info for the restaurant')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.pass_obj
-def cli_info(obj: CliApplication, selectors=None, fuzzy=False, tags=False):
-    instances = obj.select_instances(selectors, fuzzy=fuzzy, tags=tags)
-    print_instances(obj.service, instances, printer=lambda _, x: print(x))
+@pass_app
+def cli_info(app: CliApplication, selectors=None, fuzzy=False, tags=False):
+    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+    print_instances(app.service, instances, printer=lambda _, x: print(x))
 
 
 @main_cli.command(name='import', help='Import restaurants')
 @click.argument('restaurants', nargs=-1)
 @click.option("-O", "--override", help="Overide the restaurant if exists", default=False, is_flag=True)
-@click.pass_obj
-def cli_import(obj: CliApplication, restaurants=None, override=False):
+@pass_app
+def cli_import(app: CliApplication, restaurants=None, override=False):
     if not restaurants:
         print("Not provided any files to import from")
     for rest_file in restaurants:
-        obj.service.import_file(rest_file)
-    obj.save_restaurants()
+        app.service.import_file(rest_file)
+    app.save_restaurants()
 
 @main_cli.command(name='export', help='Export restaurants')
 @click.option("-f", "--file", help="Export to file", default=None)
-@click.pass_obj
-def cli_export(obj: CliApplication, file=None):
+@pass_app
+def cli_export(app: CliApplication, file=None):
     if file is None:
-        if obj.restaurants_loader.full_path.exists():
-            content = obj.restaurants_loader.full_path.read_text('utf-8')
+        if app.restaurants_loader.full_path.exists():
+            content = app.restaurants_loader.full_path.read_text('utf-8')
             print(content)
         else:
-            print(f"Error: Restaurants file not exists: {obj.restaurants_loader.full_path}")
+            print(f"Error: Restaurants file not exists: {app.restaurants_loader.full_path}")
         
     else:
         # not a hack :-)
-        copyfile(src=str(obj.restaurants_loader.full_path), dst=file)
+        copyfile(src=str(app.restaurants_loader.full_path), dst=file)
 
 
 @main_cli.command(name='add', help='Adds new restaurant')
@@ -139,53 +141,53 @@ def cli_export(obj: CliApplication, file=None):
 @click.option("-t", "--tags", help="Restaurant tags", default=False, multiple=True)
 @click.option("-p", "--param", help="Additional param", default=False, multiple=True)
 @click.option("-O", "--override", help="Overide the restaurant if exists", default=False, is_flag=True)
-@click.pass_obj
-def cli_add(obj: CliApplication, name, display_name, url, selector, tags, params, override=False):
+@pass_app
+def cli_add(app: CliApplication, name, display_name, url, selector, tags, params, override=False):
     tags = list(tags) if tags else []        
     config = dict(name=name, url=url, display_name=display_name, tags=tags, selector=selector)
     if params:
         config.update(**_params_dict(params), override=override)
-    obj.service.instances.register(**config)
-    obj.save_restaurants()
+    app.service.instances.register(**config)
+    app.save_restaurants()
 
 
 @main_cli.command(name='rm', help='Removes the restaurant')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.pass_obj
-def cli_rm(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
-    instances = obj.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+@pass_app
+def cli_rm(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
     for instance in instances:
-        del obj.service.instances[instance.name]
-    obj.save_restaurants()
+        del app.service.instances[instance.name]
+    app.save_restaurants()
 
 
 @main_cli.command(name='enable', help='Enables the restaurants')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.pass_obj
-def cli_enable(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
-    instances = obj.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+@pass_app
+def cli_enable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
     for instance in instances:
         if 'disabled' in instance.keys():
             print(f"Enabling instance {instance.name}: {instance}")
-            del obj.service.instances[instance.name]['disabled']
-    obj.save_restaurants()
+            del app.service.instances[instance.name]['disabled']
+    app.save_restaurants()
 
 
 @main_cli.command(name='disable', help='Disables the restaurants')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.pass_obj
-def cli_enable(obj: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
-    instances = obj.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+@pass_app
+def cli_enable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
     for instance in instances:
         print(f"Disabling instance {instance.name}: {instance}")
-        obj.service.instances[instance.name]['disabled'] = True
-    obj.save_restaurants()
+        app.service.instances[instance.name]['disabled'] = True
+    app.save_restaurants()
 
 """
 " Helper tools
