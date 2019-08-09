@@ -33,7 +33,6 @@ class CliApplication:
         ent = lunch.Entities(**unwrapped)
         
         self.service = lunch.CachedLunchService(cfg, ent) if cfg.use_cache else lunch.LunchService(cfg, ent)
-#        self.service.import_file(RESOURCES / 'restaurants.yml')
         return self
 
     def _first_run(self):
@@ -196,6 +195,17 @@ def cli_config(app: CliApplication):
     import yaml
     cfg = app.service.config.config
     print(yaml.safe_dump(dict(Config=cfg)))
+
+
+@main_cli.command(name='clear-cache', help='Clear cache for a day')
+@pass_app
+def cli_config(app: CliApplication):
+    if not app.service.config.use_cache:
+        print("Not using the cache - no action.")
+        return
+    
+    if isinstance(app.service, lunch.CachedLunchService):
+        app.service.clear_cache()
 
 
 """

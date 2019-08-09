@@ -5,6 +5,7 @@ import html2text
 import requests
 import yaml
 import datetime
+import shutil
 import collections
 from bs4 import BeautifulSoup, Tag
 from requests import Response
@@ -347,6 +348,11 @@ class CachedLunchService(LunchService):
         if self.cache_base is None:
             return None
         return self._cache() / f"{entity.name}.{ext}"
+
+    def clear_cache(self):
+        cache_dir = self._cache()
+        log.info(f"Cleaning cache: {cache_dir}")
+        shutil.rmtree(str(cache_dir), True)
 
 
 def to_text(content):
