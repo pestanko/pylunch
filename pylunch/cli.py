@@ -28,8 +28,9 @@ class CliApplication:
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
         cfg = config.AppConfig(**cfg_dict)
-        loaded = self.restaurants_loader.load() or {}
-        ent = lunch.Entities(**loaded)
+        loaded = self.restaurants_loader.load() or dict(restaurants={})
+        unwrapped = loaded.get('restaurants') or loaded
+        ent = lunch.Entities(**unwrapped)
         
         self.service = lunch.CachedLunchService(cfg, ent) if cfg.use_cache else lunch.LunchService(cfg, ent)
 #        self.service.import_file(RESOURCES / 'restaurants.yml')
@@ -48,7 +49,7 @@ class CliApplication:
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
         def _get() -> List['lunch.LunchEntity']:
             if selectors is None or len(selectors) == 0:
-                return list(self.service.instances.collection.values())
+                return list(self.service.instances.values())
             if tags:
                 full = " ".join(selectors)
                 return self.service.instances.find_by_tags(full)
@@ -59,7 +60,8 @@ class CliApplication:
         if with_disabled:
             return _get()
 
-        return [ item for item in _get() if item and not item.disabled]
+        instances = _get()
+        return [ item for item in instances if item and not item.disabled]
         
 
 @click.group(help=f'{APP_NAME} CLI tool')

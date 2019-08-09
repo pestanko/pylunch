@@ -135,8 +135,8 @@ class LunchResolver:
 
 
 class LunchCollection(collections.MutableMapping):
-    def __init__(self, **kwargs):
-        self._collection = {**kwargs}
+    def __init__(self, cls_wrap=None, **kwargs):
+        self._collection = { key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items() } 
 
     @property
     def collection(self) -> MutableMapping[str, Any]:
@@ -170,6 +170,8 @@ class Resolvers(LunchCollection):
 
 
 class Entities(LunchCollection):
+    def __init__(self, **kwargs):
+        super().__init__(cls_wrap=LunchEntity, **kwargs)
     @property
     def entities(self) -> MutableMapping[str, LunchEntity]:
         return self.collection
