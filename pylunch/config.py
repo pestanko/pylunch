@@ -34,6 +34,10 @@ class YamlLoader:
         self.base_dir = Path(base_dir)
         self.file = Path(file)
 
+    @property
+    def full_path(self) -> Path:
+        return self.real_path(self.file)
+
     def load(self) -> MutableMapping:
         file = self.real_path(self.file)
         content = load_yaml(file)

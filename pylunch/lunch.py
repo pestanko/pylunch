@@ -17,6 +17,7 @@ from .config import AppConfig, YamlLoader
 
 log = logging.getLogger(__name__)
 
+
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
@@ -42,11 +43,11 @@ class LunchEntity(collections.MutableMapping):
 
     @property
     def resolver(self) -> str:
-        return self._config.get('resolver', 'default')
+        return self.config.get('resolver', 'default')
 
     @property
     def name(self) -> str:
-        return self._config['name']
+        return self.config['name']
 
     @property
     def url(self) -> str:
@@ -62,11 +63,15 @@ class LunchEntity(collections.MutableMapping):
 
     @property
     def display_name(self) -> str:
-        return self._config.get('display_name') or self.name
+        return self.config.get('display_name') or self.name
 
     @property
     def tags(self) -> List[str]:
-        return self._config.get('tags')
+        return self.config.get('tags')
+
+    @property
+    def disabled(self) -> bool:
+        return self.config.get('disabled', False)
 
     def __str__(self) -> str:
         result = f"{self.__class__.__name__} \"{self.name}\""
@@ -85,7 +90,7 @@ class LunchEntity(collections.MutableMapping):
         return result
 
     def __repr__(self) -> str:
-        return str(self)
+        return str(self.config)
 
 
 class LunchResolver:
@@ -201,7 +206,14 @@ class Entities(LunchCollection):
                                   processor=lambda x: x if isinstance(x, str) else x.name,
                                   scorer=fuzz.token_sort_ratio)
 
-    def register(self, name, url, display_name=None, tags=None, selector=None, request_params=None, **kwargs):
+    def register(self, name: str, url: str, display_name: str=None, tags=None, 
+                    selector=None, request_params=None, override=False, **kwargs):
+        if name in self.entities.keys():
+            if override:
+                log.info(f"[REG] Overriding already existing: {name}")
+            else:
+                log.info(f"[REG] Skipping {name} since it already exists.")
+                return
         config = dict(name=name, url=url, selector=selector, display_name=display_name, tags=tags, request_params=request_params, **kwargs)
         instance = LunchEntity(config)
         log.info(f"[REG] Register: {instance}")
@@ -218,6 +230,9 @@ class Entities(LunchCollection):
         result = [ entity for entity in self.entities.values() if tags.evaluate(entity.tags) ]
         log.info(f"[FIND] Found by tags {expression}: {result}")
         return result
+
+    def to_dict(self) -> dict:
+        return { 'restaurants': { name: value.config for (name, value) in self.collection.items() } }
         
 
 class LunchService:
@@ -238,15 +253,17 @@ class LunchService:
     def instances(self) -> Entities:
         return self._entities
   
-    def import_file(self, file: Tuple[Path, str]):
+    def import_file(self, file: Tuple[Path, str], override=False):
         file = Path(file)
         if not file.exists():
             log.warning(f"[IMPORT] File not exists: {file}")
             return 
         with file.open("r") as fp:
+            log.info(f"[IMPORT] Importing file: {file}")
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
                 restaurant['name'] = name
+                restaurant['override'] = override
                 self.instances.register(**restaurant)  
                     
     def process_lunch_name(self, name: str) -> str:
