@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import yaml
 from pathlib import Path
 from typing import List, Tuple, Mapping
 from shutil import copyfile
@@ -75,7 +76,7 @@ pass_app = click.make_pass_decorator(CliApplication)
 def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, **kwargs):
     log_config.load(log_level)
     app = CliApplication(config_dir=config_dir)
-    ctx.obj = app.init(no_cache=no_cache, format=format)
+    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level)
 
 
 @main_cli.command(name='ls', help='List restaurants')
@@ -189,6 +190,18 @@ def cli_disable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=Fa
         app.service.instances[instance.name]['disabled'] = True
     app.save_restaurants()
 
+
+@main_cli.command(name='edit', help='Edit restaurants')
+@pass_app
+def cli_edit_restaurants(app: CliApplication):
+    cfg = app.restaurants_loader.load()
+    content = yaml_edit(cfg)
+    if content is None:
+        print("No change - not saving")
+    else:
+        app.restaurants_loader.save(content)
+
+
 @main_cli.command(name='config', help='Print the configuration')
 @pass_app
 def cli_config(app: CliApplication):
@@ -208,9 +221,38 @@ def cli_config(app: CliApplication):
         app.service.clear_cache()
 
 
+    
+@main_cli.command(name='cfg-set', help='Set config value')
+@click.argument('name')
+@click.argument('value')
+@pass_app
+def cli_set_config(app: CliApplication, name, value):
+    cfg = app.config_loader.load()
+    cfg[name] = value
+    app.config_loader.save(cfg)
+
+
+@main_cli.command(name='cfg-edit', help='Edit configuration')
+@pass_app
+def cli_edit_config(app: CliApplication):
+    cfg = app.config_loader.load()
+    content = yaml_edit(cfg)
+    if content is None:
+        print("No change - not saving")
+    else:
+        app.config_loader.save(content)
+
+
 """
 " Helper tools
 """
+
+def yaml_edit(cfg) -> dict:
+    content = click.edit(yaml.safe_dump(cfg))
+    if content is not None:
+        return yaml.safe_load(content)
+    return None
+
 
 def _params_dict(params: List[str]) -> Mapping:
     result = {}
