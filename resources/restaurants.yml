@@ -168,5 +168,25 @@ restaurants:
     selector: 16505875
     tags: ['city', 'gd', 'cz']
     resolver: zomato
+    
+  certi-dole:
+    display_name: Certi Dole
+    url: https://www.zomato.com/brno/u-t%C5%99ech-%C4%8Dert%C5%AF-dvo%C5%99%C3%A1kova-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16507255
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
 
-  
+  certi-hore:
+    display_name: Certi Hore
+    url: https://www.zomato.com/brno/u-t%C5%99ech-%C4%8Dert%C5%AF-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506534
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  jedna-basen:
+    display_name: Jedna Basen
+    url: https://www.zomato.com/brno/jedna-báseň-brno-město-brno-střed
+    selector: 16506578
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+    
