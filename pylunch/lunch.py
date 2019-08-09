@@ -107,6 +107,8 @@ class LunchResolver:
         if not response.ok:
             log.warning(f"[LUNCH] Error[{response.status_code}]: {response.content}")
             print(f"Error[{response.status_code}]: ", response.content)
+        else:
+            log.debug(f"[RES] Response [{response.status_code}]: {response.content}")
         return response
 
     def _parse_response(self, response: Response) -> List[Tag]:
@@ -218,7 +220,7 @@ class Entities(LunchCollection):
                 return
         config = dict(name=name, url=url, selector=selector, display_name=display_name, tags=tags, request_params=request_params, **kwargs)
         instance = LunchEntity(config)
-        log.info(f"[REG] Register: {instance}")
+        log.info(f"[REG] Register [{name}]: {instance}")
         self.entities[name] = instance
 
     def all_tags(self) -> List[str]:

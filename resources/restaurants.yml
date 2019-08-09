@@ -74,8 +74,8 @@ restaurants:
 
   beranek:
     display_name: Beranek
-    url: https://www.ubilehoberanka.cz/menu-dne
-    selector: 'div.menu-card.napoje'
+    url: https://www.menicka.cz/6136-pohostinstvi-u-bileho-beranka.html
+    selector: '.obsah .menicka'
     tags: ['fi', 'cz']
 
   drevak:
@@ -101,7 +101,6 @@ restaurants:
     url: http://restaurant-padowetz.cz/poledni-menu.htm
     selector: '.columns > div.tydeniMenu:not(.skryte)'
     tags: ['city', 'cz']
-
 
   tripoli:
     display_name: Tripoli Vankovka

@@ -114,7 +114,8 @@ def cli_import(app: CliApplication, restaurants=None, override=False):
     if not restaurants:
         print("Not provided any files to import from")
     for rest_file in restaurants:
-        app.service.import_file(rest_file)
+        print(f"Importing restaurant: {rest_file}")
+        app.service.import_file(rest_file, override=override)
     app.save_restaurants()
 
 @main_cli.command(name='export', help='Export restaurants')
@@ -182,12 +183,20 @@ def cli_enable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=Fal
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
 @pass_app
-def cli_enable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+def cli_disable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
     for instance in instances:
         print(f"Disabling instance {instance.name}: {instance}")
         app.service.instances[instance.name]['disabled'] = True
     app.save_restaurants()
+
+@main_cli.command(name='config', help='Print the configuration')
+@pass_app
+def cli_config(app: CliApplication):
+    import yaml
+    cfg = app.service.config.config
+    print(yaml.safe_dump(dict(Config=cfg)))
+
 
 """
 " Helper tools
