@@ -92,4 +92,8 @@ class AppConfig(collections.MutableMapping):
     @property
     def format(self) -> str:
         return self.config.get('format', 'text')
+
+    @property
+    def zomato_key(self) -> str:
+        return self.config.get('zomato_key', None)
     

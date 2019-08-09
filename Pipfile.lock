@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "42510106011270a0f398b1907e4d3400e68cfa52248a014ef330208549120933"
+            "sha256": "816a6e7ed8f1c0aa7b6a810ccfe117d4e69f0952ff2d0697ca3edee0194e36e9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -204,6 +204,14 @@
             ],
             "index": "pypi",
             "version": "==5.1.2"
+        },
+        "pyzomato": {
+            "hashes": [
+                "sha256:89954e2a324aa5956ff1f67d0cf04e5f7ad550605cb2a88e850423704f6fc99b",
+                "sha256:c4888060ed2e724b1bf314098802dfd45309e89b721028e9b4833fe7a22b96ea"
+            ],
+            "index": "pypi",
+            "version": "==0.5"
         },
         "requests": {
             "hashes": [

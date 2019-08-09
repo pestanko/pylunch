@@ -4,11 +4,13 @@ from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping
 import html2text
 import requests
 import yaml
+import json
 import datetime
 import shutil
 import collections
 from bs4 import BeautifulSoup, Tag
 from requests import Response
+from pyzomato import Pyzomato
 
 from fuzzywuzzy import fuzz, process
 from pathlib import Path
@@ -48,7 +50,7 @@ class LunchEntity(collections.MutableMapping):
 
     @property
     def name(self) -> str:
-        return self.config['name']
+        return self.config.get('name')
 
     @property
     def url(self) -> str:
@@ -94,11 +96,19 @@ class LunchEntity(collections.MutableMapping):
         return str(self.config)
 
 
-class LunchResolver:
+class AbstractResolver:
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.service = service
         self.entity = entity
 
+    def resolve_text(self) -> str:
+        return None
+
+    def resolve_html(self) -> str:
+        return None
+
+
+class LunchResolver(AbstractResolver):
     @property
     def request_url(self) -> str:
         return self.entity.url
@@ -131,12 +141,34 @@ class LunchResolver:
     def to_string(cls, parsed) -> str:
         if isinstance(parsed, list):
             items = [str(item) for item in parsed]
-            log.debug(f">> String[{type(items)}]: {items}")
             return "".join(items)
         else:
             return parsed.extract()
 
+class ZomatoResolver(AbstractResolver):
+    @property
+    def zomato(self) -> Pyzomato:
+        return self.service.zomato
 
+    def resolve_json(self):
+        return self.zomato.getDailyMenu(self.entity.selector)
+    
+    def resolve_html(self) -> str:
+        return f"<pre>{yaml.safe_dump(self.resolve_json())}</pre>"
+
+    def resolve_text(self) -> str:
+        result = ""
+        content = self.resolve_json()
+        menus = content['daily_menus']
+        for menu in menus:
+            menu = menu.get('daily_menu')
+            dishes = menu['dishes']
+            for dish in dishes:
+                dish = dish['dish']
+                result += f"{dish['name']} - {dish['price']}\n"
+        return result
+
+    
 class LunchCollection(collections.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
         self._collection = { key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items() } 
@@ -243,8 +275,17 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=LunchResolver)
+        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver)
         self._config: AppConfig = config
+        self._zomato: Pyzomato = None
+
+    @property
+    def zomato(self) -> Pyzomato:
+        if self._zomato is None:
+            if self.config.zomato_key is None:
+                return None
+            self._zomato = Pyzomato(self.config.zomato_key)
+        return self._zomato
     
     @property
     def config(self) -> AppConfig:
