@@ -114,9 +114,59 @@ restaurants:
     selector: 'div#day-menu .menu-food'
     tags: ['city', 'india', 'truck', 'ns']
 
-  drevenyvlk:
+  varna:
+    display_name: Varna
+    url: http://www.restauracevarna.cz/denni-menu/
+    selector: '#pravy-sloupec-obsah p'
+    tags: ['city', 'cz', 'gd']
+
+  dreveny-vlk:
     display_name: Drevenny Vlk
     url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-vlka-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16507597
     tags: ['city', 'cz', 'ns']
     resolver: zomato
+
+  dreveny-orol:
+    display_name: Drevenny Orol
+    url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-orla-1-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506896
+    tags: ['city', 'cz', 'ns']
+    resolver: zomato
+
+  suzies-pizza:
+    display_name: Suzies italian
+    url: https://www.zomato.com/brno/suzies-veveří-brno-střed
+    selector: 16506939
+    tags: ['city', 'pizza', 'gd', 'ita']
+    resolver: zomato
+
+  suzies-steak:
+    display_name: Suzies steak
+    url: https://www.zomato.com/brno/suzies-steak-pub-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 18126190
+    tags: ['city', 'gd', 'cz', 'steak']
+    resolver: zomato
+
+  pivni-opice:
+    display_name: Pivni Opice
+    url: https://www.zomato.com/brno/pivn%C3%AD-opice-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506709
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  statl:
+    display_name: Statl
+    url: https://www.zomato.com/brno/%C5%A1tatl-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 18494615
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  formanka:
+    display_name: Formanka
+    url: https://www.zomato.com/brno/%C5%A1tatl-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16505875
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  

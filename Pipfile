@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 pylint = "*"
+rope = "*"
 
 [packages]
 requests = "*"

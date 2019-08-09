@@ -151,21 +151,37 @@ class ZomatoResolver(AbstractResolver):
         return self.service.zomato
 
     def resolve_json(self):
-        return self.zomato.getDailyMenu(self.entity.selector)
+        if self.zomato is None:
+            return None
+        content = self.zomato.getDailyMenu(self.entity.selector)
+        log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
+        return content
     
     def resolve_html(self) -> str:
-        return f"<pre>{yaml.safe_dump(self.resolve_json())}</pre>"
+        resolved = self.resolve_json()
+        if resolved is None:
+            return None
+        result = "<div>\n"
+        lines = self._make_lines(resolved)
+        for line in lines:
+            result += f"<p>{line}</p>\n"
+        return result + "\n</div>"
 
     def resolve_text(self) -> str:
-        result = ""
         content = self.resolve_json()
+        if content is None:
+            return None
+        return "\n".join(self._make_lines(content))
+
+    def _make_lines(self, content: dict) -> list:
+        result = []
         menus = content['daily_menus']
         for menu in menus:
             menu = menu.get('daily_menu')
             dishes = menu['dishes']
             for dish in dishes:
                 dish = dish['dish']
-                result += f"{dish['name']} - {dish['price']}\n"
+                result.append(f"{dish['name']} - {dish['price']}")
         return result
 
     

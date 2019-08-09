@@ -57,10 +57,11 @@ class CliApplication:
                 return [ self.service.instances.fuz_find_one(select) for select in selectors ]
             return [ self.service.instances.get(select) for select in selectors ]
 
-        if with_disabled:
-            return _get()
-
         instances = _get()
+        instances = [instance for instance in instances if instance is not None]
+        if with_disabled:
+            return instances
+
         return [ item for item in instances if item and not item.disabled]
  
 
@@ -160,6 +161,7 @@ def cli_add(app: CliApplication, name, display_name, url, selector, tags, params
 def cli_rm(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
     for instance in instances:
+        print(f"Removing: {instance.name}")
         del app.service.instances[instance.name]
     app.save_restaurants()
 
