@@ -91,8 +91,9 @@ def cli_list(app: CliApplication, limit=None):
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
+@click.option("-U", "--update-cache", help="Update cache entry", default=False, is_flag=True)
 @pass_app
-def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
+def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
     print_instances(app.service, instances)
 
@@ -212,18 +213,39 @@ def cli_config(app: CliApplication):
     print(yaml.safe_dump(dict(Config=cfg)))
 
 
-@main_cli.command(name='clear-cache', help='Clear cache for a day')
+@main_cli.command(name='cache-clear', help='Clear cache for a day')
+@click.argument('selectors', nargs=-1)
+@click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
+@click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
 @pass_app
-def cli_config(app: CliApplication):
+def cli_cache_clear(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False):
     if not app.service.config.use_cache:
         print("Not using the cache - no action.")
         return
     
     if isinstance(app.service, lunch.CachedLunchService):
-        app.service.clear_cache()
+        if not selectors:
+            for item in app.service.clear_cache():
+                print(f"Clearing: {item}")
+        else: 
+            instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+            for item in app.service.clear_cache(instances):
+                print(f"Clearing: {item}")
 
 
-    
+@main_cli.command(name='cache-content', help='Clear cache for a day')
+@pass_app
+def cli_cache_content(app: CliApplication):
+    if not app.service.config.use_cache:
+        print("Not using the cache - no action.")
+        return
+
+    if isinstance(app.service, lunch.CachedLunchService):
+        for (name, cache_paths) in app.service.cache_content().items():
+            for path in cache_paths:
+                print(f"{name} - {path}")
+ 
+            
 @main_cli.command(name='cfg-set', help='Set config value')
 @click.argument('name')
 @click.argument('value')

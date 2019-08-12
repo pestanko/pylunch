@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping
+from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping, Mapping
 
 import html2text
 import requests
@@ -219,8 +219,6 @@ class PDFResolver(AbstractResolver):
 
         high_level.extract_text_to_fp(stream, outfp=out, laparams=laparams)
         return out.getvalue().decode('utf-8')
-
-
 
     
 class LunchCollection(collections.MutableMapping):
@@ -444,10 +442,32 @@ class CachedLunchService(LunchService):
             return None
         return self._cache() / f"{entity.name}.{ext}"
 
-    def clear_cache(self):
-        cache_dir = self._cache()
-        log.info(f"Cleaning cache: {cache_dir}")
-        shutil.rmtree(str(cache_dir), True)
+    def clear_cache(self, lst: List[LunchEntity] = None, full=False):
+        cache_dir = self._cache() if not full else self.cache_base
+        if not lst:
+            log.info(f"Cleaning cache: {cache_dir}")
+            shutil.rmtree(str(cache_dir), True)
+            return [cache_dir]
+        else:
+            return self._clear_items(cache_dir, lst)
+    
+    def _clear_items(self, base_dir, lst) -> List:
+        result = []
+        for item in lst:
+            paths: List[Path] = base_dir.glob(f"{item.name}.*")
+            for path in paths:
+                log.info(f"[CACHE] Removing {item.name}: {path}")
+                path.unlink()
+                result.append(path)
+        return result
+
+    def cache_content(self, lst: List[LunchEntity] = None) -> Mapping:
+        base = self._cache()
+        log.debug(f"[CACHE] Base: {base}")
+        result =  { name: list(str(pth) for pth in base.glob(f'{entity.name}.*')) for (name, entity) in self.instances.items() }
+        log.debug(f"[CACHE] Content: {result}")
+        return result
+        
 
 
 def to_text(content):
