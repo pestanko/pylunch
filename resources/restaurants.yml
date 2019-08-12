@@ -59,7 +59,7 @@ restaurants:
     display_name: Monte Bu
     url: 'https://www.monte-bu.cz/menu.php#poledni-section'
     selector: 'li.today'
-    tags: ['rh', 'cz']
+    tags: ['rh', 'cz', 'steak']
 
   sabaidy:
     display_name: 'Sabaidy'
@@ -157,14 +157,14 @@ restaurants:
     display_name: Lokal u Caipla
     url: https://www.zomato.com/brno/lokál-u-caipla-brno-město-brno-střed
     selector: 17807425
-    tags: ['city', 'cz', 'ns']
+    tags: ['city', 'cz', 'gd']
     resolver: zomato
 
   siwa:
     display_name: Siwa
     url: https://www.zomato.com/brno/siwa-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 18578705
-    tags: ['city', 'asia', 'ns']
+    tags: ['city', 'asia', 'gs']
     resolver: zomato
 
   dreveny-orol:
