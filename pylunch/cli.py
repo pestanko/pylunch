@@ -267,6 +267,16 @@ def cli_edit_config(app: CliApplication):
         app.config_loader.save(content)
 
 
+@main_cli.command(name='console', help='Start the console - IPython')
+@pass_app
+def cli_edit_config(app: CliApplication):
+    try:
+        import IPython
+        print("Starting the interactive console - IPython")
+        IPython.embed()
+    except ImportError:
+        print('\nIPython modeule is not available')
+
 """
 " Helper tools
 """

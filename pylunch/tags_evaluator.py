@@ -22,7 +22,7 @@ class TagsEvaluator:
         expression = self.expression
         if not expression:
             return True
-        tags = self.build_dict(*test_tags)
+        tags = self.build_dict(*(test_tags or []))
         log.debug(f"[TAGS] Eval: \"{expression}\": {tags}")
         result = False
         try:

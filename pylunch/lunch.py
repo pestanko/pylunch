@@ -81,12 +81,12 @@ class LunchEntity(collections.MutableMapping):
         return self.config.get('disabled', False)
 
     def __str__(self) -> str:
-        result = f"{self.__class__.__name__} \"{self.name}\""
+        result = f"\"{self.name}\" -"
 
         if self.display_name:
             result += f" ({self.display_name})"
         if self.tags:
-            result += f" - {self.tags}"
+            result += f" {self.tags}"
         
         result += f" {self.url}"
 
@@ -94,6 +94,9 @@ class LunchEntity(collections.MutableMapping):
             result += f" ({self.selector})"
         if self.request_params:
             result += f" - req_params={self.request_params}"
+
+        if self.resolver and self.resolver != 'default':
+            result += f' resolver={self.resolver}'
         return result
 
     def __repr__(self) -> str:
@@ -312,7 +315,7 @@ class Entities(LunchCollection):
     def all_tags(self) -> List[str]:
         accumulator = set()
         for entity in self.entities.values():
-            accumulator.update(entity.tags)
+            accumulator.update(entity.tags if entity.tags else {})
         return list(accumulator)
     
     def find_by_tags(self, expression: str):

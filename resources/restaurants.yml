@@ -53,6 +53,7 @@ restaurants:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: '#content #center_pannel'
+    tags: ['rh', 'cz']
 
   krava:
     display_name: Monte Bu
