@@ -14,10 +14,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def _instance_printer(service, instance):
-    content = service.resolve_text
-    return f"{instance.display_name} ({instance.name}):\n\n{content}\n\n{instance.url}"
-
 class CommandHandlers:
     def __init__(self, pylunch_bot: 'PyLunchTelegramBot'):
         self.pylunch_bot = pylunch_bot
@@ -41,20 +37,25 @@ class CommandHandlers:
 
         return [ item for item in instances if item and not item.disabled]
 
+    def _instance_printer(self, instance):
+        content = self.service.resolve_text(instance)
+        log.debug(f"[Telegram] entity [{instance.name}]: {content}")
+        return f"{instance.display_name} ({instance.name}):\n\n{content}\n\n{instance.url}"
+
     def print_instances(self, update, instances, printer=None):
-        printer = printer if printer is not None else _instance_printer
+        printer = printer if printer is not None else self._instance_printer
         log.debug(f"Printing: {instances}")
         if instances is None or not instances:
-            self.send_msg(update, "**Not found any instance**", markdown=True)
+            self.send_msg(update, "**Not found any instance**")
     
         elif isinstance(instances, list):
             for instance in instances:
                 if instance is not None:
                     log.info(f"Sending one response from list: {instances}")
-                    self.send_msg(update, printer(instance), markdown=True)
+                    self.send_msg(update, printer(instance))
         else:
             log.info(f"Sending one response: {instances}")
-            self.send_msg(update, printer(instances), markdown=True)
+            self.send_msg(update, printer(instances))
     
     @property
     def service(self) -> lunch.LunchService:
@@ -68,12 +69,12 @@ class CommandHandlers:
     def get_menu_one(self, update: Update, context: CallbackContext):
         result = self.select_instances(context.args, tags=False)
         log.debug(f"Found for [{context.args}]: {result}")
-        self.print_instances(update, result, printer=_instance_printer)
+        self.print_instances(update, result)
 
     def get_menu_by_tags(self, update: Update, context: CallbackContext):
         result = self.select_instances(context.args, tags=True)
         log.debug(f"Found for [{context.args}]: {result}")
-        self.print_instances(update, result, printer=_instance_printer)
+        self.print_instances(update, result)
 
     def find_by_tags(self, update: Update, context: CallbackContext):
         result = self.select_instances(context.args, tags=True)
@@ -105,7 +106,8 @@ class CommandHandlers:
         params = {}
         if markdown:
             params['parse_mode'] = telegram.ParseMode.MARKDOWN
-        update.message.reply_text(message)
+        result = update.message.reply_text(message)
+        log.debug(f"[Telegram] Send result: {result}")
 
     def help_string(self) -> str:
         commands = ""
