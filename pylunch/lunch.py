@@ -184,6 +184,21 @@ class ZomatoResolver(AbstractResolver):
                 result.append(f"{dish['name']} - {dish['price']}")
         return result
 
+
+class PDFResolver(AbstractResolver):
+    def resolve_pdf(self):
+        pass
+    
+    def resolve_html(self) -> str:
+        result = "<div>\n"
+        result += f'<a href="{self.entity.url}">{self.entity.display_name}<a>'
+        return result + "\n</div>"
+
+    def resolve_text(self) -> str:
+        return f"PDF is available at: {self.entity.url}" 
+
+
+
     
 class LunchCollection(collections.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
@@ -291,7 +306,7 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver)
+        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
 

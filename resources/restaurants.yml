@@ -190,3 +190,14 @@ restaurants:
     tags: ['city', 'gd', 'cz']
     resolver: zomato
     
+  annapurna:
+    display_name: Annapurna
+    url: http://www.indicka-restaurace-annapurna.cz/images/tydenijidelnicek/menu.pdf
+    tags: ['city', 'ns', 'india', 'asia']
+    resolver: pdf
+  
+  avast:
+    display_name: Avast
+    url: http://menu.perfectcanteen.cz/pdf/21/cz/a/a3
+    tags: ['city', 'ns', 'avast']
+    resolver: pdf
