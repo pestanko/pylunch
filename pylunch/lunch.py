@@ -9,7 +9,6 @@ import datetime
 import shutil
 import collections
 import io
-import sys
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -364,6 +363,8 @@ class LunchService:
             for (name, restaurant) in restaurants['restaurants'].items():
                 restaurant['name'] = name
                 restaurant['override'] = override
+                if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant['resolver'] not in restaurant['tags']:
+                    restaurant['tags'].append(restaurant['resolver'])
                 self.instances.register(**restaurant)  
                     
     def process_lunch_name(self, name: str) -> str:
