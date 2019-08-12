@@ -271,8 +271,6 @@ def print_instances(service: lunch.LunchService, instances, printer=None):
         for instance in instances:
             if instance is not None:
                 printer(service, instance)
-            else:
-                print("Instance not Found")
     else:
         printer(service, instances)
 

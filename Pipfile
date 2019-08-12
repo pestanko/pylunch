@@ -19,6 +19,7 @@ fuzzywuzzy = "*"
 click = "*"
 python-levenshtein = "*"
 pyzomato = "*"
+pdfminer-six = "*"
 
 [requires]
 python_version = "3.7"

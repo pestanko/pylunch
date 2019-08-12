@@ -8,6 +8,8 @@ import json
 import datetime
 import shutil
 import collections
+import io
+import sys
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -17,6 +19,9 @@ from pathlib import Path
 
 from .tags_evaluator import TagsEvaluator
 from .config import AppConfig, YamlLoader
+
+from pdfminer import high_level
+import pdfminer.layout
 
 log = logging.getLogger(__name__)
 
@@ -187,7 +192,13 @@ class ZomatoResolver(AbstractResolver):
 
 class PDFResolver(AbstractResolver):
     def resolve_pdf(self):
-        pass
+        response = requests.get(self.entity.url)
+        if not response.ok:
+            log.error(f"Unnable to get response from: {self.url}")
+            return None
+        text = self._resolve_text_from_content(io.BytesIO(response.content))
+        log.info(f"[PDF] Resolved text: {text}")
+        return text
     
     def resolve_html(self) -> str:
         result = "<div>\n"
@@ -195,7 +206,19 @@ class PDFResolver(AbstractResolver):
         return result + "\n</div>"
 
     def resolve_text(self) -> str:
-        return f"PDF is available at: {self.entity.url}" 
+        text = self.resolve_pdf()
+        return f"PDF is available at: {self.entity.url}\n\n{text}" 
+
+    def _resolve_text_from_content(self, stream: io.BytesIO):
+        out = io.BytesIO()
+        laparams = pdfminer.layout.LAParams()
+        for param in ("all_texts", "detect_vertical", "word_margin", "char_margin", "line_margin", "boxes_flow"):
+            paramv = locals().get(param, None)
+            if paramv is not None:
+                setattr(laparams, param, paramv)
+
+        high_level.extract_text_to_fp(stream, outfp=out, laparams=laparams)
+        return out.getvalue().decode('utf-8')
 
 
 
@@ -360,7 +383,7 @@ class LunchService:
         return self.to_string()
 
     def to_string(self) -> str:
-        result = "Available:\n"
+        result = f"Available ({len(self.instances)}): \n"
         for restaurant in self.instances.values():
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
