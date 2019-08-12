@@ -269,13 +269,25 @@ def cli_edit_config(app: CliApplication):
 
 @main_cli.command(name='console', help='Start the console - IPython')
 @pass_app
-def cli_edit_config(app: CliApplication):
+def cli_start_console(app: CliApplication):
     try:
         import IPython
         print("Starting the interactive console - IPython")
         IPython.embed()
     except ImportError:
         print('\nIPython modeule is not available')
+
+@main_cli.command(name='telegram-bot', help='Start the telegram bot')
+@pass_app
+def cli_start_console(app: CliApplication):
+    try:
+        from .telegram_bot import PyLunchTelegramBot
+        print("Starting the telegram bot")
+        bot = PyLunchTelegramBot(app.service)
+        bot.run()
+    except ImportError:
+        print('\nIPython modeule is not available')
+
 
 """
 " Helper tools

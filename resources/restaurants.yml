@@ -121,11 +121,50 @@ restaurants:
     selector: '#pravy-sloupec-obsah p'
     tags: ['city', 'cz', 'gd']
 
+  zlata-lod:
+    display_name: Zlata Lod
+    url: http://www.zlatalod.com/
+    selector: '#dnes'
+    tags: ['city', 'cz', 'gd']
+
+  cattani-josef:
+    display_name: Cattani Jozefska
+    url: http://www.cattani.cz/
+    selector: '.josefska > .menu'
+    tags: ['ita', 'city', 'pasta', 'ns']
+
+  cattani-veveri:
+    display_name: Cattani Veveri
+    url: http://www.cattani.cz/
+    selector: '.veveri > .menu'
+    tags: ['ita', 'city', 'pasta', 'gd']
+
   dreveny-vlk:
     display_name: Drevenny Vlk
     url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-vlka-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16507597
     tags: ['city', 'cz', 'ns']
+    resolver: zomato
+
+  padowetz:
+    display_name: Padowetz
+    url: https://www.zomato.com/brno/padowetz-original-restaurant-pub-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16507074
+    tags: ['city', 'cz', 'ns']
+    resolver: zomato
+
+  lokal:
+    display_name: Lokal u Caipla
+    url: https://www.zomato.com/brno/lokál-u-caipla-brno-město-brno-střed
+    selector: 17807425
+    tags: ['city', 'cz', 'ns']
+    resolver: zomato
+
+  siwa:
+    display_name: Siwa
+    url: https://www.zomato.com/brno/siwa-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 18578705
+    tags: ['city', 'asia', 'ns']
     resolver: zomato
 
   dreveny-orol:
@@ -154,6 +193,34 @@ restaurants:
     url: https://www.zomato.com/brno/pivn%C3%AD-opice-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16506709
     tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  vesela-vacice:
+    display_name: Vesela Vacice
+    url: https://www.zomato.com/cs/veselavacice
+    selector: 16505961
+    tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  selepka:
+    display_name: Selepka
+    url: https://www.zomato.com/cs/brno/%C5%A1elepka-kr%C3%A1lovo-pole-brno-sever
+    selector: 16506040
+    tags: ['fi', 'cz']
+    resolver: zomato
+
+  la-strada:
+    display_name: La Strada
+    url: https://www.zomato.com/cs/brno/la-strada-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 16505874
+    tags: ['fi', 'pizza', 'ita']
+    resolver: zomato
+
+  patatas:
+    display_name: Love Patatas
+    url: https://www.zomato.com/cs/brno/bistro-love-patatas-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 18390235
+    tags: ['city', 'brambor']
     resolver: zomato
 
   statl:
@@ -189,6 +256,27 @@ restaurants:
     url: https://www.zomato.com/brno/jedna-báseň-brno-město-brno-střed
     selector: 16506578
     tags: ['city', 'gd', 'cz']
+    resolver: zomato
+
+  everest:
+    display_name: Everest
+    url: https://www.zomato.com/brno/everest-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 16506537
+    tags: ['india', 'asia']
+    resolver: zomato
+
+  podloubi:
+    display_name: Podloubi
+    url: https://www.zomato.com/brno/restaurace-podloub%C3%AD-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 17809249
+    tags: ['cz', 'city', 'ns']
+    resolver: zomato
+
+  sborovna:
+    display_name: Sborovna
+    url: https://www.zomato.com/brno/sborovna-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 18335377
+    tags: ['cz', 'city', 'ns']
     resolver: zomato
     
   annapurna:

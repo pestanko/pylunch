@@ -96,4 +96,8 @@ class AppConfig(collections.MutableMapping):
     @property
     def zomato_key(self) -> str:
         return self.config.get('zomato_key', None)
+
+    @property
+    def telegram_token(self) -> str:
+        return self.config.get('telegram_token', None)
     
