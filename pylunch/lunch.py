@@ -151,6 +151,8 @@ class LunchResolver(AbstractResolver):
             return parsed.extract()
 
 class ZomatoResolver(AbstractResolver):
+    ZOMATO_NOT_ENABLED="""Zomato key is not set, please get the zomato key 
+                        and set add it to the configuration as property `zomato_key`."""
     @property
     def zomato(self) -> Pyzomato:
         return self.service.zomato
@@ -165,7 +167,7 @@ class ZomatoResolver(AbstractResolver):
     def resolve_html(self) -> str:
         resolved = self.resolve_json()
         if resolved is None:
-            return None
+            return f"<p>{ZomatoResolver.ZOMATO_NOT_ENABLED}</p>"
         result = "<div>\n"
         lines = self._make_lines(resolved)
         for line in lines:
@@ -175,7 +177,7 @@ class ZomatoResolver(AbstractResolver):
     def resolve_text(self) -> str:
         content = self.resolve_json()
         if content is None:
-            return None
+            return ZomatoResolver.ZOMATO_NOT_ENABLED
         return "\n".join(self._make_lines(content))
 
     def _make_lines(self, content: dict) -> list:
