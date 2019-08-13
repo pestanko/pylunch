@@ -326,6 +326,24 @@ class Entities(LunchCollection):
 
     def to_dict(self) -> dict:
         return { 'restaurants': { name: value.config for (name, value) in self.collection.items() } }
+
+    def select(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[LunchEntity]:
+        def _get() -> List['lunch.LunchEntity']:
+            if selectors is None or len(selectors) == 0:
+                return list(self.values())
+            if tags:
+                full = " ".join(selectors)
+                return self.find_by_tags(full)
+            if fuzzy:
+                return [ self.fuz_find_one(select) for select in selectors ]
+            return [ self.get(select) for select in selectors ]
+
+        instances = _get()
+        instances = [instance for instance in instances if instance is not None]
+        if with_disabled:
+            return instances
+
+        return [ item for item in instances if item and not item.disabled]
         
 
 class LunchService:
