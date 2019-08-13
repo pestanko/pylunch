@@ -280,10 +280,7 @@ class Entities(LunchCollection):
         self.register(name=name, **config)
 
     def find_one(self, name: str):
-        items = self._get_from_alias(name)
-        if items:
-            return self.get(items[0])
-        return self.fuz_find_one(name)[0]
+        return self.get(name) or self.fuz_find_one(name)[0]
 
     def find_all(self, name: str, limit=10):
         return [i[0] for i in self.fuz_find(name, limit)]
@@ -336,7 +333,7 @@ class Entities(LunchCollection):
                 return self.find_by_tags(full)
             if fuzzy:
                 return [ self.fuz_find_one(select) for select in selectors ]
-            return [ self.get(select) for select in selectors ]
+            return [ self.find_one(select) for select in selectors ]
 
         instances = _get()
         instances = [instance for instance in instances if instance is not None]
