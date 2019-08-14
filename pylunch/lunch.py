@@ -360,7 +360,7 @@ class LunchService:
         if not file.exists():
             log.warning(f"[IMPORT] File not exists: {file}")
             return 
-        with file.open("r") as fp:
+        with file.open("r", encoding='utf-8') as fp:
             log.info(f"[IMPORT] Importing file: {file}")
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
