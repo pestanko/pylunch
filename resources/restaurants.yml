@@ -283,4 +283,5 @@ restaurants:
     display_name: Avast
     url: http://menu.perfectcanteen.cz/pdf/21/cz/a/a3
     tags: ['city', 'ns', 'avast']
+    filters: [ 'day' ]
     resolver: pdf

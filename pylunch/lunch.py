@@ -86,8 +86,8 @@ class LunchEntity(collections.MutableMapping):
         return self.config.get('days')
 
     @property
-    def filter(self) -> str:
-        return self.config.get('filter')
+    def filters(self) -> str:
+        return self.config.get('filters')
 
     def __str__(self) -> str:
         result = f"\"{self.name}\" -"
@@ -131,7 +131,7 @@ class LunchContentFilter:
         return content
 
 class DayResolveFilter:
-    CZ_DAYS = ['Pondelí', 'Úterí', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+    CZ_DAYS = ['Pondelí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
     EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     def __init__(self, service: 'LunchService', entity: LunchEntity):
@@ -340,7 +340,8 @@ class Filters(LunchCollection):
         return self._collection.get(name, LunchContentFilter)
 
     def for_entity(self, entity: LunchEntity) -> LunchContentFilter:
-        return self.get(entity.filter)
+        log.debug(f"[FILTER] Filters for entity {entity.name} ~> {entity.filters}")
+        return [ self.get(flt) for flt in (entity.filters or []) ]
 
 
 class Entities(LunchCollection):
@@ -430,7 +431,7 @@ class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver)
-        self._filters: Filters = Filters(default=LunchContentFilter, day=DayResolveFilter)
+        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
 
@@ -499,9 +500,11 @@ class LunchService:
         resolver = self.resolvers.for_entity(entity)
         log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
         content = resolver(self, entity).resolve_text()
-        filter = self.filters.for_entity(entity)
-        log.debug(f"[FILTER] Using the text filter: {filter.__name__}")
-        return filter(self, entity).filter(content)
+        filters = self.filters.for_entity(entity)
+        for flt in filters:
+            log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
+            content = flt(self, entity).filter(content)
+        return content
     
     def resolve_html(self, entity: LunchEntity) -> str:
         resolver = self.resolvers.for_entity(entity)
