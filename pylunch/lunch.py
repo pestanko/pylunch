@@ -9,6 +9,7 @@ import datetime
 import shutil
 import collections
 import io
+import re
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -80,6 +81,14 @@ class LunchEntity(collections.MutableMapping):
     def disabled(self) -> bool:
         return self.config.get('disabled', False)
 
+    @property
+    def days(self) -> List[str]:
+        return self.config.get('days')
+
+    @property
+    def filter(self) -> str:
+        return self.config.get('filter')
+
     def __str__(self) -> str:
         result = f"\"{self.name}\" -"
 
@@ -102,7 +111,6 @@ class LunchEntity(collections.MutableMapping):
     def __repr__(self) -> str:
         return str(self.config)
 
-
 class AbstractResolver:
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.service = service
@@ -113,6 +121,73 @@ class AbstractResolver:
 
     def resolve_html(self) -> str:
         return None
+
+class LunchContentFilter:
+    def __init__(self, service: 'LunchService', entity: LunchEntity):
+        self.entity = entity
+        self.service = service
+
+    def filter(self, content: str) -> str:
+        return content
+
+class DayResolveFilter:
+    CZ_DAYS = ['Pondelí', 'Úterí', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+    EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    def __init__(self, service: 'LunchService', entity: LunchEntity):
+        self.entity = entity
+        self.service = service
+
+    @property
+    def _week_day(self) -> int:
+        return datetime.datetime.today().weekday()
+
+    def _find_pos_content(self, day_num, content, days):
+        if day_num >= len(days):
+            log.warning("Week day is greater than available days")
+            return None
+
+        day = days[day_num]
+        found = re.search(day, content, re.IGNORECASE)
+        if not found:
+            log.warning("Day was not found in the content")
+            return None
+        return found.start()
+        
+
+    def _parse_by_day(self, content: str, days: List[str]) -> str:
+        if not days:
+            log.debug("[FILTER] No days selected - sending original content")
+            return content
+        start = self._find_pos_content(self._week_day, content, days)
+        if start is None:
+            log.warning("[FILTER] Unable to find begging of the day, sending original conent")
+            return content
+        end = self._find_pos_content(self._week_day + 1, content, days)
+        if end is None:
+            log.debug(f"[FILTER] Sending content from {start} to the end of the document.")
+            return content[start:]
+        log.debug(f"[FILTER] Sending content from {start} to {end}.")
+        return content[start:end]
+
+
+    def _select_correct_days(self, content: str):
+        days = self.entity.days
+        if days:
+            return days
+        
+        today_num = self._week_day
+        options = [self.__class__.CZ_DAYS, self.__class__.EN_DAYS]
+        for option in options:
+            if re.search(option[today_num], content, re.IGNORECASE):
+                log.debug(f"[DAYS] Selecting correct days for [{option[today_num]}]: {option}")
+                return option
+        return None
+
+    def filter(self, content: str):
+        days = self._select_correct_days(content)
+        result = self._parse_by_day(content, days)
+        return result
 
 
 class LunchResolver(AbstractResolver):
@@ -151,6 +226,7 @@ class LunchResolver(AbstractResolver):
             return "".join(items)
         else:
             return parsed.extract()
+
 
 class ZomatoResolver(AbstractResolver):
     ZOMATO_NOT_ENABLED="""Zomato key is not set, please get the zomato key 
@@ -245,10 +321,6 @@ class LunchCollection(collections.MutableMapping):
          return len(self.collection) 
 
 class Resolvers(LunchCollection):
-    @property
-    def collection(self) -> MutableMapping:
-        return self._collection
-    
     def register(self, name: str, cls: type):
         log.info(f"[ADD] Resolver [{name}]: {cls.__name__}")
         self._collection[name] = cls
@@ -258,6 +330,17 @@ class Resolvers(LunchCollection):
 
     def for_entity(self, entity: LunchEntity) -> LunchResolver:
         return self.get(entity.resolver)
+
+class Filters(LunchCollection):
+    def register(self, name: str, cls: type):
+        log.info(f"[ADD] Filter [{name}]: {cls.__name__}")
+        self._collection[name] = cls
+
+    def get(self, name: str) -> type:
+        return self._collection.get(name, LunchContentFilter)
+
+    def for_entity(self, entity: LunchEntity) -> LunchContentFilter:
+        return self.get(entity.filter)
 
 
 class Entities(LunchCollection):
@@ -347,6 +430,7 @@ class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver)
+        self._filters: Filters = Filters(default=LunchContentFilter, day=DayResolveFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
 
@@ -365,6 +449,10 @@ class LunchService:
     @property
     def resolvers(self) -> Resolvers:
         return self._resolvers
+
+    @property
+    def filters(self) -> Filters:
+        return self._filters
 
     @property
     def instances(self) -> Entities:
@@ -409,7 +497,11 @@ class LunchService:
 
     def resolve_text(self, entity: LunchEntity) -> str:
         resolver = self.resolvers.for_entity(entity)
-        return resolver(self, entity).resolve_text()
+        log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
+        content = resolver(self, entity).resolve_text()
+        filter = self.filters.for_entity(entity)
+        log.debug(f"[FILTER] Using the text filter: {filter.__name__}")
+        return filter(self, entity).filter(content)
     
     def resolve_html(self, entity: LunchEntity) -> str:
         resolver = self.resolvers.for_entity(entity)
