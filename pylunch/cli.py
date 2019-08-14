@@ -7,7 +7,7 @@ from shutil import copyfile
 
 import click
 
-from pylunch import log_config, lunch, __version__, config
+from pylunch import log_config, lunch, __version__, config, utils
 
 log = logging.getLogger(__name__)
 
@@ -47,22 +47,7 @@ class CliApplication:
         self.restaurants_loader.save(self.service.instances.to_dict())
 
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
-        def _get() -> List['lunch.LunchEntity']:
-            if selectors is None or len(selectors) == 0:
-                return list(self.service.instances.values())
-            if tags:
-                full = " ".join(selectors)
-                return self.service.instances.find_by_tags(full)
-            if fuzzy:
-                return [ self.service.instances.fuz_find_one(select) for select in selectors ]
-            return [ self.service.instances.get(select) for select in selectors ]
-
-        instances = _get()
-        instances = [instance for instance in instances if instance is not None]
-        if with_disabled:
-            return instances
-
-        return [ item for item in instances if item and not item.disabled]
+        return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
  
 
 pass_app = click.make_pass_decorator(CliApplication)
@@ -105,7 +90,7 @@ def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False
 @pass_app
 def cli_info(app: CliApplication, selectors=None, fuzzy=False, tags=False):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
-    print_instances(app.service, instances, printer=lambda _, x: print(x))
+    print_instances(app.service, instances, transform=str)
 
 
 @main_cli.command(name='import', help='Import restaurants')
@@ -306,54 +291,45 @@ def _params_dict(params: List[str]) -> Mapping:
         (key, val) = param.split('=')
         result[key] = val
 
-def print_instances(service: lunch.LunchService, instances, printer=None):
-    printer = printer if printer is not None else print_text
-    if instances is None or not instances:
-        print("Not found any instance")
+def print_instances(service: lunch.LunchService, instances, transform=None):
+    transform = transform if transform is not None else lambda x: resolve_menu(service, x)
+    utils.write_instances(instances, transform=transform, writer=print)
 
-    elif isinstance(instances, list):
-        for instance in instances:
-            if instance is not None:
-                printer(service, instance)
-    else:
-        printer(service, instances)
-
-def print_text(service: lunch.LunchEntity, instance):
-    result = None
+def resolve_menu(service: lunch.LunchEntity, instance):
+    result = _generate_menu_header(instance)
     if service.config.format == 'html':
-        result = service.resolve_html(instance)
+        result += service.resolve_html(instance)
     else:
-        result = service.resolve_text(instance)
-    
-    _header_print(instance)
-    print("\n")
-    print(result)   
+        result += service.resolve_text(instance)
+    return result 
 
-def _header_print(instance):
+def _generate_menu_header(instance):
     name_str = f"{instance.display_name} ({instance.name})"
     tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
-    print_nice_header(name_str, instance.url, tags_str)
+    return generate_nice_header(name_str, instance.url, tags_str)
 
 
-def print_nice_header(*strings):
+def generate_nice_header(*strings):
     def _for_print(max_l, curr, char='='):
-        for i in range(max_l - curr): 
-            print(char, end='')
+        return char * (max_l - curr)
 
     def _print_text(max_l, text):
-        print(f"\n===  {text}", end='')
-        _for_print(max_l, len(text), char=' ') 
-        print("  ===", end='')
+        buffer = ''
+        buffer += f"\n===  {text}"
+        buffer +=_for_print(max_l, len(text), char=' ') 
+        buffer += "  ==="
+        return buffer
 
     def _beg_end_line(max_l):
-        print("")
-        _for_print(max_l + 10, 0)
-
+        return f"\n{_for_print(max_l + 10, 0)}"
+    
     max_len = max(len(text) for text in strings)
-    _beg_end_line(max_len)
+
+    result = _beg_end_line(max_len)
     for text in strings:
-        _print_text(max_len, text)
-    _beg_end_line(max_len)
+        result += _print_text(max_len, text)
+    result += _beg_end_line(max_len)
+    return result + "\n\n"
 
 
 if __name__ == '__main__':
