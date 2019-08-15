@@ -58,7 +58,8 @@ $ pylunch export -f exported.yml
 ```
 
 ## Run the cli tool
-Ktdk also provides a simple cli tool, to run your tests
+
+Hera is a help output with available commands
 
 ```bash
 # Show the help
