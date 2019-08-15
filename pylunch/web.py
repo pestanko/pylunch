@@ -84,18 +84,9 @@ def web_menu():
     return flask.Response(content, mimetype='text/plain')
 
 
-
-
-
-
 ###
 # Helpers
 ### 
-
-
-def print_instances(service: lunch.LunchService, instances, transform=None):
-    transform = transform if transform is not None else lambda x: resolve_menu(service, x)
-    utils.write_instances(instances, transform=transform, writer=print)
 
 def resolve_menu(service: lunch.LunchEntity, instance):
     result = _generate_menu_header(instance)

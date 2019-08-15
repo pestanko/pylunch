@@ -10,6 +10,7 @@ import shutil
 import collections
 import io
 import re
+import locale
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -151,7 +152,13 @@ class DayResolveFilter:
         found = re.search(day, content, re.IGNORECASE)
         if not found:
             log.warning(f"Day \"{day}\" was not found in the content")
-            return None
+            fallback = self._find_pos_content(day_num, content, self.__class__.EN_DAYS)
+            if fallback:
+                log.info(f"Fallback option has been found: {fallback} position")
+                return fallback
+            else:
+                log.warning(f"Fallback failed for {self.entity.name} and day number {day_num}.")
+                return None
         return found.start()
         
 
