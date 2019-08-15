@@ -27,6 +27,11 @@ def make_cfg(level=None):
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
+        'log-file': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'pylunch': {'handlers': ['console'], 'level': lvl},

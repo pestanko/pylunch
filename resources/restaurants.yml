@@ -35,24 +35,27 @@ restaurants:
     display_name: Buddha
     url: 'http://www.indian-restaurant-buddha.cz/index.html'
     selector: '#jidelnilisteklong'
+    filters: [ 'day' ]
     tags: ['city', 'india', 'asia']
 
   himalaya:
     display_name: Himalaya
     url: 'http://www.indian-restaurant-buddha.cz/index.html'
     selector: '#jidelnilisteklong'
+    filters: [ 'day' ]
     tags: ['city', 'india', 'asia']
 
   kytnerka:
     display_name: Na Kytnerce
-    url: 'https://nakytnerce.cz/jidlo/#poledni'
-    selector: '#features-1'
+    url: 'https://www.pivovarskarestauracemoravia.cz/'
+    selector: '#block-dennimenu .active'
     tags: ['rh', 'cz']
 
   rubin:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: '#content #center_pannel'
+    filters: ['day']
     tags: ['rh', 'cz']
 
   krava:
@@ -65,6 +68,7 @@ restaurants:
     display_name: 'Sabaidy'
     url: 'http://www.amphone.eu/restaurace'
     selector: 'li:first-child'
+    filters: ['day']
     tags: ['city', 'asia']
 
   capone:
@@ -77,6 +81,7 @@ restaurants:
     display_name: Beranek
     url: https://www.menicka.cz/6136-pohostinstvi-u-bileho-beranka.html
     selector: '.obsah .menicka'
+    filters: [ 'day' ]
     tags: ['fi', 'cz']
 
   drevak:
@@ -89,6 +94,7 @@ restaurants:
     display_name: Padagali
     url: http://padagali.cz/denni-menu/
     selector: '#main .row__wrapper > div.row'
+    filters: [ 'day' ]
     tags: ['fi', 'india', 'asia']
 
   seminar:
@@ -277,6 +283,7 @@ restaurants:
     display_name: Annapurna
     url: http://www.indicka-restaurace-annapurna.cz/images/tydenijidelnicek/menu.pdf
     tags: ['city', 'ns', 'india', 'asia']
+    filters: [ 'day' ]
     resolver: pdf
   
   avast:

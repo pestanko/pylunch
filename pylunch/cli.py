@@ -80,6 +80,9 @@ def cli_list(app: CliApplication, limit=None):
 @pass_app
 def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
+    if update_cache:
+        for item in app.service.clear_cache(instances):
+            print(f"Udating cache for: {item}")
     print_instances(app.service, instances)
 
 

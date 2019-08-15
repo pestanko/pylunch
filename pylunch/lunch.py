@@ -144,13 +144,13 @@ class DayResolveFilter:
 
     def _find_pos_content(self, day_num, content, days):
         if day_num >= len(days):
-            log.warning("Week day is greater than available days")
+            log.warning(f"Week day \"{day_num}\" is greater than available days {len(days)}")
             return None
 
         day = days[day_num]
         found = re.search(day, content, re.IGNORECASE)
         if not found:
-            log.warning("Day was not found in the content")
+            log.warning(f"Day \"{day}\" was not found in the content")
             return None
         return found.start()
         
@@ -198,10 +198,10 @@ class LunchResolver(AbstractResolver):
     def _make_request(self, **kwargs) -> requests.Response:
         response = requests.get(self.request_url, **kwargs)
         if not response.ok:
-            log.warning(f"[LUNCH] Error[{response.status_code}]: {response.content}")
-            print(f"Error[{response.status_code}]: ", response.content)
+            log.warning(f"[LUNCH] Error[{response.status_code}] ({self.entity.name}): {response.content}")
+            print(f"Error[{response.status_code}] {self.entity.name}: ", response.content)
         else:
-            log.debug(f"[RES] Response [{response.status_code}]: {response.content}")
+            log.debug(f"[RES] Response [{response.status_code}] {self.entity.name}: {response.content}")
         return response
 
     def _parse_response(self, response: Response) -> List[Tag]:
@@ -212,12 +212,20 @@ class LunchResolver(AbstractResolver):
 
     def resolve_text(self) -> str:
         html_string = self.resolve_html()
+        if html_string is None:
+            return None
         return to_text(html_string)
 
     def resolve_html(self) -> str:
         response = self._make_request(**(self.entity.request_params or {}))
         parsed = self._parse_response(response=response)
-        return self.to_string(parsed)
+        content = self.to_string(parsed)
+        if not content:
+            log.warning(f"[HTML] Content is empty for {self.entity.name} - {self.entity.url} ({self.entity.selector})")
+            return None
+        else:
+            log.debug(f"[HTML] Extracted content {self.entity.name}: {content}")
+        return content 
         
     @classmethod
     def to_string(cls, parsed) -> str:
@@ -225,7 +233,7 @@ class LunchResolver(AbstractResolver):
             items = [str(item) for item in parsed]
             return "".join(items)
         else:
-            return parsed.extract()
+            return str(parsed.extract())
 
 
 class ZomatoResolver(AbstractResolver):
@@ -500,6 +508,9 @@ class LunchService:
         resolver = self.resolvers.for_entity(entity)
         log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
         content = resolver(self, entity).resolve_text()
+        if not content:
+            log.warning(f"[SERVICE] No content for {entity.name}")
+            return None
         filters = self.filters.for_entity(entity)
         for flt in filters:
             log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
@@ -529,6 +540,9 @@ class CachedLunchService(LunchService):
             return file.read_text(encoding='utf-8')
 
         content = func(entity)
+        if not content:
+            log.warning(f"[CACHE] No content provided for {entity.name}")
+            return f'No content provided for {entity} - not caching'
         if self.cache_base is not None:
             self._create_cache_for_day()
             log.info(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
