@@ -65,7 +65,7 @@ def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=N
     ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level)
 
 
-@main_cli.command(name='ls', help='List restaurants')
+@main_cli.command(name='ls', help='List all available restaurants')
 @click.option('-l', '--limit', help="Limits number of restaurants to be shown", required=False, default=None)
 @pass_app
 def cli_list(app: CliApplication, limit=None):
@@ -124,7 +124,7 @@ def cli_export(app: CliApplication, file=None):
         copyfile(src=str(app.restaurants_loader.full_path), dst=file)
 
 
-@main_cli.command(name='add', help='Adds new restaurant')
+@main_cli.command(name='add', help='Adds a new restaurant')
 @click.option("-n", "--name", help="Restaurant name", default=False)
 @click.option("-d", "--display-name", help="Restaurant name", default=False)
 @click.option("-u", "--url", help="Restaurant url", default=False)
@@ -182,7 +182,7 @@ def cli_disable(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=Fa
     app.save_restaurants()
 
 
-@main_cli.command(name='edit', help='Edit restaurants')
+@main_cli.command(name='edit', help='Edits restaurants DB file')
 @pass_app
 def cli_edit_restaurants(app: CliApplication):
     cfg = app.restaurants_loader.load()
@@ -193,7 +193,7 @@ def cli_edit_restaurants(app: CliApplication):
         app.restaurants_loader.save(content)
 
 
-@main_cli.command(name='config', help='Print the configuration')
+@main_cli.command(name='config', help='Shows the current configuration')
 @pass_app
 def cli_config(app: CliApplication):
     import yaml
@@ -201,7 +201,7 @@ def cli_config(app: CliApplication):
     print(yaml.safe_dump(dict(Config=cfg)))
 
 
-@main_cli.command(name='cache-clear', help='Clear cache for a day')
+@main_cli.command(name='cache-clear', help='Clear a current cache for a day')
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
@@ -221,7 +221,7 @@ def cli_cache_clear(app: CliApplication, selectors: Tuple[str], fuzzy=False, tag
                 print(f"Clearing: {item}")
 
 
-@main_cli.command(name='cache-content', help='Clear cache for a day')
+@main_cli.command(name='cache-content', help='Show the current cache for a day')
 @pass_app
 def cli_cache_content(app: CliApplication):
     if not app.service.config.use_cache:
@@ -234,7 +234,7 @@ def cli_cache_content(app: CliApplication):
                 print(f"{name} - {path}")
  
             
-@main_cli.command(name='cfg-set', help='Set config value')
+@main_cli.command(name='cfg-set', help='Set a config value in the user configuration')
 @click.argument('name')
 @click.argument('value')
 @pass_app
@@ -244,7 +244,7 @@ def cli_set_config(app: CliApplication, name, value):
     app.config_loader.save(cfg)
 
 
-@main_cli.command(name='cfg-edit', help='Edit configuration')
+@main_cli.command(name='cfg-edit', help='Edit a configuration using the editor (Ex: VIM)')
 @pass_app
 def cli_edit_config(app: CliApplication):
     cfg = app.config_loader.load()
@@ -255,12 +255,12 @@ def cli_edit_config(app: CliApplication):
         app.config_loader.save(content)
 
 
-@main_cli.command(name='console', help='Start the console - IPython')
+@main_cli.command(name='console', help='Start the interactive console (IPython)')
 @pass_app
 def cli_start_console(app: CliApplication):
     try:
         import IPython
-        print("Starting the interactive console - IPython")
+        print("Starting the interactive console using the IPython")
         IPython.embed()
     except ImportError:
         print('\nIPython modeule is not available')

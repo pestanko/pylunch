@@ -9,7 +9,21 @@ with io.open('pylunch/__init__.py', 'rt', encoding='utf8') as f:
 
 long_description = Path('README.md').read_text(encoding='utf-8')
 
-requirements = ['pyyaml', 'click', 'requests', 'coloredlogs', 'python-Levenshtein', 'fuzzywuzzy', 'html2text', 'beautifulsoup4', 'lxml']
+requirements = ['pyyaml', 
+                'click', 
+                'requests', 
+                'coloredlogs', 
+                'python-Levenshtein', 
+                'fuzzywuzzy', 
+                'html2text', 
+                'beautifulsoup4', 
+                'lxml',
+                'pyzomato',
+                'pdfminer-six',
+                'ipython',
+                'flask',
+                ]
+                
 entry_points = {'console_scripts': ['pylunch = pylunch.cli:main_cli', ]}
 extra_requirements = {
     'dev': ['pytest>=3', 'coverage' ],
@@ -21,7 +35,7 @@ setup(name='pylunch',
       description='Internal pylunch cli tool to get lunch info',
       author='Peter Stanko',
       author_email='peter.stanko0@gmail.com',
-      url='https://github.com/pestanko/pylunch',
+      url='https://gitlab.com/pestanko/pylunch',
       packages=find_packages(exclude=("tests",)),
       long_description=long_description,
       long_description_content_type='text/markdown',
