@@ -21,6 +21,7 @@ python-levenshtein = "*"
 pyzomato = "*"
 pdfminer-six = "*"
 ipython = "*"
+flask = "*"
 
 [requires]
 python_version = "3.7"

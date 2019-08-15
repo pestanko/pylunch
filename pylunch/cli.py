@@ -309,30 +309,7 @@ def resolve_menu(service: lunch.LunchEntity, instance):
 def _generate_menu_header(instance):
     name_str = f"{instance.display_name} ({instance.name})"
     tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
-    return generate_nice_header(name_str, instance.url, tags_str)
-
-
-def generate_nice_header(*strings):
-    def _for_print(max_l, curr, char='='):
-        return char * (max_l - curr)
-
-    def _print_text(max_l, text):
-        buffer = ''
-        buffer += f"\n===  {text}"
-        buffer +=_for_print(max_l, len(text), char=' ') 
-        buffer += "  ==="
-        return buffer
-
-    def _beg_end_line(max_l):
-        return f"\n{_for_print(max_l + 10, 0)}"
-    
-    max_len = max(len(text) for text in strings)
-
-    result = _beg_end_line(max_len)
-    for text in strings:
-        result += _print_text(max_len, text)
-    result += _beg_end_line(max_len)
-    return result + "\n\n"
+    return utils.generate_nice_header(name_str, instance.url, tags_str)
 
 
 if __name__ == '__main__':
