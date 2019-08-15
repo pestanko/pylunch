@@ -7,7 +7,7 @@
 
 ### Install the released version
 
-You can install ktdk using the `pip`:
+You can install the `PyLunch` using the `pip`:
 ```bash
 $ pip install pylunch
 ```

@@ -269,12 +269,12 @@ def cli_start_console(app: CliApplication):
 @pass_app
 def cli_start_console(app: CliApplication):
     try:
-        from .telegram_bot import PyLunchTelegramBot
+        from pylunch.telegram_bot import PyLunchTelegramBot
         print("Starting the telegram bot")
         bot = PyLunchTelegramBot(app.service)
         bot.run()
     except ImportError:
-        print('\nIPython modeule is not available')
+        print('\n Telegram bot is not available modeule is not available')
 
 
 """
