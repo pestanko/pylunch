@@ -16,6 +16,8 @@ RESOURCES = base_dir / 'resources'
 APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
 
 class CliApplication:
     def __init__(self, config_dir=None):
@@ -52,7 +54,7 @@ class CliApplication:
 
 pass_app = click.make_pass_decorator(CliApplication)
 
-@click.group(help=f'{APP_NAME} CLI tool')
+@click.group(help=f'{APP_NAME} CLI tool', context_settings=CONTEXT_SETTINGS)
 @click.version_option(version=__version__)
 @click.option('-L', '--log-level', help=f'Set log level (d|i|w|e) - default=w', default=None)
 @click.option('-C', '--no-cache', help=f'Disable cache', is_flag=True, default=False)
