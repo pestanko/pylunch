@@ -24,10 +24,12 @@ class CliApplication:
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
 
-    def init(self, **kwargs) -> 'CliApplication':
+    def init(self, no_zomato=False, **kwargs) -> 'CliApplication':
         if not self.config_loader.base_dir.exists():
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
+        if no_zomato and 'zomato_key' in cfg_dict:
+            del cfg_dict['zomato_key']
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
@@ -58,11 +60,12 @@ pass_app = click.make_pass_decorator(CliApplication)
 @click.option('-C', '--no-cache', help=f'Disable cache', is_flag=True, default=False)
 @click.option('-c', '--config-dir', help=f'Location to the configuration directory', default=None)
 @click.option('-F', '--format', help='Set output format', default=None)
+@click.option('--no-zomato', help='Disable zomato even if enabled', default=False, is_flag=True)
 @click.pass_context
-def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, **kwargs):
+def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, no_zomato=False, **kwargs):
     log_config.load(log_level)
     app = CliApplication(config_dir=config_dir)
-    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level)
+    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level, no_zomato=no_zomato)
 
 
 @main_cli.command(name='ls', help='List all available restaurants')
