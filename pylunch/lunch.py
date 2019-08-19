@@ -132,7 +132,7 @@ class LunchContentFilter:
         return content
 
 class DayResolveFilter:
-    CZ_DAYS = ['Pondelí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+    CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
     EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     def __init__(self, service: 'LunchService', entity: LunchEntity):
