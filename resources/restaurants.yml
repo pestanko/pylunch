@@ -55,7 +55,7 @@ restaurants:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: '#content #center_pannel'
-    filters: ['day']
+    filters: ['day', 'nl']
     tags: ['rh', 'cz']
 
   krava:
@@ -81,20 +81,21 @@ restaurants:
     display_name: Beranek
     url: https://www.menicka.cz/6136-pohostinstvi-u-bileho-beranka.html
     selector: '.obsah .menicka'
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
     tags: ['fi', 'cz']
 
   drevak:
     display_name: Drevak
     url: https://www.udrevaka.cz/
     selector: '#menu .special-menu'
+    filters: [ 'nl' ]
     tags: ['fi', 'cz']
 
   padagali:
     display_name: Padagali
     url: http://padagali.cz/denni-menu/
     selector: '#main .row__wrapper > div.row'
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
     tags: ['fi', 'india', 'asia']
 
   seminar:
@@ -113,6 +114,7 @@ restaurants:
     display_name: Dr Indy
     url: http://www.drindy.cz/
     selector: 'div#day-menu .menu-food'
+    filters: ['nl']
     tags: ['city', 'india', 'truck', 'ns']
 
   varna:
@@ -131,12 +133,14 @@ restaurants:
     display_name: Cattani Jozefska
     url: http://www.cattani.cz/
     selector: '.josefska > .menu'
+    filters: ['nl']
     tags: ['ita', 'city', 'pasta', 'ns']
 
   cattani-veveri:
     display_name: Cattani Veveri
     url: http://www.cattani.cz/
     selector: '.veveri > .menu'
+    filters: ['nl']
     tags: ['ita', 'city', 'pasta', 'gd']
 
   dreveny-vlk:

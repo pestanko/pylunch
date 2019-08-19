@@ -59,7 +59,7 @@ $ pylunch export -f exported.yml
 
 ## Run the cli tool
 
-Hera is a help output with available commands
+Hera is a help output with available commands.
 
 ```bash
 # Show the help

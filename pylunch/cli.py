@@ -26,10 +26,12 @@ class CliApplication:
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
 
-    def init(self, **kwargs) -> 'CliApplication':
+    def init(self, no_zomato=False, **kwargs) -> 'CliApplication':
         if not self.config_loader.base_dir.exists():
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
+        if no_zomato and 'zomato_key' in cfg_dict:
+            del cfg_dict['zomato_key']
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
@@ -60,11 +62,12 @@ pass_app = click.make_pass_decorator(CliApplication)
 @click.option('-C', '--no-cache', help=f'Disable cache', is_flag=True, default=False)
 @click.option('-c', '--config-dir', help=f'Location to the configuration directory', default=None)
 @click.option('-F', '--format', help='Set output format', default=None)
+@click.option('--no-zomato', help='Disable zomato even if enabled', default=False, is_flag=True)
 @click.pass_context
-def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, **kwargs):
+def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, no_zomato=False, **kwargs):
     log_config.load(log_level)
     app = CliApplication(config_dir=config_dir)
-    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level)
+    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level, no_zomato=no_zomato)
 
 
 @main_cli.command(name='ls', help='List all available restaurants')
@@ -78,14 +81,18 @@ def cli_list(app: CliApplication, limit=None):
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.option("-U", "--update-cache", help="Update cache entry", default=False, is_flag=True)
+@click.option("-U", "--update-cache", '--update', help="Update cache entry", default=False, is_flag=True)
+@click.option("--cut-before", help="Remove content before the substring", default=None)
+@click.option("--cut-after", help="Remove content after the substring", default=None)
+@click.option("--no-filters", help="Do not apply filters", default=False, is_flag=True)
+@click.option("-F", "--full", help="Show full output - do not apply day filter", default=False, is_flag=True)
 @pass_app
-def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False):
+def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, **kwargs):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
     if update_cache:
         for item in app.service.clear_cache(instances):
             print(f"Udating cache for: {item}")
-    print_instances(app.service, instances)
+    print_instances(app.service, instances, **kwargs)
 
 
 @main_cli.command(name='info', help='Get info for the restaurant')
@@ -296,16 +303,16 @@ def _params_dict(params: List[str]) -> Mapping:
         (key, val) = param.split('=')
         result[key] = val
 
-def print_instances(service: lunch.LunchService, instances, transform=None):
-    transform = transform if transform is not None else lambda x: resolve_menu(service, x)
+def print_instances(service: lunch.LunchService, instances, transform=None, **kwargs):
+    transform = transform if transform is not None else lambda x: resolve_menu(service, x, **kwargs)
     utils.write_instances(instances, transform=transform, writer=print)
 
-def resolve_menu(service: lunch.LunchEntity, instance):
+def resolve_menu(service: lunch.LunchEntity, instance, **kwargs):
     result = _generate_menu_header(instance)
     if service.config.format == 'html':
-        result += service.resolve_html(instance)
+        result += service.resolve_html(instance, **kwargs)
     else:
-        result += service.resolve_text(instance)
+        result += service.resolve_text(instance, **kwargs)            
     return result 
 
 def _generate_menu_header(instance):
