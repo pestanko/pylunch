@@ -81,7 +81,7 @@ restaurants:
     display_name: Beranek
     url: https://www.menicka.cz/6136-pohostinstvi-u-bileho-beranka.html
     selector: '.obsah .menicka'
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
     tags: ['fi', 'cz']
 
   drevak:

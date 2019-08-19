@@ -76,16 +76,17 @@ def cli_list(app: CliApplication, limit=None):
 @click.argument('selectors', nargs=-1)
 @click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
-@click.option("-U", "--update-cache", help="Update cache entry", default=False, is_flag=True)
+@click.option("-U", "--update-cache", '--update', help="Update cache entry", default=False, is_flag=True)
 @click.option("--cut-before", help="Remove content before the substring", default=None)
 @click.option("--cut-after", help="Remove content after the substring", default=None)
+@click.option("--no-filters", help="Do not apply filters", default=False, is_flag=True)
 @pass_app
-def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, cut_before=None, cut_after=None):
+def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, **kwargs):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
     if update_cache:
         for item in app.service.clear_cache(instances):
             print(f"Udating cache for: {item}")
-    print_instances(app.service, instances)
+    print_instances(app.service, instances, **kwargs)
 
 
 @main_cli.command(name='info', help='Get info for the restaurant')
@@ -296,16 +297,16 @@ def _params_dict(params: List[str]) -> Mapping:
         (key, val) = param.split('=')
         result[key] = val
 
-def print_instances(service: lunch.LunchService, instances, transform=None):
-    transform = transform if transform is not None else lambda x: resolve_menu(service, x)
+def print_instances(service: lunch.LunchService, instances, transform=None, **kwargs):
+    transform = transform if transform is not None else lambda x: resolve_menu(service, x, **kwargs)
     utils.write_instances(instances, transform=transform, writer=print)
 
-def resolve_menu(service: lunch.LunchEntity, instance, cut_before=None, cut_after=None):
+def resolve_menu(service: lunch.LunchEntity, instance, **kwargs):
     result = _generate_menu_header(instance)
     if service.config.format == 'html':
-        result += service.resolve_html(instance)
+        result += service.resolve_html(instance, **kwargs)
     else:
-        result += service.resolve_text(instance)            
+        result += service.resolve_text(instance, **kwargs)            
     return result 
 
 def _generate_menu_header(instance):

@@ -124,6 +124,7 @@ class AbstractResolver:
         return None
 
 class LunchContentFilter:
+    PATTERN = re.compile("(\n+)", flags=re.MULTILINE)
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.entity = entity
         self.service = service
@@ -131,13 +132,14 @@ class LunchContentFilter:
     def filter(self, content: str) -> str:
         return content
 
-class DayResolveFilter:
+class NewLinesFilter(LunchContentFilter):
+    def filter(self, content) -> str:
+        content: str = super().filter(content)
+        return self.__class__.PATTERN.sub("\n", content)
+
+class DayResolveFilter(LunchContentFilter):
     CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
     EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
-    def __init__(self, service: 'LunchService', entity: LunchEntity):
-        self.entity = entity
-        self.service = service
 
     @property
     def _week_day(self) -> int:
@@ -446,7 +448,7 @@ class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver)
-        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter)
+        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
 
@@ -511,20 +513,23 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
-    def resolve_text(self, entity: LunchEntity) -> str:
+    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
         resolver = self.resolvers.for_entity(entity)
         log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
         content = resolver(self, entity).resolve_text()
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
+        # Do not apply filters if no filters
+        if kwargs.get('no_filters'):
+            return content
         filters = self.filters.for_entity(entity)
         for flt in filters:
             log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
             content = flt(self, entity).filter(content)
         return content
     
-    def resolve_html(self, entity: LunchEntity) -> str:
+    def resolve_html(self, entity: LunchEntity, **kwargs) -> str:
         resolver = self.resolvers.for_entity(entity)
         return resolver(self, entity).resolve_html()
 
@@ -534,19 +539,19 @@ class CachedLunchService(LunchService):
         super().__init__(cfg, entities)
         self.cache_base = Path(self.config.cache_dir)
 
-    def resolve_text(self, entity: LunchEntity) -> str:
-        return self._resolve_any(entity, super().resolve_text, ext='txt')
+    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+        return self._resolve_any(entity, super().resolve_text, ext='txt', **kwargs)
 
-    def resolve_html(self, entity: LunchEntity) -> str:
-        return self._resolve_any(entity, super().resolve_html, ext='html')
+    def resolve_html(self, entity: LunchEntity, **kwargs) -> str:
+        return self._resolve_any(entity, super().resolve_html, ext='html', **kwargs)
 
-    def _resolve_any(self, entity: LunchEntity, func, ext: str = None):
+    def _resolve_any(self, entity: LunchEntity, func, ext: str = None, **kwargs):
         file = self._entity_file(entity, ext=ext)
         if file is not None and file.exists():
             log.debug(f"[CACHE] Cache hit for {entity.name}: {file}")
             return file.read_text(encoding='utf-8')
 
-        content = func(entity)
+        content = func(entity, **kwargs)
         if not content:
             log.warning(f"[CACHE] No content provided for {entity.name}")
             return f'No content provided for {entity} - not caching'
