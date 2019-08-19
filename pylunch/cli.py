@@ -80,6 +80,7 @@ def cli_list(app: CliApplication, limit=None):
 @click.option("--cut-before", help="Remove content before the substring", default=None)
 @click.option("--cut-after", help="Remove content after the substring", default=None)
 @click.option("--no-filters", help="Do not apply filters", default=False, is_flag=True)
+@click.option("-F", "--full", help="Show full output - do not apply day filter", default=False, is_flag=True)
 @pass_app
 def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, **kwargs):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)

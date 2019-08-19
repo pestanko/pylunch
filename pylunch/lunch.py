@@ -520,14 +520,22 @@ class LunchService:
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
+
         # Do not apply filters if no filters
         if kwargs.get('no_filters'):
             return content
+        
+        return self._apply_filters(entity, content, **kwargs)
+
+    def _apply_filters(self, entity: 'LunchEntity', content: str, **kwargs):
         filters = self.filters.for_entity(entity)
         for flt in filters:
+            if flt == DayResolveFilter and kwargs.get('full'):
+                log.info("[FILTER] Skip the 'day' filter since full content expected.")
+                continue
             log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
             content = flt(self, entity).filter(content)
-        return content
+        return content 
     
     def resolve_html(self, entity: LunchEntity, **kwargs) -> str:
         resolver = self.resolvers.for_entity(entity)
