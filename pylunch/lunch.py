@@ -131,7 +131,7 @@ class RequestResolver(AbstractResolver):
         return self.entity.url
 
     def resolve(self, **kwargs) -> requests.Response:
-        response = requests.get(self.request_url, **kwargs)
+        response = requests.get(self.request_url, **(self.entity.request_params or {}))
         if not response.ok:
             log.warning(f"[LUNCH] Error[{response.status_code}] ({self.entity.name}): {response.content}")
             print(f"Error[{response.status_code}] {self.entity.name}: ", response.content)
@@ -169,7 +169,7 @@ class CutFilter(LunchContentFilter):
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
             return None
         log.info(f"[CUT] Found for {self.entity.name} suitable day delimiter for {sub} at {pos}")
-        return pos   
+        return pos.start()
 
     def filter(self, content: str, cut_before=None, cut_after=None, **kwargs) -> str:
         if not content:
@@ -221,9 +221,9 @@ class DayResolveFilter(CutFilter):
             return None
 
         day_from = day_from or self._week_day
-        day_to = day_from + 1
-        beg = self.find_day(day_from)
-        end = self.find_day(day_to)
+        day_to = day_to or (day_from + 1)
+        beg = self.find_day(day_from, content)
+        end = self.find_day(day_to, content)
         if beg is None:
             beg = 0
         if end is None:
@@ -309,8 +309,8 @@ class PDFResolver(RequestResolver):
         log.info(f"[PDF] Resolved text: {text}")
         return text
 
-    def resolve_text(self, **kw) -> str:
-        text = self.resolve(kw)
+    def resolve_text(self, **kwargs) -> str:
+        text = self.resolve(**kwargs)
         return f"PDF is available at: {self.entity.url}\n\n{text}" 
 
     def _resolve_text_from_content(self, stream: io.BytesIO):
@@ -461,7 +461,7 @@ class LunchService:
         self._cache: LunchCache = LunchCache(self)
 
     @property
-    def cache(self) -> LunchCache:
+    def cache(self) -> 'LunchCache':
         return self._cache
 
     @property
@@ -621,7 +621,7 @@ class LunchCache:
 
     def _cache_path(self, fragment: Path) -> Path:
         fragment = Path(fragment)
-        return self._cache_path / fragment
+        return self.cache_base / fragment
 
     def _create_dir(self, dir: Path) -> Path:
         dir = Path(dir)
@@ -679,7 +679,7 @@ class LunchCache:
             return
     
         if instances is None:
-            dir = str(self.cache_base / self.for_day(day))
+            dir = str(self._cache_path(self.for_day(day)))
             log.info(f"[CACHE] Removing the directory: {dir}")
             shutil.rmtree(dir, ignore_errors=True)
             return
