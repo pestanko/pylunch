@@ -117,28 +117,102 @@ class AbstractResolver:
         self.service = service
         self.entity = entity
 
-    def resolve_text(self) -> str:
+    def resolve(self, **kwargs):
         return None
 
-    def resolve_html(self) -> str:
+    def resolve_text(self, **kwargs) -> str:
+        content = self.resolve(**kwargs)
+        return None if not content else str(content)
+
+
+class RequestResolver(AbstractResolver):
+    @property
+    def request_url(self) -> str:
+        return self.entity.url
+
+    def resolve(self, **kwargs) -> requests.Response:
+        response = requests.get(self.request_url, **kwargs)
+        if not response.ok:
+            log.warning(f"[LUNCH] Error[{response.status_code}] ({self.entity.name}): {response.content}")
+            print(f"Error[{response.status_code}] {self.entity.name}: ", response.content)
+        else:
+            log.debug(f"[RES] Response [{response.status_code}] {self.entity.name}: {response.content}")
+        return response
+
+    def resolve_text(self, **kwargs) -> str:
+        res = self.resolve(**kwargs)
+        if res.ok:
+            return res.content.decode('utf-8')
         return None
+        
 
 class LunchContentFilter:
-    PATTERN = re.compile("(\n+)", flags=re.MULTILINE)
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.entity = entity
         self.service = service
 
-    def filter(self, content: str) -> str:
+    def filter(self, content: str, **kw) -> str:
         return content
 
 class NewLinesFilter(LunchContentFilter):
-    def filter(self, content) -> str:
+    PATTERN = re.compile("(\n+)", flags=re.MULTILINE)
+    def filter(self, content, **kwargs) -> str:
         content: str = super().filter(content)
         return self.__class__.PATTERN.sub("\n", content)
 
+class CutFilter(LunchContentFilter):
+    def _find_pos(self, content, sub):
+        if sub is None:
+            return None
+        found = re.search(sub, content, re.IGNORECASE)
+        if found is None:
+            log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
+            return None
+        return found   
+
+    def filter(self, content: str, cut_before=None, cut_after=None, **kwargs) -> str:
+        beg = self._find_pos(cut_before)
+        end = self._find_pos(cut_after)
+        if beg is None:
+            beg = 0
+        if end is None:
+            end = len(content)
+        return content[beg:end]
+
+class DayResolveFilter2(CutFilter):
+    CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+    CZ_COL_DAYS = ['Pondeli', 'Utery', 'Streda', 'Ctvrtek', 'Patek', 'Sobota', 'Nedele']
+    EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    @property
+    def _week_day(self) -> int:
+        return datetime.datetime.today().weekday()
+
+    def options(self, day) -> List[str]:
+        day = day
+        opts = [self.entity.days] if self.entity.days is not None else []
+        opts += [self.__class__.CZ_DAYS, self.__class__.EN_DAYS, self.__class__.CZ_COL_DAYS]
+        res = [opt[day] for opt in opts if len(opt) > day]
+        if not res:
+            return None
+        return res
+
+    def find_day(self, day):
+        if day is None:
+            return None
+        day_opts = self.options(day)
+        if not day_opts:
+            log.warning(f"[DAY] No suitable option for a day {day} for entity {self.entity.name}")
+    
+
+    def filter(self, content, day_from=None, day_to=None, **kwargs):
+        if day_da
+        return None
+
+
 class DayResolveFilter(LunchContentFilter):
     CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
+    CZ_COL_DAYS = ['Pondeli', 'Utery', 'Streda', 'Ctvrtek', 'Patek', 'Sobota', 'Nedele']
     EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     @property
@@ -186,47 +260,34 @@ class DayResolveFilter(LunchContentFilter):
             return days
         
         today_num = self._week_day
-        options = [self.__class__.CZ_DAYS, self.__class__.EN_DAYS]
+        options = 
         for option in options:
             if re.search(option[today_num], content, re.IGNORECASE):
                 log.debug(f"[DAYS] Selecting correct days for [{option[today_num]}]: {option}")
                 return option
         return None
 
-    def filter(self, content: str):
+    def filter(self, content: str, **kwargs):
         days = self._select_correct_days(content)
         result = self._parse_by_day(content, days)
         return result
 
 
-class LunchResolver(AbstractResolver):
-    @property
-    def request_url(self) -> str:
-        return self.entity.url
-
-    def _make_request(self, **kwargs) -> requests.Response:
-        response = requests.get(self.request_url, **kwargs)
-        if not response.ok:
-            log.warning(f"[LUNCH] Error[{response.status_code}] ({self.entity.name}): {response.content}")
-            print(f"Error[{response.status_code}] {self.entity.name}: ", response.content)
-        else:
-            log.debug(f"[RES] Response [{response.status_code}] {self.entity.name}: {response.content}")
-        return response
-
+class LunchResolver(RequestResolver):
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
         sub = soap.select(self.entity.selector) if self.entity.selector else soap
         log.info(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
-    def resolve_text(self) -> str:
-        html_string = self.resolve_html()
+    def resolve_text(self, **kwargs) -> str:
+        html_string = self.resolve(**kwargs)
         if html_string is None:
             return None
         return to_text(html_string)
 
-    def resolve_html(self) -> str:
-        response = self._make_request(**(self.entity.request_params or {}))
+    def resolve(self, **kwargs) -> str:
+        response = super().resolve()
         parsed = self._parse_response(response=response)
         content = self.to_string(parsed)
         if not content:
@@ -252,25 +313,18 @@ class ZomatoResolver(AbstractResolver):
     def zomato(self) -> Pyzomato:
         return self.service.zomato
 
-    def resolve_json(self):
+    def make_request(self) -> dict:
+        return self.zomato.getDailyMenu(self.entity.selector)
+
+    def resolve(self, **kwargs) -> dict:
         if self.zomato is None:
             return None
-        content = self.zomato.getDailyMenu(self.entity.selector)
+        content = self.make_request()
         log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
         return content
-    
-    def resolve_html(self) -> str:
-        resolved = self.resolve_json()
-        if resolved is None:
-            return f"<p>{ZomatoResolver.ZOMATO_NOT_ENABLED}</p>"
-        result = "<div>\n"
-        lines = self._make_lines(resolved)
-        for line in lines:
-            result += f"<p>{line}</p>\n"
-        return result + "\n</div>"
 
     def resolve_text(self) -> str:
-        content = self.resolve_json()
+        content = self.resolve()
         if content is None:
             return ZomatoResolver.ZOMATO_NOT_ENABLED
         return "\n".join(self._make_lines(content))
@@ -287,20 +341,15 @@ class ZomatoResolver(AbstractResolver):
         return result
 
 
-class PDFResolver(AbstractResolver):
-    def resolve_pdf(self):
-        response = requests.get(self.entity.url)
+class PDFResolver(RequestResolver):
+    def resolve(self, **kwargs):
+        response =  super().resolve(**kwargs)
         if not response.ok:
             log.error(f"Unnable to get response from: {self.url}")
             return None
         text = self._resolve_text_from_content(io.BytesIO(response.content))
         log.info(f"[PDF] Resolved text: {text}")
         return text
-    
-    def resolve_html(self) -> str:
-        result = "<div>\n"
-        result += f'<a href="{self.entity.url}">{self.entity.display_name}<a>'
-        return result + "\n</div>"
 
     def resolve_text(self) -> str:
         text = self.resolve_pdf()
@@ -447,7 +496,7 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver)
+        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver, request=RequestResolver)
         self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
