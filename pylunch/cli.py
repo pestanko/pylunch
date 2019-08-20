@@ -37,7 +37,7 @@ class CliApplication:
         unwrapped = loaded.get('restaurants') or loaded
         ent = lunch.Entities(**unwrapped)
         
-        self.service = lunch.CachedLunchService(cfg, ent) if cfg.use_cache else lunch.LunchService(cfg, ent)
+        self.service = lunch.LunchService(cfg, ent)
         return self
 
     def _first_run(self):
@@ -49,7 +49,7 @@ class CliApplication:
     def save_restaurants(self):
         log.info("Saving restaurants")
         self.restaurants_loader.save(self.service.instances.to_dict())
-
+    
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
         return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
  
@@ -90,7 +90,7 @@ def cli_list(app: CliApplication, limit=None):
 def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, **kwargs):
     instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
     if update_cache:
-        for item in app.service.clear_cache(instances):
+        for item in app.service.cache.clear(instances):
             print(f"Udating cache for: {item}")
     print_instances(app.service, instances, **kwargs)
 
