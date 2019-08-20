@@ -307,12 +307,13 @@ def print_instances(service: lunch.LunchService, instances, transform=None, **kw
     transform = transform if transform is not None else lambda x: resolve_menu(service, x, **kwargs)
     utils.write_instances(instances, transform=transform, writer=print)
 
-def resolve_menu(service: lunch.LunchEntity, instance, **kwargs):
+def resolve_menu(service: lunch.LunchService, instance: lunch.LunchEntity, **kwargs):
     result = _generate_menu_header(instance)
-    if service.config.format == 'html':
-        result += service.resolve_html(instance, **kwargs)
+    content = service.resolve_text(instance, **kwargs)    
+    if not content:    
+        result += f"No content provided for: {instance.name}"
     else:
-        result += service.resolve_text(instance, **kwargs)            
+        result += content
     return result 
 
 def _generate_menu_header(instance):

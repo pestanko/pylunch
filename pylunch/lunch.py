@@ -235,7 +235,7 @@ class LunchResolver(RequestResolver):
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
         sub = soap.select(self.entity.selector) if self.entity.selector else soap
-        log.info(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
+        log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
     def resolve_text(self, **kwargs) -> str:
@@ -281,8 +281,8 @@ class ZomatoResolver(AbstractResolver):
         log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
         return content
 
-    def resolve_text(self) -> str:
-        content = self.resolve()
+    def resolve_text(self, **kwargs) -> str:
+        content = self.resolve(**kwargs)
         if content is None:
             return ZomatoResolver.ZOMATO_NOT_ENABLED
         return "\n".join(self._make_lines(content))
