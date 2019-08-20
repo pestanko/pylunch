@@ -79,7 +79,6 @@ def cli_list(app: CliApplication, limit=None):
 
 @main_cli.command(name='menu', help='Get menu for a restaurant')
 @click.argument('selectors', nargs=-1)
-@click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
 @click.option("-U", "--update-cache", '--update', help="Update cache entry", default=False, is_flag=True)
 @click.option("--cut-before", help="Remove content before the substring", default=None)
@@ -87,21 +86,38 @@ def cli_list(app: CliApplication, limit=None):
 @click.option("--no-filters", help="Do not apply filters", default=False, is_flag=True)
 @click.option("-F", "--full", help="Show full output - do not apply day filter", default=False, is_flag=True)
 @pass_app
-def cli_menu(app: CliApplication, selectors: Tuple[str], fuzzy=False, tags=False, update_cache=False, **kwargs):
-    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags, with_disabled=False)
+def cli_menu(app: CliApplication, selectors: Tuple[str], tags=False, update_cache=False, **kwargs):
+    instances = app.select_instances(selectors, tags=tags, with_disabled=False)
     if update_cache:
-        for item in app.service.cache.clear(instances):
-            print(f"Udating cache for: {item}")
+        cleared = app.service.cache.clear(instances)
+        if cleared:
+            for item in cleared:
+                print(f"Udating cache for: {item}")
+        else:
+            print("No instance cleared")
     print_instances(app.service, instances, **kwargs)
 
 
+@main_cli.command(name='roll', help='Get random menu for a restaurant')
+@click.argument('selectors', nargs=-1)
+@click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
+@click.option("-l", "--limit", help="Limit number of restaurants (default: 1)", default=1)
+@pass_app
+def cli_roll(app: CliApplication, selectors: Tuple[str], tags=False, limit=1, **kwargs):
+    instances = app.select_instances(selectors, tags=tags, with_disabled=False)
+    if instances:
+        import random
+        selected = random.choices(instances, k=limit)
+        print_instances(app.service, selected, **kwargs)
+    else:
+        print("No instance found :-(")
+
 @main_cli.command(name='info', help='Get info for the restaurant')
 @click.argument('selectors', nargs=-1)
-@click.option("-f", "--fuzzy", help="Fuzzy search the name", default=False, is_flag=True)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
 @pass_app
-def cli_info(app: CliApplication, selectors=None, fuzzy=False, tags=False):
-    instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+def cli_info(app: CliApplication, selectors=None, tags=False):
+    instances = app.select_instances(selectors, tags=tags)
     print_instances(app.service, instances, transform=str)
 
 

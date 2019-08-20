@@ -671,7 +671,7 @@ class LunchCache:
 
         dir = self.for_day(day)
         fdir = self.cache_base / dir
-        return list(*fdir.glob(f"{entity.name}*"))
+        return list(fdir.glob(f"{entity.name}*"))
     
     def clear(self, instances=None, day=None):
         if self.disabled:
