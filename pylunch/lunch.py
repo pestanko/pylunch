@@ -112,6 +112,7 @@ class LunchEntity(collections.MutableMapping):
     def __repr__(self) -> str:
         return str(self.config)
 
+
 class AbstractResolver:
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.service = service
@@ -131,7 +132,11 @@ class RequestResolver(AbstractResolver):
         return self.entity.url
 
     def resolve(self, **kwargs) -> requests.Response:
-        response = requests.get(self.request_url, **(self.entity.request_params or {}))
+        try:
+            response = requests.get(self.request_url, **(self.entity.request_params or {}))
+        except Exception as ex:
+            log.error(f"Request error: {ex}")
+            return None
         if not response.ok:
             log.warning(f"[LUNCH] Error[{response.status_code}] ({self.entity.name}): {response.content}")
             print(f"Error[{response.status_code}] {self.entity.name}: ", response.content)
@@ -246,6 +251,8 @@ class LunchResolver(RequestResolver):
 
     def resolve(self, **kwargs) -> str:
         response = super().resolve()
+        if response is None:
+            return None
         parsed = self._parse_response(response=response)
         content = self.to_string(parsed)
         if not content:
@@ -302,7 +309,7 @@ class ZomatoResolver(AbstractResolver):
 class PDFResolver(RequestResolver):
     def resolve(self, **kwargs):
         response =  super().resolve(**kwargs)
-        if not response.ok:
+        if not response or not response.ok:
             log.error(f"Unnable to get response from: {self.url}")
             return None
         text = self._resolve_text_from_content(io.BytesIO(response.content))
@@ -346,6 +353,8 @@ class LunchCollection(collections.MutableMapping):
 
 class Resolvers(LunchCollection):
     def register(self, name: str, cls: type):
+        if name is None or cls is None:
+            return
         log.info(f"[ADD] Resolver [{name}]: {cls.__name__}")
         self._collection[name] = cls
 
@@ -385,6 +394,8 @@ class Entities(LunchCollection):
             return None
 
     def __setitem__(self, name, config):
+        if name is None:
+            return
         self.register(name=name, **config)
 
     def find_one(self, name: str):
@@ -406,6 +417,8 @@ class Entities(LunchCollection):
 
     def register(self, name: str, url: str, display_name: str=None, tags=None, 
                     selector=None, request_params=None, override=False, **kwargs):
+        if name is None:
+            return
         if name in self.entities.keys():
             if override:
                 log.info(f"[REG] Overriding already existing: {name}")
@@ -525,14 +538,17 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
-    def resolve(self, entity, **kwargs):
+    def _resolve(self, entity, **kwargs):
         resolver = self.resolvers.for_entity(entity)
-        log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
+        log.debug(f"[RESOLVER] Using the resolver for {entity.name}: {resolver.__name__}")
         content = resolver(self, entity).resolve(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
         return content
+
+    def _resolve(self, entity, **kwargs):
+        return self._cache_wrap(entity, func=self._resolve, ext='cache', **kwargs)
 
 
     def _resolve_text(self, entity: LunchEntity, **kwargs) -> str:
@@ -579,6 +595,7 @@ class LunchService:
 class LunchCache:
     def __init__(self, service: 'LunchService'):
         self.service = service
+        log.info(f"[CACHE] Using cache: {self.cache_base}")
 
     @property
     def config(self) -> AppConfig:

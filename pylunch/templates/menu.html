@@ -1,0 +1,53 @@
+{% extends "template.html" %}
+{% block title %}Menu{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+      <!-- Sidebar -->
+      <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>Restaurants Sidebar</h3>
+            </div>
+    
+            <ul class="list-unstyled components">
+                {% for entity in restaurants %}
+                <li class="active">
+                    <a class="menu-item" id="{{entity.name}}_item" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div id="menus" class="container">
+            
+                {% for entity in menus %}
+                <div class="row" id="{{entity.0.name}}_section">
+                    <h3 class="restaurant-header" style="width: 100%"><a href="{{entity.0.url}}">{{entity.0.display_name}}</a></h3>
+                    <div class="restaurant-content" style="width: 100%">
+                        <pre>
+                            {{entity.1}}
+                        </pre>
+                    </div>
+                </div>
+               {% endfor %}
+
+            </div>
+        </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+        $(document).ready(function () {
+
+            $("#sidebar").mCustomScrollbar({
+                    theme: "minimal"
+            });
+        
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+            });
+        
+        });
+</script>
+{% endblock %}

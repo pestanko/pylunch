@@ -5,7 +5,7 @@ import click
 from pathlib import Path
 from typing import List, Optional, Mapping
 
-from pylunch import config, lunch, utils
+from pylunch import config, lunch, utils, __version__, log_config
 
 log = logging.getLogger(__name__)
 
@@ -16,9 +16,9 @@ RESOURCES = base_dir / 'resources'
 APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-app = flask.Flask(__name__, template_folder=tmpl_dir)
-
+app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
 
 class WebApplication:
     def __init__(self, config_dir=None):
@@ -28,6 +28,7 @@ class WebApplication:
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
 
     def init(self, **kwargs) -> 'WebApplication':
+        log_config.load('i')
         if not self.config_loader.base_dir.exists():
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
@@ -35,8 +36,7 @@ class WebApplication:
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
         ent = lunch.Entities(**unwrapped)
-        
-        self.service = lunch.CachedLunchService(cfg, ent) if cfg.use_cache else lunch.LunchService(cfg, ent)
+        self.service = lunch.LunchService(cfg, ent)
         return self
 
     def _first_run(self):
@@ -62,15 +62,22 @@ class WebApplication:
 def parse_request():
     rq = flask.request
     args = rq.args 
-    result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'))
+    result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'html'))
     return result
 
+def gen_context(**kw):
+    return dict(version=__version__, **kw)
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html', **gen_context())
 
 @app.route("/menu")
 def web_menu():
     args = parse_request()
     tags = args['tags']
     selectors = args['selectors']
+    format = args['format']
 
     app = WebApplication.create()
     instances = None
@@ -80,9 +87,13 @@ def web_menu():
         instances = app.select_instances(tags, tags=True)
     else:
         instances = app.select_instances(selectors=None)
-    content = "\n".join(resolve_menu(app.service, inst) for inst in instances)
-    return flask.Response(content, mimetype='text/plain')
-
+    if format is None or format.lower() == 'text':
+        content = "\n".join(resolve_menu(app.service, inst) for inst in instances)
+        return flask.Response(content, mimetype='text/plain')
+    else:
+        menus = [(restaurant, app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
+        context = gen_context(restaurants=instances, menus=menus)
+        return flask.render_template('menu.html', **context)
 
 ###
 # Helpers
@@ -90,10 +101,7 @@ def web_menu():
 
 def resolve_menu(service: lunch.LunchEntity, instance):
     result = _generate_menu_header(instance)
-    if service.config.format == 'html':
-        result += service.resolve_html(instance)
-    else:
-        result += service.resolve_text(instance)
+    result += service.resolve_text(instance)
     return result 
 
 def _generate_menu_header(instance):
