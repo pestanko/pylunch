@@ -161,16 +161,19 @@ class NewLinesFilter(LunchContentFilter):
         return self.__class__.PATTERN.sub("\n", content)
 
 class CutFilter(LunchContentFilter):
-    def _find_pos(self, content, sub):
-        if sub is None:
+    def _find_pos(self, content, sub) -> int:
+        if sub is None or content is None:
             return None
-        found = re.search(sub, content, re.IGNORECASE)
-        if found is None:
+        pos = re.search(sub, content, re.IGNORECASE)
+        if pos is None:
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
             return None
-        return found   
+        log.info(f"[CUT] Found for {self.entity.name} suitable day delimiter for {sub} at {pos}")
+        return pos   
 
     def filter(self, content: str, cut_before=None, cut_after=None, **kwargs) -> str:
+        if not content:
+            return None
         beg = self._find_pos(cut_before)
         end = self._find_pos(cut_after)
         if beg is None:
@@ -179,10 +182,12 @@ class CutFilter(LunchContentFilter):
             end = len(content)
         return content[beg:end]
 
-class DayResolveFilter2(CutFilter):
-    CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
-    CZ_COL_DAYS = ['Pondeli', 'Utery', 'Streda', 'Ctvrtek', 'Patek', 'Sobota', 'Nedele']
-    EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+class DayResolveFilter(CutFilter):
+    DAYS = [
+        ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle'],
+        ['Pondeli', 'Utery', 'Streda', 'Ctvrtek', 'Patek', 'Sobota', 'Nedele'],
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    ]
 
     @property
     def _week_day(self) -> int:
@@ -191,86 +196,39 @@ class DayResolveFilter2(CutFilter):
     def options(self, day) -> List[str]:
         day = day
         opts = [self.entity.days] if self.entity.days is not None else []
-        opts += [self.__class__.CZ_DAYS, self.__class__.EN_DAYS, self.__class__.CZ_COL_DAYS]
+        opts += self.__class__.DAYS
         res = [opt[day] for opt in opts if len(opt) > day]
         if not res:
             return None
         return res
 
-    def find_day(self, day):
-        if day is None:
+    def find_day(self, day, content):
+        if day is None or content is None:
             return None
         day_opts = self.options(day)
         if not day_opts:
             log.warning(f"[DAY] No suitable option for a day {day} for entity {self.entity.name}")
-    
+        for opt in day_opts:
+            pos = self._find_pos(content, opt)
+            if pos is not None:
+                log.info(f"[DAY] Found for {self.entity.name} suitable day delimiter for a day {day}: {opt} at {pos}")
+                return pos
+        return None
+        
 
     def filter(self, content, day_from=None, day_to=None, **kwargs):
-        if day_da
-        return None
-
-
-class DayResolveFilter(LunchContentFilter):
-    CZ_DAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
-    CZ_COL_DAYS = ['Pondeli', 'Utery', 'Streda', 'Ctvrtek', 'Patek', 'Sobota', 'Nedele']
-    EN_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-
-    @property
-    def _week_day(self) -> int:
-        return datetime.datetime.today().weekday()
-
-    def _find_pos_content(self, day_num, content, days):
-        if day_num >= len(days):
-            log.warning(f"Week day \"{day_num}\" is greater than available days {len(days)}")
+        if not content:
             return None
 
-        day = days[day_num]
-        found = re.search(day, content, re.IGNORECASE)
-        if not found:
-            log.warning(f"Day \"{day}\" was not found in the content")
-            fallback = self._find_pos_content(day_num, content, self.__class__.EN_DAYS)
-            if fallback:
-                log.info(f"Fallback option has been found: {fallback} position")
-                return fallback
-            else:
-                log.warning(f"Fallback failed for {self.entity.name} and day number {day_num}.")
-                return None
-        return found.start()
-        
-
-    def _parse_by_day(self, content: str, days: List[str]) -> str:
-        if not days:
-            log.debug("[FILTER] No days selected - sending original content")
-            return content
-        start = self._find_pos_content(self._week_day, content, days)
-        if start is None:
-            log.warning("[FILTER] Unable to find begging of the day, sending original conent")
-            return content
-        end = self._find_pos_content(self._week_day + 1, content, days)
+        day_from = day_from or self._week_day
+        day_to = day_from + 1
+        beg = self.find_day(day_from)
+        end = self.find_day(day_to)
+        if beg is None:
+            beg = 0
         if end is None:
-            log.debug(f"[FILTER] Sending content from {start} to the end of the document.")
-            return content[start:]
-        log.debug(f"[FILTER] Sending content from {start} to {end}.")
-        return content[start:end]
-
-
-    def _select_correct_days(self, content: str):
-        days = self.entity.days
-        if days:
-            return days
-        
-        today_num = self._week_day
-        options = 
-        for option in options:
-            if re.search(option[today_num], content, re.IGNORECASE):
-                log.debug(f"[DAYS] Selecting correct days for [{option[today_num]}]: {option}")
-                return option
-        return None
-
-    def filter(self, content: str, **kwargs):
-        days = self._select_correct_days(content)
-        result = self._parse_by_day(content, days)
-        return result
+            end = len(content)
+        return content[beg:end]
 
 
 class LunchResolver(RequestResolver):
@@ -351,8 +309,8 @@ class PDFResolver(RequestResolver):
         log.info(f"[PDF] Resolved text: {text}")
         return text
 
-    def resolve_text(self) -> str:
-        text = self.resolve_pdf()
+    def resolve_text(self, **kw) -> str:
+        text = self.resolve(kw)
         return f"PDF is available at: {self.entity.url}\n\n{text}" 
 
     def _resolve_text_from_content(self, stream: io.BytesIO):
@@ -500,6 +458,11 @@ class LunchService:
         self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
+        self._cache: LunchCache = LunchCache(self)
+
+    @property
+    def cache(self) -> LunchCache:
+        return self._cache
 
     @property
     def zomato(self) -> Pyzomato:
@@ -562,10 +525,20 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
-    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+    def resolve(self, entity, **kwargs):
         resolver = self.resolvers.for_entity(entity)
         log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
-        content = resolver(self, entity).resolve_text()
+        content = resolver(self, entity).resolve(**kwargs)
+        if not content:
+            log.warning(f"[SERVICE] No content for {entity.name}")
+            return None
+        return content
+
+
+    def _resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+        resolver = self.resolvers.for_entity(entity)
+        log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
+        content = resolver(self, entity).resolve_text(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
@@ -576,6 +549,22 @@ class LunchService:
         
         return self._apply_filters(entity, content, **kwargs)
 
+    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+        return self._cache_wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
+
+    def _cache_wrap(self, entity: LunchEntity, func, day=None, ext=None, suffix=None, **kwargs) -> str:
+        if not self.cache.enabled:
+            return func(entity=entity, **kwargs)
+
+        cached = self.cache.get_entity(entity, day=day, ext=ext, suffix=suffix)
+        if cached:
+            return cached
+        
+        content = func(entity=entity, **kwargs)
+        if content:
+            self.cache.store_entity(entity, content=content, ext=ext, suffix=suffix)
+        return content
+
     def _apply_filters(self, entity: 'LunchEntity', content: str, **kwargs):
         filters = self.filters.for_entity(entity)
         for flt in filters:
@@ -584,47 +573,61 @@ class LunchService:
                 continue
             log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
             content = flt(self, entity).filter(content)
-        return content 
-    
-    def resolve_html(self, entity: LunchEntity, **kwargs) -> str:
-        resolver = self.resolvers.for_entity(entity)
-        return resolver(self, entity).resolve_html()
-
-
-class CachedLunchService(LunchService):
-    def __init__(self, cfg: AppConfig, entities: Entities):
-        super().__init__(cfg, entities)
-        self.cache_base = Path(self.config.cache_dir)
-
-    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
-        return self._resolve_any(entity, super().resolve_text, ext='txt', **kwargs)
-
-    def resolve_html(self, entity: LunchEntity, **kwargs) -> str:
-        return self._resolve_any(entity, super().resolve_html, ext='html', **kwargs)
-
-    def _resolve_any(self, entity: LunchEntity, func, ext: str = None, **kwargs):
-        file = self._entity_file(entity, ext=ext)
-        if file is not None and file.exists():
-            log.debug(f"[CACHE] Cache hit for {entity.name}: {file}")
-            return file.read_text(encoding='utf-8')
-
-        content = func(entity, **kwargs)
-        if not content:
-            log.warning(f"[CACHE] No content provided for {entity.name}")
-            return f'No content provided for {entity} - not caching'
-        if self.cache_base is not None:
-            self._create_cache_for_day()
-            log.info(f"[CACHE] Writing \"{entity.name}\" to cache: {file}")
-            file.write_text(str(content), encoding='utf-8')
         return content
 
-    def _create_cache_for_day(self, day: str=None) -> Path:
-        """
-        Expected format: YYYY-MM-DD
-        """
-        if not self._cache().exists():
-            self._cache().mkdir(parents=True)
-        return self._cache
+
+class LunchCache:
+    def __init__(self, service: 'LunchService'):
+        self.service = service
+
+    @property
+    def config(self) -> AppConfig:
+        return self.service.config
+
+    @property
+    def enabled(self) -> bool:
+        return not self.disabled
+    @property
+    def disabled(self) -> bool:
+        return self.config.get('no_cache', False) or self.cache_base is None
+
+
+    @property
+    def cache_base(self) -> Path:
+        return Path(self.config.cache_dir)
+
+    def save(self, path: Path, content):
+        if self.disabled:
+            log.info(f"[CACHE] Cache is not enabled or cache dir not set - not saving")
+            return
+
+        if content is None:
+            log.warning(f"[CACHE] No content provided - not saving: {path}")
+        
+        log.info(f"[CACHE] Writing content to cache: {path}")
+        fp: Path = self._cache_path(path)
+        self._create_dir(fp.parent)
+        fp.write_text(str(content), encoding='utf-8')
+
+    def get(self, path: Path) -> str:
+        if self.disabled:
+            log.debug(f"[CACHE] Cache is not enabled or cache dir not set - no content")
+            return None
+        fp: Path = self._cache_path(path)
+        if not fp.exists():
+            log.debug(f"[CACHE] Cache for item not exists: {fp}")
+            return None
+        return fp.read_text(encoding='utf-8')
+
+    def _cache_path(self, fragment: Path) -> Path:
+        fragment = Path(fragment)
+        return self._cache_path / fragment
+
+    def _create_dir(self, dir: Path) -> Path:
+        dir = Path(dir)
+        if not dir.exists():
+            dir.mkdir(parents=True)
+        return dir
 
     @property
     def _today_date(self) -> str:
@@ -633,40 +636,59 @@ class CachedLunchService(LunchService):
     def _cache(self, date=None) -> Optional[Path]:
         if self.cache_base is None:
             return None
-        return self.cache_base / (self._today_date if date is None else date)
+        return Path(self._today_date if date is None else date)
 
-    def _entity_file(self, entity: LunchEntity, ext=None) -> Path:
-        ext = ext if ext is not None else 'txt'
-        if self.cache_base is None:
-            return None
-        return self._cache() / f"{entity.name}.{ext}"
+    def for_day(self, day: str=None) -> Path:
+        if day is None:
+            day = self._today_date
+        return Path(day)
 
-    def clear_cache(self, lst: List[LunchEntity] = None, full=False):
-        cache_dir = self._cache() if not full else self.cache_base
-        if not lst:
-            log.info(f"Cleaning cache: {cache_dir}")
-            shutil.rmtree(str(cache_dir), True)
-            return [cache_dir]
-        else:
-            return self._clear_items(cache_dir, lst)
+    def create_fragment(self, entity: LunchEntity, day=None, suffix=None, ext='txt') -> Path:
+        file_name = entity.name
+        if suffix is not None:
+            file_name += "-" + suffix
+        return self.for_day(day) / f'{file_name}.{ext}' 
     
-    def _clear_items(self, base_dir, lst) -> List:
-        result = []
-        for item in lst:
-            paths: List[Path] = base_dir.glob(f"{item.name}.*")
-            for path in paths:
-                log.info(f"[CACHE] Removing {item.name}: {path}")
-                path.unlink()
-                result.append(path)
-        return result
+    def store_entity(self, entity: LunchEntity, content: str, suffix=None, day=None, ext='txt'):
+        fragment = self.create_fragment(entity, day=day, suffix=None, ext=ext)
+        self.save(fragment, content)
 
-    def cache_content(self, lst: List[LunchEntity] = None) -> Mapping:
-        base = self._cache()
-        log.debug(f"[CACHE] Base: {base}")
-        result =  { name: list(str(pth) for pth in base.glob(f'{entity.name}.*')) for (name, entity) in self.instances.items() }
-        log.debug(f"[CACHE] Content: {result}")
-        return result
+    def get_entity(self, entity: LunchEntity, day=None, suffix=None, ext='txt'):
+        if self.disabled:
+            log.info("[CACHE] Cache is not enabled.")
+            return None
+        fragment = self.create_fragment(entity, day=day, suffix=suffix, ext=ext)
+        log.info(f"[CACHE] Cache for entity {entity.name}: {fragment}")
+        content = self.get(fragment)
+        if not content:
+            log.debug(f"[CACHE] No content for {entity.name} - {fragment}")
+        return content if content else None
+
+    def paths_for_entity(self, entity: LunchEntity, day=None):
+        if self.disabled:
+            log.info("[CACHE] Cache is not enabled.")
+            return None
+
+        dir = self.for_day(day)
+        fdir = self.cache_base / dir
+        return list(*fdir.glob(f"{entity.name}*"))
+    
+    def clear(self, instances=None, day=None):
+        if self.disabled:
+            log.info("[CACHE] Cache is not enabled.")
+            return
+    
+        if instances is None:
+            dir = str(self.cache_base / self.for_day(day))
+            log.info(f"[CACHE] Removing the directory: {dir}")
+            shutil.rmtree(dir, ignore_errors=True)
+            return
         
+        for inst in instances:
+            files = self.paths_for_entity(inst, day=day)
+            for file in files:
+                file.unlink()
+            
 
 
 def to_text(content):
