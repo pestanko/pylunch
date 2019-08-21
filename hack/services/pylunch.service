@@ -1,6 +1,6 @@
 [Unit]
 Description=PyLunch Gunicorn server
-Requires=gunicorn.socket
+Requires=pylunch.socket
 After=network.target
 
 [Service]
