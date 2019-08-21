@@ -9,6 +9,7 @@ import datetime
 import shutil
 import collections
 import io
+import os
 import re
 import locale
 from bs4 import BeautifulSoup, Tag
@@ -95,6 +96,7 @@ class LunchEntity(collections.MutableMapping):
 
         if self.display_name:
             result += f" ({self.display_name})"
+
         if self.tags:
             result += f" {self.tags}"
         
@@ -112,26 +114,49 @@ class LunchEntity(collections.MutableMapping):
     def __repr__(self) -> str:
         return str(self.config)
 
+######
+# Resolvers
+######
+
 
 class AbstractResolver:
+    CACHE_EXT='txt'
+    CACHE_SUFFIX=None
+
     def __init__(self, service: 'LunchService', entity: LunchEntity):
         self.service = service
         self.entity = entity
 
-    def resolve(self, **kwargs):
-        return None
+    def resolve(self, day=None, **kwargs) -> Any:
+        cls = self.__class__
+        log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
+        try:
+            suffix = cls.CACHE_SUFFIX or cls.__name__
+            return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT, suffix=suffix)
+            #return self._resolve(**kwargs)
+        except Exception as ex:
+            log.error(f"[RESOLV] Resolved error {cls.__name__}: {ex}", exc_info=True)
+            return None
 
     def resolve_text(self, **kwargs) -> str:
         content = self.resolve(**kwargs)
         return None if not content else str(content)
 
+    def _resolve(**kwargs) -> Any:
+        """ This method should be overriden - abstract method
+        """
+        return None
+
 
 class RequestResolver(AbstractResolver):
+    CACHE_EXT='dat'
+    CACHE_SUFFIX='raw-request'
+
     @property
     def request_url(self) -> str:
         return self.entity.url
 
-    def resolve(self, **kwargs) -> requests.Response:
+    def _resolve(self, **kwargs) -> requests.Response:
         try:
             response = requests.get(self.request_url, **(self.entity.request_params or {}))
         except Exception as ex:
@@ -149,7 +174,115 @@ class RequestResolver(AbstractResolver):
         if res.ok:
             return res.content.decode('utf-8')
         return None
+
+
+class HtmlResolver(RequestResolver):
+    CACHE_EXT='html'
+    CACHE_SUFFIX='html'
+
+    def _parse_response(self, response: Response) -> List[Tag]:
+        soap = BeautifulSoup(response.content, "lxml")
+        sub = soap.select(self.entity.selector) if self.entity.selector else soap
+        log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
+        return sub
+
+    def resolve_text(self, **kwargs) -> str:
+        html_string = self.resolve(**kwargs)
+        if html_string is None:
+            return None
+        return to_text(html_string)
+
+    def _resolve(self, **kwargs) -> str:
+        response = super()._resolve(**kwargs)
+        if response is None:
+            return None
+        parsed = self._parse_response(response=response)
+        content = self.to_string(parsed)
+        if not content:
+            log.warning(f"[HTML] Content is empty for {self.entity.name} - {self.entity.url} ({self.entity.selector})")
+            return None
+        else:
+            log.debug(f"[HTML] Extracted content {self.entity.name}: {content}")
+        return content 
         
+    @classmethod
+    def to_string(cls, parsed) -> str:
+        if isinstance(parsed, list):
+            items = [str(item) for item in parsed]
+            return "".join(items)
+        else:
+            return str(parsed.extract())
+
+
+class ZomatoResolver(AbstractResolver):
+    CACHE_EXT='json'
+    CACHE_SUFFIX='zomato'
+    ZOMATO_NOT_ENABLED="""Zomato key is not set, please get the zomato key 
+                        and set add it to the configuration as property `zomato_key`."""
+    @property
+    def zomato(self) -> Pyzomato:
+        return self.service.zomato
+
+    def make_request(self) -> dict:
+        return self.zomato.getDailyMenu(self.entity.selector)
+
+    def _resolve(self, **kwargs) -> dict:
+        if self.zomato is None:
+            return None
+        content = self.make_request()
+        log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
+        return content
+
+    def resolve_text(self, **kwargs) -> str:
+        content = self.resolve(**kwargs)
+        if content is None:
+            return ZomatoResolver.ZOMATO_NOT_ENABLED
+        return "\n".join(self._make_lines(content))
+
+    def _make_lines(self, content: dict) -> list:
+        result = []
+        menus = content['daily_menus']
+        for menu in menus:
+            menu = menu.get('daily_menu')
+            dishes = menu['dishes']
+            for dish in dishes:
+                dish = dish['dish']
+                result.append(f"{dish['name']} - {dish['price']}")
+        return result
+
+
+class PDFResolver(RequestResolver):
+    CACHE_EXT='pdf'
+    CACHE_SUFFIX='pdf'
+
+    def _resolve(self, **kwargs):
+        response =  super()._resolve(**kwargs)
+        if not response or not response.ok:
+            log.error(f"Unnable to get response from: {self.url}")
+            return None
+        text = self._resolve_text_from_content(io.BytesIO(response.content))
+        log.info(f"[PDF] Resolved text: {text}")
+        return text
+
+    def resolve_text(self, **kwargs) -> str:
+        text = self.resolve(**kwargs)
+        return f"PDF is available at: {self.entity.url}\n\n{text}" 
+
+    def _resolve_text_from_content(self, stream: io.BytesIO):
+        out = io.BytesIO()
+        laparams = pdfminer.layout.LAParams()
+        for param in ("all_texts", "detect_vertical", "word_margin", "char_margin", "line_margin", "boxes_flow"):
+            paramv = locals().get(param, None)
+            if paramv is not None:
+                setattr(laparams, param, paramv)
+
+        high_level.extract_text_to_fp(stream, outfp=out, laparams=laparams)
+        return out.getvalue().decode('utf-8')
+
+
+######
+# Filters
+######
 
 class LunchContentFilter:
     def __init__(self, service: 'LunchService', entity: LunchEntity):
@@ -186,6 +319,7 @@ class CutFilter(LunchContentFilter):
         if end is None:
             end = len(content)
         return content[beg:end]
+
 
 class DayResolveFilter(CutFilter):
     DAYS = [
@@ -235,102 +369,6 @@ class DayResolveFilter(CutFilter):
             end = len(content)
         return content[beg:end]
 
-
-class LunchResolver(RequestResolver):
-    def _parse_response(self, response: Response) -> List[Tag]:
-        soap = BeautifulSoup(response.content, "lxml")
-        sub = soap.select(self.entity.selector) if self.entity.selector else soap
-        log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
-        return sub
-
-    def resolve_text(self, **kwargs) -> str:
-        html_string = self.resolve(**kwargs)
-        if html_string is None:
-            return None
-        return to_text(html_string)
-
-    def resolve(self, **kwargs) -> str:
-        response = super().resolve()
-        if response is None:
-            return None
-        parsed = self._parse_response(response=response)
-        content = self.to_string(parsed)
-        if not content:
-            log.warning(f"[HTML] Content is empty for {self.entity.name} - {self.entity.url} ({self.entity.selector})")
-            return None
-        else:
-            log.debug(f"[HTML] Extracted content {self.entity.name}: {content}")
-        return content 
-        
-    @classmethod
-    def to_string(cls, parsed) -> str:
-        if isinstance(parsed, list):
-            items = [str(item) for item in parsed]
-            return "".join(items)
-        else:
-            return str(parsed.extract())
-
-
-class ZomatoResolver(AbstractResolver):
-    ZOMATO_NOT_ENABLED="""Zomato key is not set, please get the zomato key 
-                        and set add it to the configuration as property `zomato_key`."""
-    @property
-    def zomato(self) -> Pyzomato:
-        return self.service.zomato
-
-    def make_request(self) -> dict:
-        return self.zomato.getDailyMenu(self.entity.selector)
-
-    def resolve(self, **kwargs) -> dict:
-        if self.zomato is None:
-            return None
-        content = self.make_request()
-        log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
-        return content
-
-    def resolve_text(self, **kwargs) -> str:
-        content = self.resolve(**kwargs)
-        if content is None:
-            return ZomatoResolver.ZOMATO_NOT_ENABLED
-        return "\n".join(self._make_lines(content))
-
-    def _make_lines(self, content: dict) -> list:
-        result = []
-        menus = content['daily_menus']
-        for menu in menus:
-            menu = menu.get('daily_menu')
-            dishes = menu['dishes']
-            for dish in dishes:
-                dish = dish['dish']
-                result.append(f"{dish['name']} - {dish['price']}")
-        return result
-
-
-class PDFResolver(RequestResolver):
-    def resolve(self, **kwargs):
-        response =  super().resolve(**kwargs)
-        if not response or not response.ok:
-            log.error(f"Unnable to get response from: {self.url}")
-            return None
-        text = self._resolve_text_from_content(io.BytesIO(response.content))
-        log.info(f"[PDF] Resolved text: {text}")
-        return text
-
-    def resolve_text(self, **kwargs) -> str:
-        text = self.resolve(**kwargs)
-        return f"PDF is available at: {self.entity.url}\n\n{text}" 
-
-    def _resolve_text_from_content(self, stream: io.BytesIO):
-        out = io.BytesIO()
-        laparams = pdfminer.layout.LAParams()
-        for param in ("all_texts", "detect_vertical", "word_margin", "char_margin", "line_margin", "boxes_flow"):
-            paramv = locals().get(param, None)
-            if paramv is not None:
-                setattr(laparams, param, paramv)
-
-        high_level.extract_text_to_fp(stream, outfp=out, laparams=laparams)
-        return out.getvalue().decode('utf-8')
-
     
 class LunchCollection(collections.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
@@ -351,6 +389,8 @@ class LunchCollection(collections.MutableMapping):
     def __len__(self):
          return len(self.collection) 
 
+
+
 class Resolvers(LunchCollection):
     def register(self, name: str, cls: type):
         if name is None or cls is None:
@@ -359,9 +399,9 @@ class Resolvers(LunchCollection):
         self._collection[name] = cls
 
     def get(self, name: str) -> type:
-        return self._collection.get(name, LunchResolver)
+        return self._collection.get(name, HtmlResolver)
 
-    def for_entity(self, entity: LunchEntity) -> LunchResolver:
+    def for_entity(self, entity: LunchEntity) -> HtmlResolver:
         return self.get(entity.resolver)
 
 class Filters(LunchCollection):
@@ -467,7 +507,7 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=LunchResolver, zomato=ZomatoResolver, pdf=PDFResolver, request=RequestResolver)
+        self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, pdf=PDFResolver, request=RequestResolver)
         self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
@@ -566,20 +606,7 @@ class LunchService:
         return self._apply_filters(entity, content, **kwargs)
 
     def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
-        return self._cache_wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
-
-    def _cache_wrap(self, entity: LunchEntity, func, day=None, ext=None, suffix=None, **kwargs) -> str:
-        if not self.cache.enabled:
-            return func(entity=entity, **kwargs)
-
-        cached = self.cache.get_entity(entity, day=day, ext=ext, suffix=suffix)
-        if cached:
-            return cached
-        
-        content = func(entity=entity, **kwargs)
-        if content:
-            self.cache.store_entity(entity, content=content, ext=ext, suffix=suffix)
-        return content
+        return self.cache.wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
 
     def _apply_filters(self, entity: 'LunchEntity', content: str, **kwargs):
         filters = self.filters.for_entity(entity)
@@ -705,9 +732,31 @@ class LunchCache:
             files = self.paths_for_entity(inst, day=day)
             for file in files:
                 file.unlink()
+
+    def wrap(self, entity: LunchEntity, func, day=None, ext=None, suffix=None, **kwargs) -> str:
+        if not self.enabled:
+            return func(entity=entity, **kwargs)
+
+        cached = self.get_entity(entity, day=day, ext=ext, suffix=suffix)
+        if cached:
+            return cached
+        
+        content = func(entity=entity, **kwargs)
+        if content:
+            self.store_entity(entity, content=content, ext=ext, suffix=suffix)
+        return content
+
+    def content(self, day=None):
+        if self.disabled:
+            return None
+
+        day_path = self.for_day(day=day)
+        log.info(f"[CACHE] Cache content for {day_path}: {self.cache_base / day_path}")
+        full = str(self.cache_base / day_path)
+        return list(os.listdir(full))
+        
+
             
-
-
 def to_text(content):
     h = html2text.HTML2Text()
     h.ignore_links = True

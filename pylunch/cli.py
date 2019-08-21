@@ -236,14 +236,13 @@ def cli_cache_clear(app: CliApplication, selectors: Tuple[str], fuzzy=False, tag
         print("Not using the cache - no action.")
         return
     
-    if isinstance(app.service, lunch.CachedLunchService):
-        if not selectors:
-            for item in app.service.clear_cache():
-                print(f"Clearing: {item}")
-        else: 
-            instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
-            for item in app.service.clear_cache(instances):
-                print(f"Clearing: {item}")
+    if not selectors:
+        for item in app.service.cache.clear():
+            print(f"Clearing: {item}")
+    else: 
+        instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
+        for item in app.service.cache.clear(instances):
+            print(f"Clearing: {item}")
 
 
 @main_cli.command(name='cache-content', help='Show the current cache for a day')
@@ -253,10 +252,12 @@ def cli_cache_content(app: CliApplication):
         print("Not using the cache - no action.")
         return
 
-    if isinstance(app.service, lunch.CachedLunchService):
-        for (name, cache_paths) in app.service.cache_content().items():
-            for path in cache_paths:
-                print(f"{name} - {path}")
+    content =  app.service.cache.content()
+    if not content:
+        print("No content in cache for today")
+    else:
+        for path in content:
+            print(path)
  
             
 @main_cli.command(name='cfg-set', help='Set a config value in the user configuration')
