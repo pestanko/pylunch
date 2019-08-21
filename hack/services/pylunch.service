@@ -1,0 +1,20 @@
+[Unit]
+Description=PyLunch Gunicorn server
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+PIDFile=/run/pylunch/pid
+User=pstanko
+Group=pstanko
+EnvironmentFile=/etc/conf.d/pylunch
+RuntimeDirectory=pylunch
+WorkingDirectory=/home/pstanko/src/pylunch
+ExecStart=/usr/local/bin/pipenv run gunicorn --workers 3 --pid /run/pylunch/pid   \
+          --bind unix:/run/pylunch/socket "pylunch.web:app"
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
