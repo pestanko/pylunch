@@ -1,0 +1,20 @@
+{% extends "template.html" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+            <h1 class="row">Error {{code}}</h1>
+            <p class="important row">
+                An error has occured: {{message}}
+            </p>
+
+            <pre class="row" style="width: 100%">
+                {{stacktrace}}
+            </pre>
+    </div>
+{% endblock %}

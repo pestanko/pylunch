@@ -19,8 +19,11 @@ tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
+app.jinja_env.auto_reload = True
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 class WebApplication:
+    INSTANCE = None
     def __init__(self, config_dir=None):
         self.service: lunch.LunchService = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
@@ -35,6 +38,7 @@ class WebApplication:
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
+        log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
         ent = lunch.Entities(**unwrapped)
         self.service = lunch.LunchService(cfg, ent)
         return self
@@ -53,28 +57,54 @@ class WebApplication:
         return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
  
     @classmethod
-    def create(cls) -> 'WebApplication':
-        app = cls(config_dir=CONFIG_DIR)
-        app.init()
-        return app
+    def get(cls) -> 'WebApplication':
+        if cls.INSTANCE is None:
+            cls.INSTANCE = cls(config_dir=CONFIG_DIR)
+            cls.INSTANCE.init()
+        return cls.INSTANCE
 
 
 def parse_request():
     rq = flask.request
     args = rq.args 
-    result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'html'))
+    result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'html'), roll=args.get('roll'))
     return result
 
 def gen_context(**kw):
     return dict(version=__version__, **kw)
 
+def roll_filter(items, roll):
+    if not items:
+        return []
+    if not roll:
+        return items
+    import random
+    return random.choices(items, k=int(roll))
+
+@app.errorhandler(Exception)
+def handle_error(e):
+    code = 500
+    if isinstance(e, flask.HTTPException):
+        code = e.code
+    context = gen_context(code=code, stacktrace=e, message=str(e))
+    return flask.render_template('error.html', **context), code
+
+@app.errorhandler(404)
+def page_not_found(e: Exception):
+    # note that we set the 404 status explicitly
+    code = 404
+    context = gen_context(code=code, stacktrace=e, message=str(e))
+    return flask.render_template('error.html', **context), 404
+
 @app.route('/')
 def index():
-    return flask.render_template('index.html', **gen_context())
+    web_app = WebApplication.get()
+    context = gen_context(tags=web_app.service.instances.all_tags(), restaurants=web_app.service.instances.all())
+    return flask.render_template('index.html', **context)
 
 @app.route('/restaurants/<name>')
 def restaurant(name):
-    web_app: WebApplication = WebApplication.create()
+    web_app: WebApplication = WebApplication.get()
     entity = web_app.service.instances.find_one(name)
     menu = web_app.service.resolve_text(entity)
     context = gen_context(entity=entity, menu=menu)
@@ -87,8 +117,9 @@ def web_menu():
     tags = args['tags']
     selectors = args['selectors']
     format = args['format']
+    roll = args['roll']
 
-    web_app = WebApplication.create()
+    web_app = WebApplication.get()
     instances = None
     if selectors:
         instances = web_app.select_instances(instances)
@@ -96,6 +127,9 @@ def web_menu():
         instances = web_app.select_instances(tags, tags=True)
     else:
         instances = web_app.select_instances(selectors=None)
+    
+    instances = roll_filter(instances, roll)
+
     if format is None or format.lower() == 'text':
         content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
         return flask.Response(content, mimetype='text/plain')

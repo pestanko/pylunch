@@ -7,11 +7,16 @@
     display: flex;
     width: 100%;
     margin-top: 40px;
+    padding-bottom: 2.5rem;            /* Footer height */
 }
 
 body {
     font-family: 'Poppins', sans-serif;
     background: #fafafa;
+}
+
+.page-container {
+    position: relative;
 }
 
 p {
@@ -34,7 +39,7 @@ a, a:hover, a:focus {
     left: 0;
     height: 100vh;
     z-index: 999;
-    background: #7386D5;
+    background: #343a40!important;
     color: #fff;
     transition: all 0.3s;
 }
@@ -42,7 +47,7 @@ a, a:hover, a:focus {
 
 #sidebar .sidebar-header {
     padding: 20px;
-    background: #6d7fcc;
+    background: #343a40!important;
 }
 
 #sidebar ul.components {
@@ -61,18 +66,19 @@ a, a:hover, a:focus {
     display: block;
 }
 #sidebar ul li a:hover {
-    color: #7386D5;
+    color: rgb(180, 65, 74);
     background: #fff;
 }
 
 #sidebar ul li.active > a, a[aria-expanded="true"] {
     color: #fff;
-    background: #6d7fcc;
+    background: #343a40!important;
 }
 #sidebar ul a {
-    font-size: 0.5em !important;
+    font-size: 0.7em !important;
     padding-left: 30px !important;
-    background: #6d7fcc;
+    background: #343a40!important;
+    color: #EEE;
 }
 
 pre, code {
@@ -84,7 +90,8 @@ pre, code {
     bottom: 0;
     width: 100%;
     height: 2.5rem;            /* Footer height */
-    text-align: center;
+    text-align: right;
+    padding-right: 10px;
 }
 
 
@@ -102,7 +109,7 @@ pre, code {
     display: block;
     color: #f2f2f2 !important;
     text-align: center;
-    padding: 14px 16px;
+    padding: 10px 20px;
     text-decoration: none;
 }
   

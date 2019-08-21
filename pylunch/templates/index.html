@@ -8,9 +8,31 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-            <h1 class="row">PyLunch</h1>
-            <p class="important row">
-              Welcome to PyLunch.
-            </p>
+        <h1 class="row">PyLunch</h1>
+        <p class="important row">
+            Welcome to PyLunch.
+        </p>
+        <div class="row">
+            <div class="col-6">
+                <h3 style="width: 100%">Restaurants</h3>
+                <ul class="list-unstyled components">
+                    {% for entity in restaurants %}
+                    <li>
+                        <a class="menu-item" id="{{entity.name}}_item" href="/restaurants/{{entity.name}}">{{entity.display_name}} ({{entity.name}})</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-6">
+                    <h3 style="width: 100%">Tags</h3>
+                    <ul class="list-unstyled components">
+                        {% for tag in tags %}
+                        <li>
+                            <a class="menu-item" id="{{tag}}_item" href="/menu?t={{tag}}">{{tag}}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+            </div>
+        </div>
     </div>
 {% endblock %}

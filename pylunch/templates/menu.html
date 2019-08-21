@@ -12,7 +12,7 @@
     
             <ul class="list-unstyled components">
                 {% for entity in restaurants %}
-                <li class="active">
+                <li>
                     <a class="menu-item" id="{{entity.name}}_item" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
                 </li>
                 {% endfor %}
@@ -23,14 +23,19 @@
             
                 {% for entity in menus %}
                 <div class="row" id="{{entity.0.name}}_section">
-                    <h3 class="restaurant-header" style="width: 100%"><a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a></h3>
-                    <p style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
-                    <p class="restaurant-tags" style="width: 100%">
+                    <div class="container" style="width: 100%">
+                            <div class="row">
+                                    <h3 class="restaurant-header" class="col-8" style="width: 60%"><a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a></h3>
+                                    <span class="col-4 float-right"><a href="{{entity.0.url}}">Restaurant's webpage</a></span>
+                            </div>
+                    </div>
+                   
+                    <p class="restaurant-tags" style="width: 100%" class="row">
                         {% for tag in entity.0.tags %}
                             <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
                         {% endfor %}
                     </p>
-                    <div class="restaurant-content" style="width: 100%">
+                    <div class="restaurant-content" style="width: 100%" class="row">
                         <pre>
                             <code>
                             {{entity.1}}

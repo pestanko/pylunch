@@ -441,6 +441,9 @@ class Entities(LunchCollection):
     def find_one(self, name: str):
         return self.get(name) or self.fuz_find_one(name)[0]
 
+    def all(self) -> List[LunchEntity]:
+        return self.values()
+
     def find_all(self, name: str, limit=10):
         return [i[0] for i in self.fuz_find(name, limit)]
 
