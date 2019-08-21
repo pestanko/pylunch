@@ -21,7 +21,11 @@
             </tr>
             <tr>
                 <td>Tags</td>
-                <td>{{entity.tags}}</td>
+                <td> 
+                    {% for tag in entity.tags %}
+                        <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
+                    {% endfor %}
+                </td>
             </tr>
             <tr>
                 <td>Resolver</td>
