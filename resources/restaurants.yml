@@ -84,6 +84,13 @@ restaurants:
     filters: [ 'day', 'nl' ]
     tags: ['fi', 'cz']
 
+  vivo-bene:
+    display_name: Vivo Bene Gusto
+    url: http://www.vivobene-gusto.cz/obedove-menu
+    selector: '#main .article > .bd'
+    filters: ['day']
+    tags: ['ns', 'ita', 'city']
+
   drevak:
     display_name: Drevak
     url: https://www.udrevaka.cz/
