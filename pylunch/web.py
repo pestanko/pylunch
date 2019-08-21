@@ -72,6 +72,15 @@ def gen_context(**kw):
 def index():
     return flask.render_template('index.html', **gen_context())
 
+@app.route('/restaurants/<name>')
+def restaurant(name):
+    web_app: WebApplication = WebApplication.create()
+    entity = web_app.service.instances.find_one(name)
+    menu = web_app.service.resolve_text(entity)
+    context = gen_context(entity=entity, menu=menu)
+    return flask.render_template('restaurant.html', **context)
+
+
 @app.route("/menu")
 def web_menu():
     args = parse_request()
@@ -79,19 +88,19 @@ def web_menu():
     selectors = args['selectors']
     format = args['format']
 
-    app = WebApplication.create()
+    web_app = WebApplication.create()
     instances = None
     if selectors:
-        instances = app.select_instances(instances)
+        instances = web_app.select_instances(instances)
     elif tags:
-        instances = app.select_instances(tags, tags=True)
+        instances = web_app.select_instances(tags, tags=True)
     else:
-        instances = app.select_instances(selectors=None)
+        instances = web_app.select_instances(selectors=None)
     if format is None or format.lower() == 'text':
-        content = "\n".join(resolve_menu(app.service, inst) for inst in instances)
+        content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
         return flask.Response(content, mimetype='text/plain')
     else:
-        menus = [(restaurant, app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
+        menus = [(restaurant, web_app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
         context = gen_context(restaurants=instances, menus=menus)
         return flask.render_template('menu.html', **context)
 

@@ -1,0 +1,57 @@
+{% extends "template.html" %}
+{% block title %} {{entity.name}} {% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div style="margin-top: 30px" id="restaurant" class="container">
+        <h1> {{entity.display_name}} </h1>
+        <table class="table row">
+            <tr>
+                <td>Name</td>
+                <td>{{entity.name}}</td>
+            </tr>
+            <tr>
+                <td>Display Name</td>
+                <td>{{entity.display_name}}</td>
+            </tr>
+            <tr>
+                <td>Url</td>
+                <td><a href="{{entity.url}}">{{entity.url}}</a></td>
+            </tr>
+            <tr>
+                <td>Tags</td>
+                <td>{{entity.tags}}</td>
+            </tr>
+            <tr>
+                <td>Resolver</td>
+                <td>{{entity.resolver}}</td>
+            </tr>
+        </table>
+
+        <div class="container row">
+            <h3 class="row">Menu: </h1>
+                <pre style="margin-top: 20px" class="row">
+                    <code>
+                        {{menu}}
+                    </code>
+                </pre>
+        </div>
+    </div>  
+{% endblock %}
+
+{% block scripts %}
+<script>
+        $(document).ready(function () {
+
+            $("#sidebar").mCustomScrollbar({
+                    theme: "minimal"
+            });
+        
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+            });
+        
+        });
+</script>
+{% endblock %}

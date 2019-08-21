@@ -23,7 +23,8 @@
             
                 {% for entity in menus %}
                 <div class="row" id="{{entity.0.name}}_section">
-                    <h3 class="restaurant-header" style="width: 100%"><a href="{{entity.0.url}}">{{entity.0.display_name}}</a></h3>
+                    <h3 class="restaurant-header" style="width: 100%"><a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a></h3>
+                    <p style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
                     <p class="restaurant-tags" style="width: 100%">{{entity.0.tags}}</p>
                     <div class="restaurant-content" style="width: 100%">
                         <pre>
