@@ -12,7 +12,18 @@
     {% endblock %}
 </head>
 <body>
+    <nav id="topnavbar" class="nav navbar-dark bg-dark">
+            <ul class="container list-inline">
+                <li class="item">
+                    <a class="link" href="/">Home</a>
+                </li>
+                <li class="item">
+                    <a class="link" href="/menu">Menu</a>
+                </li>
+            </ul>
+    </nav>
     <div id="content" class="container wrapper">
+        
         {% block content %}{% endblock %}
     </div>
     <div id="footer">
