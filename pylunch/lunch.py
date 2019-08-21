@@ -230,7 +230,7 @@ class ZomatoResolver(AbstractResolver):
         if self.zomato is None:
             return None
         content = self.make_request()
-        log.info(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
+        log.debug(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
         return content
 
     def resolve_text(self, **kwargs) -> str:
@@ -726,12 +726,15 @@ class LunchCache:
             dir = str(self._cache_path(self.for_day(day)))
             log.info(f"[CACHE] Removing the directory: {dir}")
             shutil.rmtree(dir, ignore_errors=True)
-            return
+            return [dir]
         
+        result = []
         for inst in instances:
             files = self.paths_for_entity(inst, day=day)
             for file in files:
+                result.append(str(file))
                 file.unlink()
+        return result
 
     def wrap(self, entity: LunchEntity, func, day=None, ext=None, suffix=None, **kwargs) -> str:
         if not self.enabled:

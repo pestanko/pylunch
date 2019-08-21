@@ -90,11 +90,6 @@ def cli_menu(app: CliApplication, selectors: Tuple[str], tags=False, update_cach
     instances = app.select_instances(selectors, tags=tags, with_disabled=False)
     if update_cache:
         cleared = app.service.cache.clear(instances)
-        if cleared:
-            for item in cleared:
-                print(f"Udating cache for: {item}")
-        else:
-            print("No instance cleared")
     print_instances(app.service, instances, **kwargs)
 
 
