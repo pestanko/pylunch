@@ -58,6 +58,20 @@ restaurants:
     filters: ['day', 'nl']
     tags: ['rh', 'cz']
 
+  liquid-bread:
+    display_name: Liquid Bread
+    url: http://www.liquidbread.cz/liquidbread/liquidbread/mainmenu/daily-menu/
+    selector: '#content .Standard'
+    filters: ['day', 'nl']
+    tags: ['rh', 'cz']
+
+  winston:
+    display_name: Winston
+    url: https://www.menicka.cz/3875-pekarna-crocus-s.r.o..html
+    selector: '.obsah .menicka'
+    filters: ['day', 'nl']
+    tags: ['rh', 'cz']
+
   krava:
     display_name: Monte Bu
     url: 'https://www.monte-bu.cz/menu.php#poledni-section'
@@ -156,6 +170,14 @@ restaurants:
     selector: 16507597
     tags: ['city', 'cz', 'ns']
     resolver: zomato
+  
+  portoriko:
+    display_name: Portoriko
+    url: https://www.zomato.com/brno/portoriko-královo-pole-brno-sever
+    selector: 16506862
+    resolver: zomato
+    tags: ['rh', 'cz']
+
 
   padowetz:
     display_name: Padowetz
