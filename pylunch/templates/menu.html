@@ -4,22 +4,32 @@
     {{ super() }}
     <style>
         #sidebar {
-            min-width: 250px;
-            max-width: 250px;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            height: 100vh;
+            z-index: 999;
             background: #343a40!important;
             color: #fff;
             transition: all 0.3s;
+            overflow-y: scroll;
+            box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        #page-container {
+            margin-top: 50px;
+            margin-left: 0px;
+            overflow-y: scroll;
+        }
+
+        #page-container.active {
+            margin-left: 250px !important;
         }
 
         #sidebar.active {
-            min-width: 0px;
-            max-width: 0px;
-            text-align: center;
-        }
-
-        #sidebar.active .sidebar-header h3,
-        #sidebar.active .CTAs {
-            display: none;
+            text-align: left;
+            left: 0;
         }
 
         #sidebar.active .sidebar-header strong {
@@ -31,8 +41,8 @@
         }
 
         #sidebar.active ul li a {
-            padding: 20px 10px;
-            text-align: center;
+            padding: 10px 5px;
+            text-align: left;
             font-size: 0.85em;
         }
 
@@ -97,7 +107,8 @@
 {% block content %}
       <!-- Sidebar -->
       <nav id="sidebar" class="sidebar">
-            <div class="sidebar-header">
+
+            <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
                 <h3>PyLunch Restaurants</h3>
             </div>
     
@@ -160,6 +171,10 @@
                 theme: "minimal"
         });
 
+        $("#page-container").mCustomScrollbar({
+                theme: "minimal"
+        });
+
         $("#sidebar-search").on('keyup paste', function(value){
             var value = this.value.toLowerCase();
             console.log("Value text: ", value)
@@ -177,16 +192,8 @@
     
         $('#sidebarCollapse').on('click', function () {
             $('#sidebar').toggleClass('active');
-            $('.overlay').toggleClass('active');
-            console.log("Overlay toggle clicked")
-        });
-
-        $('#dismiss,.overlay').on('click', function () {
-            // hide sidebar
-            $('#sidebar').removeClass('active');
-            // hide overlay
-            $('.overlay').removeClass('active');
-            console.log("Overlay or dismiss clicked")
+            $('#page-container').toggleClass('active');
+            console.log("Toggle clicked")
         });
     
     });
