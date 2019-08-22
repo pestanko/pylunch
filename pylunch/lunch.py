@@ -438,7 +438,7 @@ class Entities(LunchCollection):
             return
         self.register(name=name, **config)
 
-    def find_one(self, name: str):
+    def find_one(self, name: str) -> LunchEntity:
         return self.get(name) or self.fuz_find_one(name)[0]
 
     def all(self) -> List[LunchEntity]:
@@ -495,8 +495,6 @@ class Entities(LunchCollection):
             if tags:
                 full = " ".join(selectors)
                 return self.find_by_tags(full)
-            if fuzzy:
-                return [ self.fuz_find_one(select) for select in selectors ]
             return [ self.find_one(select) for select in selectors ]
 
         instances = _get()
@@ -505,6 +503,9 @@ class Entities(LunchCollection):
             return instances
 
         return [ item for item in instances if item and not item.disabled]
+
+    def select_as_dict(self, selectors, tags=False, with_disabled=True) -> Mapping:
+        return { item.name: item for item in self.select(selectors, tags=tags, with_disabled=with_disabled) if item }
         
 
 class LunchService:

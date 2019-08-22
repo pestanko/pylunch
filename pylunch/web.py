@@ -1,5 +1,6 @@
 import flask
 import os
+from urllib.error import HTTPError
 import logging
 import click
 from pathlib import Path
@@ -19,7 +20,7 @@ tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 def create_app():
-    flask_app =flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
+    flask_app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
     if flask_app.debug:
         flask_app.jinja_env.auto_reload = True
         flask_app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -78,11 +79,29 @@ class WebApplication:
         return cls.INSTANCE
 
 
-def parse_request():
-    rq = flask.request
-    args = rq.args 
-    result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'html'), roll=args.get('roll'))
-    return result
+    def parse_request(self):
+        rq = flask.request
+        args = rq.args 
+        result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'h'), roll=args.get('roll'))
+        return result
+
+    def select_by_request(self):
+        args = self.parse_request()
+        tags = args['tags']
+        selectors = args['selectors']
+        format: str = args['format']
+        roll = args['roll']
+        def _inner():
+            if selectors:
+                return self.select_instances(selectors)
+            elif tags:
+                return self.select_instances(tags, tags=True)
+            else:
+                return self.select_instances(selectors=None)
+        result = _inner()
+        return roll_filter(result, roll)
+
+
 
 def roll_filter(items, roll):
     if not items:
@@ -95,7 +114,7 @@ def roll_filter(items, roll):
 @app.errorhandler(Exception)
 def handle_error(e):
     code = 500
-    if isinstance(e, flask.HTTPException):
+    if isinstance(e, HTTPError):
         code = e.code
     web_app = WebApplication.get()
     context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
@@ -126,30 +145,43 @@ def restaurant(name):
 
 @app.route("/menu")
 def web_menu():
-    args = parse_request()
-    tags = args['tags']
-    selectors = args['selectors']
-    format = args['format']
-    roll = args['roll']
-
     web_app = WebApplication.get()
-    instances = None
-    if selectors:
-        instances = web_app.select_instances(instances)
-    elif tags:
-        instances = web_app.select_instances(tags, tags=True)
-    else:
-        instances = web_app.select_instances(selectors=None)
-    
-    instances = roll_filter(instances, roll)
+    instances = web_app.select_by_request()
 
-    if format is None or format.lower() == 'text':
+    if format is None or format.startswith('t'):
         content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
         return flask.Response(content, mimetype='text/plain')
     else:
         menus = [(restaurant, web_app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
         context = web_app.gen_context(restaurants=instances, menus=menus)
         return flask.render_template('menu.html', **context)
+
+
+###
+# API
+###
+
+@app.route("/api/restaurants")
+def route_api_restaurants():
+    web_app = WebApplication.get()
+    instances = web_app.select_by_request()
+    return flask.jsonify({item.name: item.config for item in instances if item})
+
+
+@app.route("/api/restaurants/<name>")
+def route_api_restaurants_get(name):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    return flask.jsonify(instance.config)
+
+
+@app.route("/api/restaurants/<name>/menu")
+def route_api_restaurants_get_menu(name):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    content = web_app.service.resolve_text(instance)
+    result = {**instance.config, 'content': content}
+    return flask.jsonify(result)
 
 ###
 # Helpers
