@@ -712,14 +712,17 @@ class LunchCache:
             log.debug(f"[CACHE] No content for {entity.name} - {fragment}")
         return content if content else None
 
-    def paths_for_entity(self, entity: LunchEntity, day=None):
+    def paths_for_entity(self, entity: LunchEntity, day=None, relative=False):
         if self.disabled:
             log.info("[CACHE] Cache is not enabled.")
             return None
 
         dir = self.for_day(day)
         fdir = self.cache_base / dir
-        return list(fdir.glob(f"{entity.name}*"))
+        paths = list(fdir.glob(f"{entity.name}*"))
+        if paths and relative:
+            paths = [ path.relative_to(self.cache_base) for path in paths ]
+        return paths
     
     def clear(self, instances=None, day=None):
         if self.disabled:

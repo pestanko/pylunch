@@ -167,6 +167,11 @@ def route_api_restaurants():
     instances = web_app.select_by_request()
     return flask.jsonify({item.name: item.config for item in instances if item})
 
+@app.route("/api/tags")
+def route_api_tags():
+    web_app = WebApplication.get()
+    tags = web_app.service.instances.all_tags()
+    return flask.jsonify(tags)
 
 @app.route("/api/restaurants/<name>")
 def route_api_restaurants_get(name):
@@ -182,6 +187,14 @@ def route_api_restaurants_get_menu(name):
     content = web_app.service.resolve_text(instance)
     result = {**instance.config, 'content': content}
     return flask.jsonify(result)
+
+
+@app.route("/api/restaurants/<name>/cache")
+def route_api_restaurants_get_cache(name):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    paths = web_app.service.cache.paths_for_entity(instance, relative=True)
+    return flask.jsonify([ str(item) for item in paths])
 
 ###
 # Helpers
