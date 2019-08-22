@@ -28,7 +28,6 @@ def save_yaml(file: Union[Path, str], content: dict):
     with file.open("w") as fp:
         yaml.safe_dump(content, fp)
 
-
 class YamlLoader:    
     def __init__(self, base_dir: Union[str, Path], file: Union[str, Path]):
         self.base_dir = Path(base_dir)

@@ -95,9 +95,18 @@ Commands:
   menu           Get menu for a restaurant
   rm             Removes the restaurant
   telegram-bot   Start the telegram bot
-
-
 ```
 
+### Runnig the server
 
+As a server is used the Flask.
+To run the flask server please take a look to the documnetation.
+
+In order to start the pylunch server take a look at the `run_flask.ps1` or `run_flask.sh` scripts.
+
+For access to the admin pages - in order to import restaurants or invalidate (refresh cache) you will need to set env variables:
+```
+PYLUNCH_SECRET=<JWT_SECRET>
+PYLUNCH_USERS=PATH_TO_USERS_FILE
+```
 

@@ -22,6 +22,9 @@ pyzomato = "*"
 pdfminer-six = "*"
 ipython = "*"
 flask = "*"
+jwt = "*"
+flask-jwt-extended = "*"
+werkzeug = "*"
 
 [requires]
 python_version = "3.7"

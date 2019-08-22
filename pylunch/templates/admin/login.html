@@ -1,0 +1,47 @@
+{% extends "template.html" %}
+{% block title %}Login{% endblock %}
+{% block head %}
+    {{ super() }}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1 class="row">Login</h1>
+            <div class="form-group col-sm-5">
+                <label for="username">Email</label>
+                <input type="text" class="form-control" name="username" id="username" placeholder="Username">
+            </div>
+            <div class="form-group col-sm-5">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" name="password" id="password" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit">Sign in</button>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $('#submit').on('click', function() {
+            var username = $('#username').val();
+            var password = $('#password').val();
+            var data = {
+                username: username,
+                password: password
+            };
+            console.log("Login: ", data);
+            request = {
+                type: "POST",
+                url: "/admin/token/auth",
+                data: data,
+                dataType: 'json'
+            };
+            $.ajax(request).done(function(result) {
+                    console.log("Success Result", result);
+                    window.location.href = '/admin/index';
+            }).fail(function(result){
+                    console.log("Fail Result", result);
+            });
+        });
+    });
+</script>
+{% endblock %}

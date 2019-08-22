@@ -1,12 +1,20 @@
 import flask
+import functools
 import os
 from urllib.error import HTTPError
 import logging
 import click
 from pathlib import Path
-from typing import List, Optional, Mapping
-
+from typing import List, Optional, Mapping, Union
 from pylunch import config, lunch, utils, __version__, log_config
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    jwt_refresh_token_required, create_refresh_token,
+    get_jwt_identity, set_access_cookies,
+    set_refresh_cookies, unset_jwt_cookies
+)
 
 log = logging.getLogger(__name__)
 
@@ -19,22 +27,67 @@ CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-def create_app():
-    flask_app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
-    if flask_app.debug:
-        flask_app.jinja_env.auto_reload = True
-        flask_app.config['TEMPLATES_AUTO_RELOAD'] = True
-    return flask_app
+class AdminUsers(utils.CollectionWrapper):
+    @property
+    def users(self) -> Mapping:
+        return self.collection
 
-app = create_app()
+    def import_users(self, file: str):
+        log.info(f"[IMPORT] Importing users from: {file}")
+        loaded = utils.load_yaml(file)
+        if not loaded:
+            return
+        
+        for (name, password) in loaded.items():
+            log.info(f"[IMPORT] Importing user: {name}")
+            self[name] = password
 
+    def generate_hash(self, password):
+        return generate_password_hash(password)
+
+    def check_password(self, name, passwd) -> bool:
+        userhash = self.get(name)
+        if not userhash:
+            log.info(f"[USER] Password check failed: User {name} not exists.")
+            return False
+        if check_password_hash(userhash, passwd):
+            log.info(f"[USER] User password accepted for {name}")
+            return True
+        log.info(f"[USER] User password rejected for {name} - mismatch")
+        return False
+
+    def issue_tokens(self, name) -> dict:
+        access_token = create_access_token(identity = name)
+        refresh_token = create_refresh_token(identity = name)
+        return dict(access_token=access_token, refresh_token = refresh_token, username=name)
+
+    def issue_access_token(self, name) -> dict:
+        access_token = create_access_token(identity = name)
+        return dict(access_token=access_token, username=name)
+
+    
 class WebApplication:
     INSTANCE = None
+
+    @classmethod
+    def create_app(cls):
+        flask_app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
+        flask_app.config['JWT_SECRET_KEY'] = os.getenv('PYLUNCH_SECRET', 'jwt-secret-string')
+        flask_app.config['JWT_TOKEN_LOCATION'] = ('cookies', 'headers')
+        flask_app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
+        flask_app.config['JWT_REFRESH_COOKIE_PATH'] = '/'
+        JWTManager(flask_app)
+        if flask_app.debug:
+            flask_app.jinja_env.auto_reload = True
+            flask_app.config['TEMPLATES_AUTO_RELOAD'] = True
+        return flask_app
+
     def __init__(self, config_dir=None):
         self._service: lunch.LunchService = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
+        self.users = AdminUsers()
 
     @property
     def service(self) -> lunch.LunchService:
@@ -51,6 +104,7 @@ class WebApplication:
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
         ent = lunch.Entities(**unwrapped)
         self._service = lunch.LunchService(cfg, ent)
+        self.users.import_users(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         return self
 
     def _first_run(self):
@@ -101,6 +155,14 @@ class WebApplication:
         result = _inner()
         return roll_filter(result, roll)
 
+
+app = WebApplication.create_app()
+api = flask.Blueprint('api', __name__)
+admin = flask.Blueprint('admin', __name__)
+
+def register_blueprints(app):
+    app.register_blueprint(api, url_prefix='/api')
+    app.register_blueprint(admin, url_prefix='/admin')
 
 
 def roll_filter(items, roll):
@@ -162,26 +224,26 @@ def web_menu():
 # API
 ###
 
-@app.route("/api/restaurants")
+@api.route("/restaurants")
 def route_api_restaurants():
     web_app = WebApplication.get()
     instances = web_app.select_by_request()
     return flask.jsonify({item.name: item.config for item in instances if item})
 
-@app.route("/api/tags")
+@api.route("/tags")
 def route_api_tags():
     web_app = WebApplication.get()
     tags = web_app.service.instances.all_tags()
     return flask.jsonify(tags)
 
-@app.route("/api/restaurants/<name>")
+@api.route("/restaurants/<name>")
 def route_api_restaurants_get(name):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
     return flask.jsonify(instance.config)
 
 
-@app.route("/api/restaurants/<name>/menu")
+@api.route("/restaurants/<name>/menu")
 def route_api_restaurants_get_menu(name):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
@@ -190,12 +252,69 @@ def route_api_restaurants_get_menu(name):
     return flask.jsonify(result)
 
 
-@app.route("/api/restaurants/<name>/cache")
+@api.route("/restaurants/<name>/cache")
 def route_api_restaurants_get_cache(name):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
     paths = web_app.service.cache.paths_for_entity(instance, relative=True)
     return flask.jsonify([ str(item) for item in paths])
+
+###
+# Admin
+###
+
+# Same thing as login here, except we are only setting a new cookie
+# for the access token.
+@admin.route('/token/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def admin_refresh():
+    # Create the new access token
+    current_user = get_jwt_identity()
+    web_app=WebApplication.get()
+    access_token = web_app.users.issue_access_token(current_user)
+
+    # Set the JWT access cookie in the response
+    resp = flask.jsonify({'refresh': True, **access_token})
+    set_access_cookies(resp, access_token['access_token'])
+    return resp, 200
+
+# Use the set_access_cookie() and set_refresh_cookie() on a response
+# object to set the JWTs in the response cookies. You can configure
+# the cookie names and other settings via various app.config options
+@admin.route('/token/auth', methods=['POST'])
+def admin_login():
+    log.info(f"[LOGIN] Received data: {flask.request.data}")
+    username = flask.request.form.get('username', None)
+    password = flask.request.form.get('password', None)
+    if not username or not password:
+        return flask.jsonify({'message': 'Username or password is missing'})
+    
+    web_app=WebApplication.get()
+    if not web_app.users.check_password(username, password):
+        return flask.jsonify({'error': 'Invalid password'})
+
+    tokens = web_app.users.issue_tokens(username)
+
+    # Set the JWT cookies in the response
+    resp = flask.jsonify({'login': True, **tokens})
+    set_access_cookies(resp, tokens.get('access_token'))
+    set_refresh_cookies(resp, tokens.get('refresh_token'))
+    return resp, 200
+
+@admin.route('/login', methods=['GET'])
+def admin_login_form():
+    web_app = WebApplication.get()
+    context = web_app.gen_context()
+    return flask.render_template('admin/login.html', **context)
+
+
+@admin.route('/index', methods=['GET'])
+def admin_index():
+    web_app = WebApplication.get()
+    context = web_app.gen_context()
+    return flask.render_template('admin/index.html', **context)
+
+register_blueprints(app)
 
 ###
 # Helpers
