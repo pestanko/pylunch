@@ -18,9 +18,14 @@ CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
-app.jinja_env.auto_reload = True
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+def create_app():
+    flask_app =flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
+    if flask_app.debug:
+        flask_app.jinja_env.auto_reload = True
+        flask_app.config['TEMPLATES_AUTO_RELOAD'] = True
+    return flask_app
+
+app = create_app()
 
 class WebApplication:
     INSTANCE = None

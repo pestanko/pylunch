@@ -2,6 +2,93 @@
 {% block title %}Menu{% endblock %}
 {% block head %}
     {{ super() }}
+    <style>
+        #sidebar {
+            min-width: 250px;
+            max-width: 250px;
+            background: #343a40!important;
+            color: #fff;
+            transition: all 0.3s;
+        }
+
+        #sidebar.active {
+            min-width: 0px;
+            max-width: 0px;
+            text-align: center;
+        }
+
+        #sidebar.active .sidebar-header h3,
+        #sidebar.active .CTAs {
+            display: none;
+        }
+
+        #sidebar.active .sidebar-header strong {
+            display: block;
+        }
+
+        #sidebar ul li a {
+            text-align: left;
+        }
+
+        #sidebar.active ul li a {
+            padding: 20px 10px;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        #sidebar.active ul li a i {
+            margin-right: 0;
+            display: block;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        #sidebar.active ul ul a {
+            padding: 10px !important;
+        }
+
+        #sidebar.active .dropdown-toggle::after {
+            top: auto;
+            bottom: 10px;
+            right: 50%;
+            -webkit-transform: translateX(50%);
+            -ms-transform: translateX(50%);
+            transform: translateX(50%);
+        }
+
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: #343a40!important;
+        }
+
+        #sidebar .sidebar-header strong {
+            display: none;
+            font-size: 1.8em;
+        }
+
+        #sidebar ul.components {
+            padding: 20px 0;
+            border-bottom: 1px solid #343a40!important;
+        }
+
+        #sidebar ul li a {
+            padding: 10px;
+            font-size: 0.8em;
+            display: block;
+        }
+
+        #sidebar ul li a:hover {
+            color: rgb(179, 71, 71);
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        p {
+            margin-bottom: 0.5rem;
+        }
+    </style>
 {% endblock %}
 {% block content %}
       <!-- Sidebar -->
@@ -17,50 +104,68 @@
                 </li>
                 {% endfor %}
             </ul>
+            
         </nav>
 
-        <div id="menus" class="container">
+        <div id="menus" style="margin-left: 10px" class="container-fluid">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                    <div class="container-fluid">
             
-                {% for entity in menus %}
-                <div class="row" id="{{entity.0.name}}_section">
-                    <div class="container" style="width: 100%">
-                            <div class="row">
-                                    <h3 class="restaurant-header" class="col-8" style="width: 60%"><a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a></h3>
-                                    <span class="col-4 float-right"><a href="{{entity.0.url}}">Restaurant's webpage</a></span>
-                            </div>
+                        <button type="button" id="sidebarCollapse" class="btn btn-info">
+                            <i class="fas fa-align-left"></i>
+                            <span>Toggle Sidebar</span>
+                        </button>
+            
                     </div>
-                   
-                    <p class="restaurant-tags" style="width: 100%" class="row">
+            </nav>
+        
+            {% for entity in menus %}
+            <div class="row container-fluid" style="width: 100%" id="{{entity.0.name}}_section">
+                <h3 class="restaurant-header" style="text-align: left; width: 100%">
+                    <a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a>
+                </h3>
+                <p class="" style="margin-right: 20px" style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
+                <p class="restaurant-tags" style="width: 100%" class="row">
                         {% for tag in entity.0.tags %}
                             <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
                         {% endfor %}
-                    </p>
-                    <div class="restaurant-content" style="width: 100%" class="row">
-                        <pre>
-                            <code>
-                            {{entity.1}}
-                            </code>
-                        </pre>
-                    </div>
+                </p>
+                <div class="restaurant-content" style="width: 100%" class="row">
+                    <pre>
+                        <code>
+                        {{entity.1}}
+                        </code>
+                    </pre>
                 </div>
-               {% endfor %}
-
             </div>
+            {% endfor %}
+
         </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-        $(document).ready(function () {
+    $(document).ready(function () {
 
-            $("#sidebar").mCustomScrollbar({
-                    theme: "minimal"
-            });
-        
-            $('#sidebarCollapse').on('click', function () {
-                $('#sidebar').toggleClass('active');
-            });
-        
+        $("#sidebar").mCustomScrollbar({
+                theme: "minimal"
         });
+    
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+            $('.overlay').toggleClass('active');
+            console.log("Overlay toggle clicked")
+        });
+
+        $('#dismiss,.overlay').on('click', function () {
+            // hide sidebar
+            $('#sidebar').removeClass('active');
+            // hide overlay
+            $('.overlay').removeClass('active');
+            console.log("Overlay or dismiss clicked")
+        });
+    
+    });
 </script>
 {% endblock %}
