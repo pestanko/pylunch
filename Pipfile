@@ -22,7 +22,6 @@ pyzomato = "*"
 pdfminer-six = "*"
 ipython = "*"
 flask = "*"
-jwt = "*"
 flask-jwt-extended = "*"
 werkzeug = "*"
 
