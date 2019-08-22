@@ -102,6 +102,15 @@
         .hide {
             display: none !important;
         }
+
+        #sidebarCollapse {
+            position: fixed;
+            top: 2px;
+            left: 5px;
+            z-index: 2000;
+            font-size: 15px;
+            background-color: #343a40;
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -126,18 +135,12 @@
             
         </nav>
 
+        <button type="button" id="sidebarCollapse" class="btn btn-dark">
+            <i class="fas fa-align-left"></i>
+            <span>Restaurants</span>
+        </button>
+
         <div id="menus" style="margin-left: 10px" class="container-fluid">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                    <div class="container-fluid">
-            
-                        <button type="button" id="sidebarCollapse" class="btn btn-info">
-                            <i class="fas fa-align-left"></i>
-                            <span>Toggle Sidebar</span>
-                        </button>
-            
-                    </div>
-            </nav>
-        
             {% for entity in menus %}
             <div class="row container-fluid" style="width: 100%" id="{{entity.0.name}}_section">
                 <h3 class="restaurant-header" style="text-align: left; width: 100%">
@@ -195,7 +198,25 @@
             $('#page-container').toggleClass('active');
             console.log("Toggle clicked")
         });
-    
+
+        // The function actually applying the offset
+        function offsetAnchor() {
+        if (location.hash.length !== 0) {
+            window.scrollTo(window.scrollX, window.scrollY - 100);
+        }
+        }
+
+        // Captures click events of all <a> elements with href starting with #
+        $(document).on('click', 'a[href^="#"]', function(event) {
+        // Click events are captured before hashchanges. Timeout
+        // causes offsetAnchor to be called after the page jump.
+        window.setTimeout(function() {
+            offsetAnchor();
+        }, 0);
+        });
+
+        // Set the offset when entering page with hash present in the url
+        window.setTimeout(offsetAnchor, 0);
     });
 </script>
 {% endblock %}
