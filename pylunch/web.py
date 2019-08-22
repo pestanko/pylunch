@@ -147,8 +147,9 @@ def restaurant(name):
 def web_menu():
     web_app = WebApplication.get()
     instances = web_app.select_by_request()
+    format = web_app.parse_request()['format']
 
-    if format is None or format.startswith('t'):
+    if format is not None and format.startswith('t'):
         content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
         return flask.Response(content, mimetype='text/plain')
     else:
