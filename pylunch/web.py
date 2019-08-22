@@ -30,10 +30,14 @@ app = create_app()
 class WebApplication:
     INSTANCE = None
     def __init__(self, config_dir=None):
-        self.service: lunch.LunchService = None
+        self._service: lunch.LunchService = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
+
+    @property
+    def service(self) -> lunch.LunchService:
+        return self._service
 
     def init(self, **kwargs) -> 'WebApplication':
         log_config.load('i')
@@ -45,7 +49,7 @@ class WebApplication:
         unwrapped = loaded.get('restaurants') or loaded
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
         ent = lunch.Entities(**unwrapped)
-        self.service = lunch.LunchService(cfg, ent)
+        self._service = lunch.LunchService(cfg, ent)
         return self
 
     def _first_run(self):
@@ -60,6 +64,11 @@ class WebApplication:
 
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
         return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
+
+    def gen_context(self, **kwargs):
+        tags = self.service.instances.all_tags()
+        restaurants = self.service.instances.all()
+        return dict(version=__version__, all_tags=tags, all_restaurants=restaurants, **kwargs)
  
     @classmethod
     def get(cls) -> 'WebApplication':
@@ -75,9 +84,6 @@ def parse_request():
     result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'html'), roll=args.get('roll'))
     return result
 
-def gen_context(**kw):
-    return dict(version=__version__, **kw)
-
 def roll_filter(items, roll):
     if not items:
         return []
@@ -91,20 +97,22 @@ def handle_error(e):
     code = 500
     if isinstance(e, flask.HTTPException):
         code = e.code
-    context = gen_context(code=code, stacktrace=e, message=str(e))
+    web_app = WebApplication.get()
+    context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
     return flask.render_template('error.html', **context), code
 
 @app.errorhandler(404)
 def page_not_found(e: Exception):
     # note that we set the 404 status explicitly
     code = 404
-    context = gen_context(code=code, stacktrace=e, message=str(e))
+    web_app = WebApplication.get()
+    context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
     return flask.render_template('error.html', **context), 404
 
 @app.route('/')
 def index():
     web_app = WebApplication.get()
-    context = gen_context(tags=web_app.service.instances.all_tags(), restaurants=web_app.service.instances.all())
+    context = web_app.gen_context()
     return flask.render_template('index.html', **context)
 
 @app.route('/restaurants/<name>')
@@ -112,7 +120,7 @@ def restaurant(name):
     web_app: WebApplication = WebApplication.get()
     entity = web_app.service.instances.find_one(name)
     menu = web_app.service.resolve_text(entity)
-    context = gen_context(entity=entity, menu=menu)
+    context = web_app.gen_context(entity=entity, menu=menu)
     return flask.render_template('restaurant.html', **context)
 
 
@@ -140,7 +148,7 @@ def web_menu():
         return flask.Response(content, mimetype='text/plain')
     else:
         menus = [(restaurant, web_app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
-        context = gen_context(restaurants=instances, menus=menus)
+        context = web_app.gen_context(restaurants=instances, menus=menus)
         return flask.render_template('menu.html', **context)
 
 ###

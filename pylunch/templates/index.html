@@ -16,7 +16,7 @@
             <div class="col-6">
                 <h3 style="width: 100%">Restaurants</h3>
                 <ul class="list-unstyled components">
-                    {% for entity in restaurants %}
+                    {% for entity in all_restaurants %}
                     <li>
                         <a class="menu-item" id="{{entity.name}}_item" href="/restaurants/{{entity.name}}">{{entity.display_name}} ({{entity.name}})</a>
                     </li>
@@ -26,7 +26,7 @@
             <div class="col-6">
                     <h3 style="width: 100%">Tags</h3>
                     <ul class="list-unstyled components">
-                        {% for tag in tags %}
+                        {% for tag in all_tags %}
                         <li>
                             <a class="menu-item" id="{{tag}}_item" href="/menu?t={{tag}}">{{tag}}</a>
                         </li>

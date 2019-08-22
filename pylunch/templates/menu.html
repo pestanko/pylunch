@@ -115,7 +115,7 @@
 {% endblock %}
 {% block content %}
       <!-- Sidebar -->
-      <nav id="sidebar" class="sidebar">
+      <nav id="sidebar" class="sidebar active">
 
             <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
                 <h3>PyLunch Restaurants</h3>
@@ -169,6 +169,8 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        $('#sidebar').addClass('active');
+        $('#page-container').addClass('active');
 
         $("#sidebar").mCustomScrollbar({
                 theme: "minimal"
