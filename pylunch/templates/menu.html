@@ -88,6 +88,10 @@
         p {
             margin-bottom: 0.5rem;
         }
+
+        .hide {
+            display: none !important;
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -97,10 +101,14 @@
                 <h3>PyLunch Restaurants</h3>
             </div>
     
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
+            </div>
+
             <ul class="list-unstyled components">
                 {% for entity in restaurants %}
-                <li>
-                    <a class="menu-item" id="{{entity.name}}_item" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
+                <li class="menu-item" id="{{entity.name}}-item">
+                    <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
                 </li>
                 {% endfor %}
             </ul>
@@ -150,6 +158,21 @@
 
         $("#sidebar").mCustomScrollbar({
                 theme: "minimal"
+        });
+
+        $("#sidebar-search").on('keyup paste', function(value){
+            var value = this.value.toLowerCase();
+            console.log("Value text: ", value)
+            $("#sidebar .menu-item-link").each(function(){
+                var item = this
+                var item_text = $(item).text().toLowerCase();
+                console.log("item text: ", item_text)
+                if(item_text.includes(value)) {
+                    $(item).removeClass("hide")
+                } else {
+                    $(item).addClass("hide")
+                }
+            });
         });
     
         $('#sidebarCollapse').on('click', function () {
