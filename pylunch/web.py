@@ -293,11 +293,11 @@ def admin_login():
     username = flask.request.form.get('username', None)
     password = flask.request.form.get('password', None)
     if not username or not password:
-        return flask.jsonify({'message': 'Username or password is missing'})
+        return flask.jsonify({'message': 'Username or password is missing'}), 401
     
     web_app=WebApplication.get()
     if not web_app.users.check_password(username, password):
-        return flask.jsonify({'error': 'Invalid password'})
+        return flask.jsonify({'error': 'Invalid password'}), 401
 
     tokens = web_app.users.issue_tokens(username)
 
