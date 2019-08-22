@@ -21,6 +21,13 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        postJson("/admin/token/valid", {}).done(function(result) {
+            console.log("Success Result", result);
+                    window.location.href = '/admin/index';
+            }).fail(function(result){
+                    console.log("Fail Result", result);
+            });
+
         $('#submit').on('click', function() {
             var username = $('#username').val();
             var password = $('#password').val();
@@ -29,13 +36,8 @@
                 password: password
             };
             console.log("Login: ", data);
-            request = {
-                type: "POST",
-                url: "/admin/token/auth",
-                data: data,
-                dataType: 'json'
-            };
-            $.ajax(request).done(function(result) {
+            postJson("/admin/token/auth", data)
+            .done(function(result) {
                     console.log("Success Result", result);
                     window.location.href = '/admin/index';
             }).fail(function(result){

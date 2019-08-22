@@ -8,9 +8,31 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-            <h1 class="row">Admin pages</h1>
-            <p class="important row">
-                Welcome Admin
-            </p>
+        <h1 class="row">Admin pages</h1>
+        <p class="important row">
+            Welcome Admin {{user}}
+        </p>
+
+        <div class="row">
+            <h3 id="cache-invalidate">Invalidate the cache</h3>
+        </div>
+    
     </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+       
+        $('#cache-invalidate').on('click', function() {
+            console.log("cache invalidate: ");
+            postJson("/admin/cache-invalidate", {})
+            .done(function(result) {
+                    console.log("Success Result", result);
+            }).fail(function(result){
+                    console.log("Fail Result", result);
+            });
+        });
+    });
+</script>
 {% endblock %}

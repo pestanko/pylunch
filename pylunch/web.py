@@ -4,6 +4,7 @@ import os
 from urllib.error import HTTPError
 import logging
 import click
+import datetime
 from pathlib import Path
 from typing import List, Optional, Mapping, Union
 from pylunch import config, lunch, utils, __version__, log_config
@@ -76,6 +77,11 @@ class WebApplication:
         flask_app.config['JWT_TOKEN_LOCATION'] = ('cookies', 'headers')
         flask_app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
         flask_app.config['JWT_REFRESH_COOKIE_PATH'] = '/'
+        flask_app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+
+        flask_app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
+        flask_app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+
         JWTManager(flask_app)
         if flask_app.debug:
             flask_app.jinja_env.auto_reload = True
@@ -179,7 +185,7 @@ def handle_error(e):
     if isinstance(e, HTTPError):
         code = e.code
     web_app = WebApplication.get()
-    context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
+    context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
     return flask.render_template('error.html', **context), code
 
 @app.errorhandler(404)
@@ -309,10 +315,26 @@ def admin_login_form():
 
 
 @admin.route('/index', methods=['GET'])
+@jwt_required
 def admin_index():
     web_app = WebApplication.get()
-    context = web_app.gen_context()
+    user = get_jwt_identity()
+    context = web_app.gen_context(user=user)
     return flask.render_template('admin/index.html', **context)
+
+@admin.route('/token/valid', methods=['POST'])
+@jwt_required
+def admin_token_valid():
+    web_app = WebApplication.get()
+    user = get_jwt_identity()
+    return flask.jsonify({'valid': True})
+
+@admin.route('/cache-invalidate', methods=['POST'])
+@jwt_required
+def admin_cache_invalidate():
+    web_app = WebApplication.get()
+    items = web_app.service.cache.clear()
+    return flask.jsonify({'message': "cache updated", "content": items})
 
 register_blueprints(app)
 
