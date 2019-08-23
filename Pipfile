@@ -24,6 +24,8 @@ ipython = "*"
 flask = "*"
 flask-jwt-extended = "*"
 werkzeug = "*"
+aiohttp = "*"
+aiodns = "*"
 
 [requires]
 python_version = "3.7"

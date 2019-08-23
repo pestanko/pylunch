@@ -1,0 +1,272 @@
+{% extends "template.html" %}
+{% block title %}Async Menu{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+        #sidebar {
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: -250px;
+            height: 100vh;
+            z-index: 999;
+            background: #343a40!important;
+            color: #fff;
+            transition: all 0.3s;
+            overflow-y: scroll;
+            box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        #page-container {
+            margin-top: 50px;
+            margin-left: 0px;
+            overflow-y: scroll;
+        }
+
+        #page-container.active {
+            margin-left: 250px !important;
+        }
+
+        #sidebar.active {
+            text-align: left;
+            left: 0;
+        }
+
+        #sidebar.active .sidebar-header strong {
+            display: block;
+        }
+
+        #sidebar ul li a {
+            text-align: left;
+        }
+
+        #sidebar.active ul li a {
+            padding: 10px 5px;
+            text-align: left;
+            font-size: 0.85em;
+        }
+
+        #sidebar.active ul li a i {
+            margin-right: 0;
+            display: block;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        #sidebar.active ul ul a {
+            padding: 10px !important;
+        }
+
+        #sidebar.active .dropdown-toggle::after {
+            top: auto;
+            bottom: 10px;
+            right: 50%;
+            -webkit-transform: translateX(50%);
+            -ms-transform: translateX(50%);
+            transform: translateX(50%);
+        }
+
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: #343a40!important;
+        }
+
+        #sidebar .sidebar-header strong {
+            display: none;
+            font-size: 1.8em;
+        }
+
+        #sidebar ul.components {
+            padding: 20px 0;
+            border-bottom: 1px solid #343a40!important;
+        }
+
+        #sidebar ul li a {
+            padding: 10px;
+            font-size: 0.8em;
+            display: block;
+        }
+
+        #sidebar ul li a:hover {
+            color: rgb(179, 71, 71);
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        p {
+            margin-bottom: 0.5rem;
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        #sidebarCollapse {
+            position: fixed;
+            top: 2px;
+            left: 5px;
+            z-index: 2000;
+            font-size: 15px;
+            background-color: #343a40;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+      <!-- Sidebar -->
+      <nav id="sidebar" class="sidebar active">
+
+            <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
+                <h3>PyLunch Restaurants</h3>
+            </div>
+    
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
+            </div>
+
+            <ul id="nav-restaurants-list" class="list-unstyled components">
+                
+            </ul>
+        </nav>
+
+        <button type="button" id="sidebarCollapse" class="btn btn-dark">
+            <i class="fas fa-align-left"></i>
+            <span>Restaurants</span>
+        </button>
+
+        <div id="menus" style="margin-left: 10px" class="container-fluid">
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+
+        function addRestaurantMenuItem(restaurant){
+            var restRoot = $("#nav-restaurants-list")
+            var name = restaurant.name;
+            var dname = restaurant.display_name;
+            var item = $("<li class='menu-item' id='" + name + "-menu-item'><a class='menu-item-link' href='#"+ name +"-section'>" +dname+ " (" + name + ")</a></li>")
+            restRoot.append(item);
+        }
+        
+        function addRestaurantMenuContent(restaurant){
+            var restRoot = $("#menus")
+            var name = restaurant.name;
+            var dname = restaurant.display_name;
+            var tags = restaurant.tags;
+
+            var tags_content = "";
+            tags.forEach(function(tag) {
+                tags_content += `<a href="/amenu?t=${tag}">${tag}</a>&nbsp;`
+            });
+            var item = $(`<div class="row container-fluid" style="width: 100%" id="${name}-section">
+                <h3 class="restaurant-header" style="text-align: left; width: 100%">
+                    <a href="/restaurants/${name}">${dname}</a>
+                </h3>
+                <p class="" style="margin-right: 20px" style="width: 100%">
+                    <a href="${restaurant.url}">Restaurant's webpage</a>
+                </p>
+                <p class="restaurant-tags" style="width: 100%" class="row" id="example-tags-list">
+                    ${tags_content}
+                </p>
+                <div class="restaurant-content" style="width: 100%" class="row">
+                    <pre>
+                        <code id="${name}-menu-content">
+                        Loading the Menu ...
+                        </code>
+                    </pre>
+                </div>
+            </div>`)
+            restRoot.append(item);
+
+            loadMenuForRestaurant(name);
+        }
+
+        function loadMenuForRestaurant(name) {
+            var request = getJson('/api/restaurants/' + name + '/menu').done(function(content) {
+                console.log("Restaurants menu Result [ " + name + " ]: ", content);
+                var root = $("#" + name + "-menu-content").text(content.content);
+            }).fail(function(content){
+                console.error("Restaurants menu Error [ " + name + " ]: ", content)
+            });
+        }
+
+        function addRestaurants(restaurants) {
+            if(!restaurants) 
+                return;
+            Object.values(restaurants).forEach(function(restaurant) {
+                addRestaurantMenuItem(restaurant);
+                addRestaurantMenuContent(restaurant);
+            });
+        }
+
+        function loadRestaurants() {
+            var query = window.location.search;
+            var request = getJson('/api/restaurants' + query).done(function(content) {
+                console.log("Restaurants Result: ", content);
+                addRestaurants(content);
+            }).fail(function(content){
+                console.error("Restaurants Error: ", content)
+            });
+        }
+
+        loadRestaurants();
+
+
+
+        $('#sidebar').addClass('active');
+        $('#page-container').addClass('active');
+
+        $("#sidebar").mCustomScrollbar({
+                theme: "minimal"
+        });
+
+        $("#page-container").mCustomScrollbar({
+                theme: "minimal"
+        });
+
+        $("#sidebar-search").on('keyup paste', function(value){
+            var value = this.value.toLowerCase();
+            console.log("Value text: ", value)
+            $("#sidebar .menu-item-link").each(function(){
+                var item = this
+                var item_text = $(item).text().toLowerCase();
+                console.log("item text: ", item_text)
+                if(item_text.includes(value)) {
+                    $(item).removeClass("hide")
+                } else {
+                    $(item).addClass("hide")
+                }
+            });
+        });
+    
+        $('#sidebarCollapse').on('click', function () {
+            $('#sidebar').toggleClass('active');
+            $('#page-container').toggleClass('active');
+            console.log("Toggle clicked")
+        });
+
+        // The function actually applying the offset
+        function offsetAnchor() {
+        if (location.hash.length !== 0) {
+            window.scrollTo(window.scrollX, window.scrollY - 60);
+        }
+        }
+
+        // Captures click events of all <a> elements with href starting with #
+        $(document).on('click', 'a[href^="#"]', function(event) {
+        // Click events are captured before hashchanges. Timeout
+        // causes offsetAnchor to be called after the page jump.
+        window.setTimeout(function() {
+            offsetAnchor();
+        }, 0);
+        });
+
+        // Set the offset when entering page with hash present in the url
+        window.setTimeout(offsetAnchor, 0);
+    });
+</script>
+{% endblock %}

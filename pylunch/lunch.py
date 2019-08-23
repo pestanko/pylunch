@@ -1,6 +1,8 @@
 import logging
 from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping, Mapping
 
+import aiohttp
+import asyncio
 import html2text
 import requests
 import yaml
@@ -113,6 +115,7 @@ class LunchEntity(collections.MutableMapping):
 
     def __repr__(self) -> str:
         return str(self.config)
+
 
 ######
 # Resolvers
@@ -558,7 +561,17 @@ class LunchService:
                 restaurant['override'] = override
                 if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant['resolver'] not in restaurant['tags']:
                     restaurant['tags'].append(restaurant['resolver'])
-                self.instances.register(**restaurant)  
+                self.instances.register(**restaurant)
+        
+    def import_string(self, string: str, override=False):
+        log.info(f"[IMPORT] Importing content: {string}")
+        restaurants = yaml.safe_load(string)
+        for (name, restaurant) in restaurants['restaurants'].items():
+            restaurant['name'] = name
+            restaurant['override'] = override
+            if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant['resolver'] not in restaurant['tags']:
+                restaurant['tags'].append(restaurant['resolver'])
+            self.instances.register(**restaurant)
                     
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
@@ -638,7 +651,6 @@ class LunchCache:
     @property
     def disabled(self) -> bool:
         return self.config.get('no_cache', False) or self.cache_base is None
-
 
     @property
     def cache_base(self) -> Path:

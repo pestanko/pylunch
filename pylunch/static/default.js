@@ -7,3 +7,13 @@ function postJson(url, data) {
     };
     return $.ajax(request)
 }
+
+
+function getJson(url) {
+    request = {
+        type: "GET",
+        url: url,
+        dataType: 'json'
+    };
+    return $.ajax(request)
+}

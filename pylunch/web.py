@@ -211,6 +211,12 @@ def restaurant(name):
     return flask.render_template('restaurant.html', **context)
 
 
+@app.route('/amenu')
+def web_async_menu():
+    web_app = WebApplication.get()
+    context = web_app.gen_context()
+    return flask.render_template('amenu.html', **context)
+
 @app.route("/menu")
 def web_menu():
     web_app = WebApplication.get()
