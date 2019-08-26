@@ -207,6 +207,13 @@ restaurants:
     tags: ['city', 'cz', 'ns']
     resolver: zomato
 
+  4pokoje:
+    display_name: 4 Pokoje
+    url: https://www.zomato.com/brno/4pokoje-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506939
+    tags: ['city', 'fancy', 'gd']
+    resolver: zomato
+
   suzies-pizza:
     display_name: Suzies italian
     url: https://www.zomato.com/brno/suzies-veveří-brno-střed
@@ -302,7 +309,7 @@ restaurants:
     display_name: Podloubi
     url: https://www.zomato.com/brno/restaurace-podloub%C3%AD-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 17809249
-    tags: ['cz', 'city', 'ns']
+    tags: ['cz', 'city', 'gd']
     resolver: zomato
 
   sborovna:
