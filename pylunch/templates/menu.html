@@ -1,5 +1,5 @@
 {% extends "template.html" %}
-{% block title %}Menu{% endblock %}
+{% block title %}Async Menu{% endblock %}
 {% block head %}
     {{ super() }}
     <style>
@@ -125,14 +125,9 @@
                 <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
             </div>
 
-            <ul class="list-unstyled components">
-                {% for entity in restaurants %}
-                <li class="menu-item" id="{{entity.name}}-item">
-                    <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
-                </li>
-                {% endfor %}
+            <ul id="nav-restaurants-list" class="list-unstyled components">
+                
             </ul>
-            
         </nav>
 
         <button type="button" id="sidebarCollapse" class="btn btn-dark">
@@ -141,27 +136,6 @@
         </button>
 
         <div id="menus" style="margin-left: 10px" class="container-fluid">
-            {% for entity in menus %}
-            <div class="row container-fluid" style="width: 100%" id="{{entity.0.name}}_section">
-                <h3 class="restaurant-header" style="text-align: left; width: 100%">
-                    <a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a>
-                </h3>
-                <p class="" style="margin-right: 20px" style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
-                <p class="restaurant-tags" style="width: 100%" class="row">
-                        {% for tag in entity.0.tags %}
-                            <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
-                        {% endfor %}
-                </p>
-                <div class="restaurant-content" style="width: 100%" class="row">
-                    <pre>
-                        <code>
-                        {{entity.1}}
-                        </code>
-                    </pre>
-                </div>
-            </div>
-            {% endfor %}
-
         </div>
     </div>
 {% endblock %}
@@ -169,6 +143,80 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
+
+        function addRestaurantMenuItem(restaurant){
+            var restRoot = $("#nav-restaurants-list")
+            var name = restaurant.name;
+            var dname = restaurant.display_name;
+            var item = $("<li class='menu-item' id='" + name + "-menu-item'><a class='menu-item-link' href='#"+ name +"-section'>" +dname+ " (" + name + ")</a></li>")
+            restRoot.append(item);
+        }
+        
+        function addRestaurantMenuContent(restaurant){
+            var restRoot = $("#menus")
+            var name = restaurant.name;
+            var dname = restaurant.display_name;
+            var tags = restaurant.tags;
+
+            var tags_content = "";
+            tags.forEach(function(tag) {
+                tags_content += `<a href="/menu?t=${tag}">${tag}</a>&nbsp;`
+            });
+            var item = $(`<div class="row container-fluid" style="width: 100%" id="${name}-section">
+                <h3 class="restaurant-header" style="text-align: left; width: 100%">
+                    <a href="/restaurants/${name}">${dname}</a>
+                </h3>
+                <p class="" style="margin-right: 20px" style="width: 100%">
+                    <a href="${restaurant.url}">Restaurant's webpage</a>
+                </p>
+                <p class="restaurant-tags" style="width: 100%" class="row" id="example-tags-list">
+                    ${tags_content}
+                </p>
+                <div class="restaurant-content" style="width: 100%" class="row">
+                    <pre>
+                        <code id="${name}-menu-content">
+                        Loading the Menu ...
+                        </code>
+                    </pre>
+                </div>
+            </div>`)
+            restRoot.append(item);
+
+            loadMenuForRestaurant(name);
+        }
+
+        function loadMenuForRestaurant(name) {
+            var request = getJson('/api/restaurants/' + name + '/menu').done(function(content) {
+                console.log("Restaurants menu Result [ " + name + " ]: ", content);
+                var root = $("#" + name + "-menu-content").text(content.content);
+            }).fail(function(content){
+                console.error("Restaurants menu Error [ " + name + " ]: ", content)
+            });
+        }
+
+        function addRestaurants(restaurants) {
+            if(!restaurants) 
+                return;
+            Object.values(restaurants).forEach(function(restaurant) {
+                addRestaurantMenuItem(restaurant);
+                addRestaurantMenuContent(restaurant);
+            });
+        }
+
+        function loadRestaurants() {
+            var query = window.location.search;
+            var request = getJson('/api/restaurants' + query).done(function(content) {
+                console.log("Restaurants Result: ", content);
+                addRestaurants(content);
+            }).fail(function(content){
+                console.error("Restaurants Error: ", content)
+            });
+        }
+
+        loadRestaurants();
+
+
+
         $('#sidebar').addClass('active');
         $('#page-container').addClass('active');
 

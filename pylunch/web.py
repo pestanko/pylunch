@@ -211,14 +211,14 @@ def restaurant(name):
     return flask.render_template('restaurant.html', **context)
 
 
-@app.route('/amenu')
+@app.route('/menu')
 def web_async_menu():
     web_app = WebApplication.get()
     context = web_app.gen_context()
-    return flask.render_template('amenu.html', **context)
+    return flask.render_template('menu.html', **context)
 
-@app.route("/menu")
-def web_menu():
+@app.route("/fmenu")
+def web_fallback_menu():
     web_app = WebApplication.get()
     instances = web_app.select_by_request()
     format = web_app.parse_request()['format']
@@ -229,7 +229,7 @@ def web_menu():
     else:
         menus = [(restaurant, web_app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
         context = web_app.gen_context(restaurants=instances, menus=menus)
-        return flask.render_template('menu.html', **context)
+        return flask.render_template('fmenu.html', **context)
 
 
 ###

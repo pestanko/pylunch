@@ -10,11 +10,19 @@ restaurants:
     url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Globus
     tags: ['rh', 'fast', 'rhlp']
 
+  lloyds:
+    display_name: Lloyds
+    selector: '#dnesni-menu'
+    url: http://restauracelloyds.cz/ke-stazeni/denni_menu.jpg
+    resolver: ocr_raw
+    tags: ['rh', 'cz']
+
   kocka:
     display_name: Zelena Kocka
-    selector: '#dnesni-menu'
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/ZelenaKocka
-    tags: ['rh', 'cz', 'rhlp']
+    selector: '.elementor-container .elementor-image img'
+    url: https://www.zelenakocka.cz/poledni-nabidka/
+    resolver: ocr_img
+    tags: ['rh', 'cz']
 
   purkynka:
     display_name: Purkynka

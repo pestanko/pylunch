@@ -116,6 +116,10 @@ class LunchEntity(collections.MutableMapping):
     def __repr__(self) -> str:
         return str(self.config)
 
+    @classmethod
+    def clone(cls, origin: 'LunchEntity'):
+        return cls(origin.config)
+
 
 ######
 # Resolvers
@@ -282,6 +286,65 @@ class PDFResolver(RequestResolver):
         high_level.extract_text_to_fp(stream, outfp=out, laparams=laparams)
         return out.getvalue().decode('utf-8')
 
+
+class OcrImgRawResolver(RequestResolver):
+    CACHE_EXT='img'
+    CACHE_SUFFIX='img-ocr'
+
+    def _resolve(self, **kwargs):
+        response =  super()._resolve(**kwargs)
+        if not response or not response.ok:
+            log.error(f"Unnable to get response from: {self.url}")
+            return None
+        text = self._resolve_text_from_content(io.BytesIO(response.content))
+        log.info(f"[IMG] Resolved image: {text}")
+        return text
+
+    def resolve_text(self, **kwargs) -> str:
+        text = self.resolve(**kwargs)
+        return f"PDF is available at: {self.entity.url}\n\n{text}" 
+
+    def _resolve_text_from_content(self, stream: io.BytesIO):
+        import pytesseract
+        from PIL import Image
+        img = Image.open(stream)
+        return pytesseract.image_to_string(img)
+
+    def resolve_text(self, **kwargs) -> str:
+        html_string = self.resolve(**kwargs)
+        if html_string is None:
+            return None
+        return html_string
+
+
+class OCRHeavyResolver(RequestResolver):
+    CACHE_EXT='html'
+    CACHE_SUFFIX='html-img'
+
+    def _parse_response(self, response: Response) -> List[Tag]:
+        soap = BeautifulSoup(response.content, "lxml")
+        sub = soap.select(self.entity.selector) if self.entity.selector else soap
+        log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
+        return sub
+
+    def _resolve(self, **kwargs) -> str:
+        response = super()._resolve(**kwargs)
+        if response is None:
+            return None
+        parsed = self._parse_response(response=response)
+        if not parsed:
+            return None
+        url = parsed[0]['src']
+        log.info(f"[OCR] Got an URL for [{self.entity.name}]: {url}")
+        new_entity = LunchEntity.clone(self.entity)
+        new_entity['url'] = url
+        return OcrImgRawResolver(self.service, entity=new_entity).resolve(**kwargs)
+
+    def resolve_text(self, **kwargs) -> str:
+        html_string = self.resolve(**kwargs)
+        if html_string is None:
+            return None
+        return html_string
 
 ######
 # Filters
@@ -514,7 +577,8 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, pdf=PDFResolver, request=RequestResolver)
+        self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, ocr_img=OCRHeavyResolver, ocr_raw=OcrImgRawResolver,
+                                                pdf=PDFResolver, request=RequestResolver)
         self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
