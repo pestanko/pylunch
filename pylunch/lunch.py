@@ -308,7 +308,7 @@ class OcrImgRawResolver(RequestResolver):
         import pytesseract
         from PIL import Image
         img = Image.open(stream)
-        return pytesseract.image_to_string(img)
+        return pytesseract.image_to_string(img, lang="ces")
 
     def resolve_text(self, **kwargs) -> str:
         html_string = self.resolve(**kwargs)
