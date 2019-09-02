@@ -25,6 +25,24 @@ $ cd pylunch
 $ pipenv install # install the dependencies
 ```
 
+### Install Tesseract for OCR support
+To support extracting text from images you need to install [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki).
+Then you need to download trained models for your language [Tesseract data files wiki](https://github.com/tesseract-ocr/tesseract/wiki/Data-Files) 
+(English is supported by default).
+Recommended are the [best (most accurate) trained models](https://github.com/tesseract-ocr/tessdata_best).
+Save downloaded trained models to a dictionary with name `tessdata`. 
+Expose environment variable `TESSDATA_PREFIX` with path to `tessdata` directory (i.e. `TESSDATA_PREFIX=/tmp/tessdata`).
+
+You can specify different language when extracting data from the image for any restaurant with attribute `language: <Lang code>` in `restaurants.yml` file. 
+
+####Dockerfile supported languages:
+| Language | Lang code |
+| ---------|:---:| 
+| English  | eng | 
+| Czech    | ces | 
+| Slovak   | slk | 
+
+
 ### First Run
 In order to run the tool correctly you need to configure it.
 
