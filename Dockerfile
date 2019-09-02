@@ -8,6 +8,8 @@ RUN apt-get update \
     && pip3 install --no-cache-dir pipenv \
     && mkdir /usr/local/share/tessdata \
     && wget 'https://github.com/tesseract-ocr/tessdata_best/blob/master/ces.traineddata?raw=true' -O ces.traineddata \
+    && wget 'https://github.com/tesseract-ocr/tessdata_best/blob/master/slk.traineddata?raw=true' -O slk.traineddata \
+    && wget 'https://github.com/tesseract-ocr/tessdata_best/blob/master/eng.traineddata?raw=true' -O eng.traineddata \
     && mv *.traineddata /usr/local/share/tessdata/
 
 ENV TESSDATA_PREFIX=/usr/local/share/tessdata
