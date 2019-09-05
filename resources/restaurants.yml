@@ -136,8 +136,16 @@ restaurants:
   tripoli:
     display_name: Tripoli Vankovka
     url: http://www.tripolivankovka.cz/denni-menu
-    selector: 'section.menu-list > menu:first-of-type'
+    selector: 'div.menu-for-one-day'
+    filters: ['day']
     tags: ['city', 'ita', 'pizza', 'vankovka', 'ns']
+    
+  husa:
+    display_name: Potrefena husa Vankovka
+    url: https://www.potrefenahusabrno.cz/menu/
+    selector: 'div.menu-for-one-day'
+    filters: ['day']
+    tags: ['city', 'cz', 'vankovka', 'ns']
 
   drindy:
     display_name: Dr Indy
