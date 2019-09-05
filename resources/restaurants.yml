@@ -194,13 +194,12 @@ restaurants:
     resolver: zomato
     tags: ['rh', 'cz']
 
-
   padowetz:
     display_name: Padowetz
-    url: https://www.zomato.com/brno/padowetz-original-restaurant-pub-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 16507074
+    url: http://www.restaurant-padowetz.cz/poledni-menu.htm
+    selector: ".tydeniMenu"
+    filters: ["day"]
     tags: ['city', 'cz', 'ns']
-    resolver: zomato
 
   lokal:
     display_name: Lokal u Caipla
