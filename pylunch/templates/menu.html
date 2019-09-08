@@ -162,7 +162,8 @@
             tags.forEach(function(tag) {
                 tags_content += `<a href="/menu?t=${tag}">${tag}</a>&nbsp;`
             });
-            var item = $(`<div class="row container-fluid" style="width: 100%" id="${name}-section">
+            var item = $(`
+            <div class="row container-fluid restaurant-section not-loaded" style="width: 100%" id="${name}-section">
                 <h3 class="restaurant-header" style="text-align: left; width: 100%">
                     <a href="/restaurants/${name}">${dname}</a>
                 </h3>
@@ -186,11 +187,26 @@
         }
 
         function loadMenuForRestaurant(name) {
-            var request = getJson('/api/restaurants/' + name + '/menu').done(function(content) {
-                console.log("Restaurants menu Result [ " + name + " ]: ", content);
-                var root = $("#" + name + "-menu-content").text(content.content);
-            }).fail(function(content){
-                console.error("Restaurants menu Error [ " + name + " ]: ", content)
+
+            function setContent(name, content) {
+                $("#" + name + "-menu-content").text(content);
+            }
+
+            function setError(name, err) {
+                var errContent = err.responseJSON;
+                $(`#${name}-section`).removeClass('not-loaded');
+                $(`#${name}-section`).addClass('error');
+                setContent(name, `Error [${errContent.status}] - ${errContent.message}`);
+            }
+
+            var request = getJson('/api/restaurants/' + name + '/menu').done(function(result) {
+                console.log("Restaurants menu Result [ " + name + " ]: ", result);
+                setContent(name, result.content)
+                $(`#${name}-section`).removeClass('not-loaded');
+                $(`#${name}-section`).addClass('loaded');
+            }).fail(function(err){
+                console.error("Restaurants menu Error [ " + name + " ]: ", err)
+                setError(name, err);
             });
         }
 
@@ -214,7 +230,6 @@
         }
 
         loadRestaurants();
-
 
 
         $('#sidebar').addClass('active');

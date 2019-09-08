@@ -7,7 +7,7 @@ import click
 import datetime
 from pathlib import Path
 from typing import List, Optional, Mapping, Union
-from pylunch import config, lunch, utils, __version__, log_config
+from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_jwt_extended import (
@@ -75,13 +75,15 @@ def handle_general_error(e):
     context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
     return flask.render_template('error.html', **context), code
 
+def handle_api_error(e: errors.PyLunchApiError):
+    return flask.jsonify(e.to_json()), e.code
+
 def page_not_found(e: Exception):
     # note that we set the 404 status explicitly
     code = 404
     web_app = WebApplication.get()
     context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
     return flask.render_template('error.html', **context), 404
-
 
     
 class WebApplication:
@@ -106,6 +108,7 @@ class WebApplication:
         else:
             flask_app.register_error_handler(404, page_not_found)
             flask_app.register_error_handler(Exception, handle_general_error)
+            flask_app.register_error_handler(errors.PyLunchApiError, handle_api_error)
         return flask_app
 
     def __init__(self, config_dir=None):
@@ -264,8 +267,11 @@ def route_api_restaurants_get_menu(name):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
     content = web_app.service.resolve_text(instance)
-    result = {**instance.config, 'content': content}
-    return flask.jsonify(result)
+    if content:
+        result = {**instance.config, 'content': content}
+        return flask.jsonify(result)
+    else:
+        return flask.jsonify(errors.UnnableToLoadContent(name).to_json()), 400
 
 
 @api.route("/restaurants/<name>/cache")
