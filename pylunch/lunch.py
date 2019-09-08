@@ -413,6 +413,7 @@ class DayResolveFilter(CutFilter):
         day_opts = self.options(day)
         if not day_opts:
             log.warning(f"[DAY] No suitable option for a day {day} for entity {self.entity.name}")
+            return None
         for opt in day_opts:
             pos = self._find_pos(content, opt)
             if pos is not None:

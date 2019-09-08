@@ -126,11 +126,17 @@
             </div>
 
             <ul class="list-unstyled components">
-                {% for entity in restaurants %}
-                <li class="menu-item" id="{{entity.name}}-item">
-                    <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
-                </li>
-                {% endfor %}
+                {% if restaurants %}
+                    {% for entity in restaurants %}
+                    <li class="menu-item" id="{{entity.name}}-item">
+                        <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
+                    </li>
+                    {% endfor %}
+                {%else%}
+                    <li class="menu-item" id="message-item">
+                        No restaurants found
+                    </li>
+                {% endif %}
             </ul>
             
         </nav>

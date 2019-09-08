@@ -66,6 +66,23 @@ class AdminUsers(utils.CollectionWrapper):
         access_token = create_access_token(identity = name)
         return dict(access_token=access_token, username=name)
 
+
+def handle_general_error(e):
+    code = 500
+    if isinstance(e, HTTPError):
+        code = e.code
+    web_app = WebApplication.get()
+    context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
+    return flask.render_template('error.html', **context), code
+
+def page_not_found(e: Exception):
+    # note that we set the 404 status explicitly
+    code = 404
+    web_app = WebApplication.get()
+    context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
+    return flask.render_template('error.html', **context), 404
+
+
     
 class WebApplication:
     INSTANCE = None
@@ -86,6 +103,9 @@ class WebApplication:
         if flask_app.debug:
             flask_app.jinja_env.auto_reload = True
             flask_app.config['TEMPLATES_AUTO_RELOAD'] = True
+        else:
+            flask_app.register_error_handler(404, page_not_found)
+            flask_app.register_error_handler(Exception, handle_general_error)
         return flask_app
 
     def __init__(self, config_dir=None):
@@ -179,23 +199,6 @@ def roll_filter(items, roll):
     import random
     return random.choices(items, k=int(roll))
 
-@app.errorhandler(Exception)
-def handle_error(e):
-    code = 500
-    if isinstance(e, HTTPError):
-        code = e.code
-    web_app = WebApplication.get()
-    context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
-    return flask.render_template('error.html', **context), code
-
-@app.errorhandler(404)
-def page_not_found(e: Exception):
-    # note that we set the 404 status explicitly
-    code = 404
-    web_app = WebApplication.get()
-    context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
-    return flask.render_template('error.html', **context), 404
-
 @app.route('/')
 def index():
     web_app = WebApplication.get()
@@ -221,6 +224,7 @@ def web_async_menu():
 def web_fallback_menu():
     web_app = WebApplication.get()
     instances = web_app.select_by_request()
+    instances = instances if instances is not None else []
     format = web_app.parse_request()['format']
 
     if format is not None and format.startswith('t'):
