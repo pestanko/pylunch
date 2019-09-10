@@ -93,6 +93,10 @@ class LunchEntity(collections.MutableMapping):
     def filters(self) -> str:
         return self.config.get('filters')
 
+    @property
+    def language(self) -> str:
+        return self.config.get('language') or 'eng'
+
     def __str__(self) -> str:
         result = f"\"{self.name}\" -"
 
@@ -308,7 +312,7 @@ class OcrImgRawResolver(RequestResolver):
         import pytesseract
         from PIL import Image
         img = Image.open(stream)
-        return pytesseract.image_to_string(img)
+        return pytesseract.image_to_string(img, lang=self.entity.language)
 
     def resolve_text(self, **kwargs) -> str:
         html_string = self.resolve(**kwargs)
