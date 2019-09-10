@@ -95,7 +95,7 @@ class LunchEntity(collections.MutableMapping):
 
     @property
     def language(self) -> str:
-        return self.config.get('language') or 'ces'
+        return self.config.get('language') or 'eng'
 
     def __str__(self) -> str:
         result = f"\"{self.name}\" -"
