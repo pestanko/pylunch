@@ -156,6 +156,7 @@ class LunchEntity(collections.MutableMapping):
     def clone(cls, origin: 'LunchEntity'):
         return cls(origin.config)
 
+
 class ResolverConfig(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any], entity: LunchEntity=None, content=None):
         self._config = {**config}
@@ -187,7 +188,11 @@ class ResolverConfig(collections.MutableMapping):
 
     @property
     def name(self) -> str:
-        return self.config.get('name')
+        return self.resolver
+
+    @property
+    def resolver(self) -> str:
+        return self.config.get('resolver')
 
     @property
     def url(self) -> str:
@@ -195,7 +200,7 @@ class ResolverConfig(collections.MutableMapping):
 
     @property
     def selector(self) -> str:
-        return self.config.get('selector')
+        return self.config.get('selector') or self.entity.selector
 
     @property
     def content(self) -> str:
@@ -206,14 +211,25 @@ class ResolverConfig(collections.MutableMapping):
         text = self.config.get('text', 'false')
         return distutils.util.strtobool(text)
 
+    @property
+    def allow_cache(self) -> bool:
+       return not self.no_cache
+
+    @property
+    def no_cache(self) -> bool:
+        no_cache = self.config.get('no_cache', 'false')
+        return distutils.util.strtobool(no_cache)
+
 
 ######
 # Resolvers
 ######
 
+
 class AbstractResolver:
     CACHE_EXT='txt'
     CACHE_SUFFIX=None
+    CACHE_DISABLED=False
 
     def __init__(self, service: 'LunchService', config: ResolverConfig):
         self._service = service
@@ -236,8 +252,12 @@ class AbstractResolver:
         log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
         try:
             suffix = cls.CACHE_SUFFIX or cls.__name__
-            return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT, suffix=suffix)
-            #return self._resolve(**kwargs)
+            allow_cache = self.config.allow_cache and not cls.CACHE_DISABLED
+            log.debug("[RESOLV] Cache state: {}")
+            if allow_cache:
+                return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT, suffix=suffix)
+            
+            return self._resolve(day=day, **kwargs)
         except Exception as ex:
             log.error(f"[RESOLV] Resolved error {cls.__name__}: {ex}", exc_info=True)
             return None
@@ -286,7 +306,7 @@ class ResolverChain(AbstractResolver):
         else:
             resolved = instance.resolve_text(**kwargs)
         return resolved
-        
+
         
 class RequestResolver(AbstractResolver):
     CACHE_EXT='dat'
@@ -299,13 +319,13 @@ class RequestResolver(AbstractResolver):
 
     @property
     def request_url(self) -> str:
-        return self.entity.url
+        return self.config.url or self.config.content or self.entity.url
 
     def get_request_params(self) -> dict:
         headers = {'User-Agent': self.__class__.random_useragent()}
         params = dict()
-        if self.entity.request_params:
-            params.update(self.entity.request_params)
+        if self.config.request_params:
+            params.update(self.config.request_params)
             if 'headers' in params:
                 params['headers'].update(headers)
         else:
@@ -339,7 +359,7 @@ class HtmlResolver(RequestResolver):
 
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
-        sub = soap.select(self.entity.selector) if self.entity.selector else soap
+        sub = soap.select(self.config.selector) if self.config.selector else soap
         log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
@@ -356,7 +376,7 @@ class HtmlResolver(RequestResolver):
         parsed = self._parse_response(response=response)
         content = self.to_string(parsed)
         if not content:
-            log.warning(f"[HTML] Content is empty for {self.entity.name} - {self.entity.url} ({self.entity.selector})")
+            log.warning(f"[HTML] Content is empty for {self.entity.name} - {self.config.url} ({self.config.selector})")
             return None
         else:
             log.debug(f"[HTML] Extracted content {self.entity.name}: {content}")
@@ -368,7 +388,58 @@ class HtmlResolver(RequestResolver):
             items = [str(item) for item in parsed]
             return "".join(items)
         else:
+            return str(parsed)
+
+
+class AbstractHtmlResolver(AbstractResolver):
+    CACHE_EXT='html'
+    CACHE_SUFFIX='html'
+
+    def resolve_text(self, **kwargs) -> str:
+        html_string = self.resolve(**kwargs)
+        if html_string is None:
+            return None
+        return to_text(html_string)
+
+
+class HtmlTagsSelectorResolver(AbstractHtmlResolver):
+    CACHE_DISABLED=True
+
+    def _resolve(self, **kwargs) -> List[Tag]:
+        response: requests.Response = self.config.content
+
+        soap = BeautifulSoup(response.content, "lxml")
+        tags = soap.select(self.entity.selector) if self.entity.selector else soap
+        log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {tags}")
+        return tags
+
+
+class ToStringResolver(AbstractResolver):
+    def _resolve(self, **kwargs) -> str:
+        string = self.config.content
+        content = self.to_string(string)
+        if not content:
+            log.warning(f"[STR] Content is empty for {self.entity.name}")
+            return None
+        else:
+            log.debug(f"[STR] Extracted content {self.entity.name}: {content}")
+        return content
+
+    @classmethod
+    def to_string(cls, parsed) -> str:
+        if isinstance(parsed, list):
+            items = [str(item) for item in parsed]
+            return "".join(items)
+        else:
             return str(parsed.extract())
+
+
+class HtmlTagsAttributeResolver(AbstractHtmlResolver):
+    def _resolve(self, **kwargs):
+        tags: List[Tag] = self.config.content
+
+        return super()._resolve()
+
 
 
 class ZomatoResolver(AbstractResolver):
@@ -607,7 +678,6 @@ class LunchCollection(collections.MutableMapping):
          return len(self.collection) 
 
 
-
 class Resolvers(LunchCollection):
     def register(self, name: str, cls: type):
         if name is None or cls is None:
@@ -620,6 +690,7 @@ class Resolvers(LunchCollection):
 
     def for_entity(self, entity: LunchEntity) -> HtmlResolver:
         return self.get(entity.resolver)
+
 
 class Filters(LunchCollection):
     def register(self, name: str, cls: type):
@@ -729,7 +800,7 @@ class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, ocr_img=OCRHeavyResolver, ocr_raw=OcrImgRawResolver,
-                                                pdf=PDFResolver, request=RequestResolver)
+                                                pdf=PDFResolver, request=RequestResolver, chain=ResolverChain)
         self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
