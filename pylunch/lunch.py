@@ -14,6 +14,7 @@ import io
 import os
 import re
 import locale
+import distutils
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -56,7 +57,6 @@ USER_AGENTS = [
     'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)',
     'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)'
 ]
-
 
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
@@ -122,6 +122,10 @@ class LunchEntity(collections.MutableMapping):
         return self.config.get('filters')
 
     @property
+    def chain(self) -> List[MutableMapping]:
+        return self.config.get('chain')
+
+    @property
     def language(self) -> str:
         return self.config.get('language') or 'eng'
 
@@ -152,19 +156,80 @@ class LunchEntity(collections.MutableMapping):
     def clone(cls, origin: 'LunchEntity'):
         return cls(origin.config)
 
+class ResolverConfig(collections.MutableMapping):
+    def __init__(self, config: Mapping[str, Any], entity: LunchEntity=None, content=None):
+        self._config = {**config}
+        self._entity = entity
+        self._content = content
+
+    def __getitem__(self, k):
+         return self._config.get(k)
+
+    def __setitem__(self, k, v):
+         self.config[k] = v
+    
+    def __delitem__(self, k):
+         del self.config[k]
+    
+    def __iter__(self):
+        return iter(self._config)
+    
+    def __len__(self):
+         return len(self.config)
+
+    @property
+    def config(self) -> MutableMapping['str', Any]:
+        return self._config
+
+    @property
+    def entity(self) -> LunchEntity:
+        return self._entity
+
+    @property
+    def name(self) -> str:
+        return self.config.get('name')
+
+    @property
+    def url(self) -> str:
+        return self.config.get('url')
+
+    @property
+    def selector(self) -> str:
+        return self.config.get('selector')
+
+    @property
+    def content(self) -> str:
+        return self._content if self._content is not None else self.config.get('content')
+
+    @property
+    def text(self) -> bool:
+        text = self.config.get('text', 'false')
+        return distutils.util.strtobool(text)
+
 
 ######
 # Resolvers
 ######
 
-
 class AbstractResolver:
     CACHE_EXT='txt'
     CACHE_SUFFIX=None
 
-    def __init__(self, service: 'LunchService', entity: LunchEntity):
-        self.service = service
-        self.entity = entity
+    def __init__(self, service: 'LunchService', config: ResolverConfig):
+        self._service = service
+        self._config = config
+
+    @property
+    def config(self) -> ResolverConfig:
+        return self._config
+    
+    @property
+    def entity(self) -> LunchEntity:
+        return self.config.entity
+
+    @property
+    def service(self) -> 'LunchService':
+        return self._service
 
     def resolve(self, day=None, **kwargs) -> Any:
         cls = self.__class__
@@ -187,6 +252,42 @@ class AbstractResolver:
         return None
 
 
+class ResolverChain(AbstractResolver):
+    CACHE_EXT='txt'
+    CACHE_SUFFIX='chain'
+
+    @property
+    def chain(self) -> List[MutableMapping]:
+        return self.entity.chain
+
+    def _resolve(self, **kwargs) -> Any:
+        content = None
+        log.info(f"[CHAIN] Resolving chain for {self.entity.name}")
+        for res_cfg in self.chain:
+            config = ResolverConfig(config=res_cfg, entity=self.entity, content=content)
+            resolved = self._resolve_one(config=config, content=content, **kwargs)
+
+            if not resolved:
+                log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name}: no content")
+            else:
+                log.info(f"[CHAIN] Resolver {config.name} for {self.entity.name}: {resolved}")
+            content = resolved
+        return content
+
+    def _resolve_one(self, config, content, **kwargs):
+        resolver = self.service.resolvers.get(config.name)
+        if not resolver:
+            log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name} was not found, skipping.")
+            return None
+        log.info(f"[CHAIN] Using the resolver {config.name} for entity: {self.entity.name}: {resolver.__name__}")
+        instance: AbstractResolver = resolver(service=self.service, config=config)
+        if config.text:
+            resolved = instance.resolve(**kwargs)
+        else:
+            resolved = instance.resolve_text(**kwargs)
+        return resolved
+        
+        
 class RequestResolver(AbstractResolver):
     CACHE_EXT='dat'
     CACHE_SUFFIX='raw-request'
@@ -712,7 +813,8 @@ class LunchService:
     def _resolve(self, entity, **kwargs):
         resolver = self.resolvers.for_entity(entity)
         log.debug(f"[RESOLVER] Using the resolver for {entity.name}: {resolver.__name__}")
-        content = resolver(self, entity).resolve(**kwargs)
+        config = ResolverConfig(config=entity.config, entity=entity, content=None)
+        content = resolver(service=self, config=config).resolve(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
