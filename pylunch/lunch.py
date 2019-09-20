@@ -1,8 +1,6 @@
 import logging
 from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping, Mapping
 
-import aiohttp
-import asyncio
 import html2text
 import requests
 import yaml
