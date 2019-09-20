@@ -14,7 +14,7 @@ $ pip install pylunch
 
 
 ### Install the development version from github
-- Python 3.6 or later
+- Python 3.7 or later
 - (Optional) [pipenv](https://github.com/pypa/pipenv)
 
 Or you can add it as a development dependency using the ``pipenv``
@@ -35,7 +35,8 @@ Expose environment variable `TESSDATA_PREFIX` with path to `tessdata` directory 
 
 You can specify different language when extracting data from the image for any restaurant with attribute `language: <Lang code>` in `restaurants.yml` file. 
 
-####Dockerfile supported languages:
+#### Dockerfile supported languages:
+
 | Language | Lang code |
 | ---------|:---:| 
 | English  | eng | 
