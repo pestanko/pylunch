@@ -24,6 +24,8 @@ restaurants:
     url: https://www.zelenakocka.cz/poledni-nabidka/
     resolver: ocr_img
     language: ces
+    cut_after: 'Polední nabídka'
+    filters: ['cut', 'nl']
     tags: ['rh', 'cz']
 
   purkynka:
