@@ -122,8 +122,8 @@ class LunchEntity(collections.MutableMapping):
         return self.config.get('filters')
 
     @property
-    def chain(self) -> List[MutableMapping]:
-        return self.config.get('chain')
+    def resolvers(self) -> List[MutableMapping]:
+        return self.config.get('resolvers')
 
     @property
     def language(self) -> str:
@@ -195,6 +195,10 @@ class ResolverConfig(collections.MutableMapping):
         return self.config.get('resolver')
 
     @property
+    def request_params(self) -> dict:
+        return self.config.get('request_params', {})
+
+    @property
     def url(self) -> str:
         return self.config.get('url')
 
@@ -232,6 +236,7 @@ class AbstractResolver:
     CACHE_DISABLED=False
 
     def __init__(self, service: 'LunchService', config: ResolverConfig):
+        log.debug(f"[RESOLV] Instance of {self.__class__.__name__} with {config}")
         self._service = service
         self._config = config
 
@@ -278,7 +283,7 @@ class ResolverChain(AbstractResolver):
 
     @property
     def chain(self) -> List[MutableMapping]:
-        return self.entity.chain
+        return self.entity.resolvers
 
     def _resolve(self, **kwargs) -> Any:
         content = None
@@ -319,7 +324,7 @@ class RequestResolver(AbstractResolver):
 
     @property
     def request_url(self) -> str:
-        return self.config.url or self.config.content or self.entity.url
+        return self.config.content or self.config.url or self.entity.url
 
     def get_request_params(self) -> dict:
         headers = {'User-Agent': self.__class__.random_useragent()}
@@ -557,9 +562,9 @@ class OCRHeavyResolver(RequestResolver):
             return None
         url = parsed[0]['src']
         log.info(f"[OCR] Got an URL for [{self.entity.name}]: {url}")
-        new_entity = LunchEntity.clone(self.entity)
-        new_entity['url'] = url
-        return OcrImgRawResolver(self.service, entity=new_entity).resolve(**kwargs)
+        config = ResolverConfig(entity=self.entity, config=self.entity.config, content=url)
+        
+        return OcrImgRawResolver(self.service, config=config).resolve(**kwargs)
 
     def resolve_text(self, **kwargs) -> str:
         html_string = self.resolve(**kwargs)
@@ -692,7 +697,10 @@ class Resolvers(LunchCollection):
     def get(self, name: str) -> type:
         return self._collection.get(name, HtmlResolver)
 
-    def for_entity(self, entity: LunchEntity) -> HtmlResolver:
+    def for_entity(self, entity: LunchEntity) -> AbstractResolver:
+        if entity.resolvers is not None or entity.resolver == 'chain':
+            log.info("[RESOLV] Using the chain resolver")
+            return ResolverChain
         return self.get(entity.resolver)
 
 
@@ -803,9 +811,24 @@ class Entities(LunchCollection):
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
-        self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, ocr_img=OCRHeavyResolver, ocr_raw=OcrImgRawResolver,
-                                                pdf=PDFResolver, request=RequestResolver, chain=ResolverChain)
-        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter, cut=CutFilter)
+        self._resolvers: Resolvers = Resolvers(
+            default=HtmlResolver, 
+            zomato=ZomatoResolver, 
+            ocr_img=OCRHeavyResolver, 
+            ocr_raw=OcrImgRawResolver,
+            pdf=PDFResolver, 
+            request=RequestResolver, 
+            chain=ResolverChain, 
+            html_tags=HtmlTagsSelectorResolver, 
+            html=HtmlResolver, 
+            html_attr=HtmlTagsAttributeResolver
+            )
+        self._filters: Filters = Filters(
+            raw=LunchContentFilter, 
+            day=DayResolveFilter, 
+            nl=NewLinesFilter, 
+            cut=CutFilter
+            )
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
         self._cache: LunchCache = LunchCache(self)
@@ -886,10 +909,8 @@ class LunchService:
         return result
 
     def _resolve(self, entity, **kwargs):
-        resolver = self.resolvers.for_entity(entity)
-        log.debug(f"[RESOLVER] Using the resolver for {entity.name}: {resolver.__name__}")
-        config = ResolverConfig(config=entity.config, entity=entity, content=None)
-        content = resolver(service=self, config=config).resolve(**kwargs)
+        content = self._get_resolver(entity).resolve(**kwargs)
+
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
@@ -898,11 +919,8 @@ class LunchService:
     def _resolve(self, entity, **kwargs):
         return self._cache_wrap(entity, func=self._resolve, ext='cache', **kwargs)
 
-
     def _resolve_text(self, entity: LunchEntity, **kwargs) -> str:
-        resolver = self.resolvers.for_entity(entity)
-        log.debug(f"[RESOLVER] Using the resolver: {resolver.__name__}")
-        content = resolver(self, entity).resolve_text(**kwargs)
+        content = self._get_resolver(entity).resolve_text(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
             return None
@@ -912,6 +930,13 @@ class LunchService:
             return content
         
         return self._apply_filters(entity, content, **kwargs)
+
+    def _get_resolver(self, entity) -> AbstractResolver:
+        resolver = self.resolvers.for_entity(entity)
+        log.debug(f"[RESOLVER] Using the resolver for {entity.name}: {resolver.__name__}")
+        config = ResolverConfig(config=entity.config, entity=entity, content=None)
+
+        return resolver(service=self, config=config)
 
     def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
         return self.cache.wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
