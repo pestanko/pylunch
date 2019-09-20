@@ -50,10 +50,10 @@ restaurants:
 
   himalaya:
     display_name: Himalaya
-    url: 'http://www.indian-restaurant-buddha.cz/index.html'
-    selector: '#jidelnilisteklong'
+    url: 'https://www.himalayarestaurace.cz/en/daily-menu/'
+    selector: '#main-content p.et_pb_text_inner'
     filters: [ 'day' ]
-    tags: ['city', 'india', 'asia']
+    tags: ['city', 'india', 'asia', 'ns']
 
   kytnerka:
     display_name: Na Kytnerce
@@ -333,7 +333,7 @@ restaurants:
     display_name: Sborovna
     url: https://www.zomato.com/brno/sborovna-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 18335377
-    tags: ['cz', 'city', 'ns']
+    tags: ['cz', 'city', 'gd']
     resolver: zomato
     
   annapurna:
@@ -349,3 +349,10 @@ restaurants:
     tags: ['city', 'ns', 'avast']
     filters: [ 'day' ]
     resolver: pdf
+
+  casa-fuego:
+    display_name: Casa Fuego
+    url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
+    selector: '.tab-content > .tab-pane'
+    tags: ['city', 'gd', 'spain']
+    filters: [ 'day' ]
