@@ -16,6 +16,7 @@ restaurants:
     url: http://restauracelloyds.cz/ke-stazeni/denni_menu.jpg
     resolver: ocr_raw
     language: ces
+    filters: ['nl']
     tags: ['rh', 'cz']
 
   kocka:
