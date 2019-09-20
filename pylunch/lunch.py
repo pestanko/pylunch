@@ -12,7 +12,6 @@ import io
 import os
 import re
 import locale
-import distutils
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -211,7 +210,8 @@ class ResolverConfig(collections.MutableMapping):
     @property
     def text(self) -> bool:
         text = self.config.get('text', 'false')
-        return distutils.util.strtobool(text)
+        from distutils import util
+        return util.strtobool(text)
 
     @property
     def allow_cache(self) -> bool:
@@ -220,7 +220,8 @@ class ResolverConfig(collections.MutableMapping):
     @property
     def no_cache(self) -> bool:
         no_cache = self.config.get('no_cache', 'false')
-        return distutils.util.strtobool(no_cache)
+        from distutils import util
+        return util.strtobool(no_cache)
 
 
 ######
