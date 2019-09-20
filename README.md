@@ -29,6 +29,7 @@ $ pipenv install # install the dependencies
 To support extracting text from images you need to install [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki).
 Then you need to download trained models for your language [Tesseract data files wiki](https://github.com/tesseract-ocr/tesseract/wiki/Data-Files) 
 (English is supported by default).
+
 Recommended are the [best (most accurate) trained models](https://github.com/tesseract-ocr/tessdata_best).
 Save downloaded trained models to a dictionary with name `tessdata`. 
 Expose environment variable `TESSDATA_PREFIX` with path to `tessdata` directory (i.e. `TESSDATA_PREFIX=/tmp/tessdata`).

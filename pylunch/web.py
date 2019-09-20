@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 # Find the correct template folder when running from a different location
 base_dir = Path(__file__).parent.parent
 RESOURCES = base_dir / 'resources'
+INTERNAL = base_dir / 'internal'
 APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -152,15 +153,29 @@ class WebApplication:
     def gen_context(self, **kwargs):
         tags = self.service.instances.all_tags()
         restaurants = self.service.instances.all()
-        return dict(version=__version__, all_tags=tags, all_restaurants=restaurants, **kwargs)
- 
+        analytics = self._load_analytics()
+        return dict(
+            version=__version__, 
+            all_tags=tags, 
+            all_restaurants=restaurants, 
+            analytics=analytics,
+            **kwargs)
+
+    def _load_analytics(self):
+        analytics_path: Path = INTERNAL / 'analitics.html'
+        if not analytics_path.exists():
+            log.debug(f"[INIT] Analytics not loaded: {analytics_path}")
+            return None
+
+        log.info(f"[INIT] Analytics loaded: {analytics_path}")
+        return analytics_path.read_text(encoding='utf-8')
+        
     @classmethod
     def get(cls) -> 'WebApplication':
         if cls.INSTANCE is None:
             cls.INSTANCE = cls(config_dir=CONFIG_DIR)
             cls.INSTANCE.init()
         return cls.INSTANCE
-
 
     def parse_request(self):
         rq = flask.request

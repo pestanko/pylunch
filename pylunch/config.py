@@ -99,4 +99,3 @@ class AppConfig(collections.MutableMapping):
     @property
     def telegram_token(self) -> str:
         return self.config.get('telegram_token', None)
-    
