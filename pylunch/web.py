@@ -162,7 +162,7 @@ class WebApplication:
             **kwargs)
 
     def _load_analytics(self):
-        analytics_path: Path = INTERNAL / 'analitics.html'
+        analytics_path: Path = INTERNAL / 'analytics.html'
         if not analytics_path.exists():
             log.debug(f"[INIT] Analytics not loaded: {analytics_path}")
             return None
