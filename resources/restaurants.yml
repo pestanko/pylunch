@@ -180,23 +180,11 @@ restaurants:
 
   zlata-lod:
     display_name: Zlata Lod
-    url: http://www.zlatalod.com/
-    selector: '#dnes'
+    url: http://www.zlatalod.com/menu
+    selector: '.menu-for-one-day'
+    filters: ['day', 'cut']
+    cut_after: 'Nabídka baru'
     tags: ['city', 'cz', 'gd']
-
-  cattani-josef:
-    display_name: Cattani Jozefska
-    url: http://www.cattani.cz/
-    selector: '.josefska > .menu'
-    filters: ['nl']
-    tags: ['ita', 'city', 'pasta', 'ns']
-
-  cattani-veveri:
-    display_name: Cattani Veveri
-    url: http://www.cattani.cz/
-    selector: '.veveri > .menu'
-    filters: ['nl']
-    tags: ['ita', 'city', 'pasta', 'gd']
 
   dreveny-vlk:
     display_name: Drevenny Vlk
