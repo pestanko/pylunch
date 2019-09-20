@@ -144,14 +144,16 @@ restaurants:
     display_name: Tripoli Vankovka
     url: http://www.tripolivankovka.cz/denni-menu
     selector: 'div.menu-for-one-day'
-    filters: ['day']
+    filters: ['day', 'cut']
+    cut_after: 'Nabídka baru'
     tags: ['city', 'ita', 'pizza', 'vankovka', 'ns']
     
   husa:
     display_name: Potrefena husa Vankovka
     url: https://www.potrefenahusabrno.cz/menu/
     selector: 'div.menu-for-one-day'
-    filters: ['day']
+    filters: ['day', 'cut']
+    cut_after: 'Nabídka baru'
     tags: ['city', 'cz', 'vankovka', 'ns']
 
   drindy:
@@ -205,7 +207,8 @@ restaurants:
     display_name: Padowetz
     url: http://www.restaurant-padowetz.cz/poledni-menu.htm
     selector: ".tydeniMenu"
-    filters: ["day"]
+    filters: ["day", 'cut']
+    cut_after: 'Nápoje k menu'
     tags: ['city', 'cz', 'ns']
 
   lokal:
@@ -367,19 +370,19 @@ restaurants:
     url: http://www.mamut-pub.cz/tydenni-menu/
     selector: '#centerBack3'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
 
   na-tahu:
     display_name: Na Tahu
     url: http://www.na-tahu.cz/tydenni-menu/
     selector: '#centerTop'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
 
   storey:
     display_name: STOReY
     url: http://www.storey.cz
     selector: 'ul._denni_menu'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day' ]
+    filters: [ 'day', 'nl' ]
 
