@@ -425,10 +425,14 @@ class CutFilter(LunchContentFilter):
         return pos.start()
 
     def filter(self, content: str, cut_before=None, cut_after=None, **kwargs) -> str:
+        cut_before = cut_before or self.entity['cut_before']
+        cut_after = cut_after or self.entity['cut_after']
+
         if not content:
             return None
-        beg = self._find_pos(cut_before)
-        end = self._find_pos(cut_after)
+
+        beg = self._find_pos(content, cut_before)
+        end = self._find_pos(content, cut_after)
         if beg is None:
             beg = 0
         if end is None:
@@ -629,7 +633,7 @@ class LunchService:
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(default=HtmlResolver, zomato=ZomatoResolver, ocr_img=OCRHeavyResolver, ocr_raw=OcrImgRawResolver,
                                                 pdf=PDFResolver, request=RequestResolver)
-        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter)
+        self._filters: Filters = Filters(raw=LunchContentFilter, day=DayResolveFilter, nl=NewLinesFilter, cut=CutFilter)
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
         self._cache: LunchCache = LunchCache(self)

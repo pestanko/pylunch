@@ -51,8 +51,9 @@ restaurants:
   himalaya:
     display_name: Himalaya
     url: 'https://www.himalayarestaurace.cz/en/daily-menu/'
-    selector: '#main-content p.et_pb_text_inner'
-    filters: [ 'day' ]
+    selector: 'div#main-content div.et_pb_text_inner > p'
+    filters: [ 'day', 'cut', nl ]
+    cut_after: 'PŘÍLOHA'
     tags: ['city', 'india', 'asia', 'ns']
 
   kytnerka:
@@ -112,7 +113,8 @@ restaurants:
     display_name: Vivo Bene Gusto
     url: http://www.vivobene-gusto.cz/obedove-menu
     selector: '#main .article > .bd'
-    filters: ['day']
+    cut_after: 'OBĚDOVÁ NABÍDKA'
+    filters: ['day', 'cut']
     tags: ['ns', 'ita', 'city']
 
   drevak:
