@@ -355,4 +355,26 @@ restaurants:
     url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
     selector: '.tab-content > .tab-pane'
     tags: ['city', 'gd', 'spain']
+    filters: [ 'day', nl ]
+
+  mamut-pub:
+    display_name: Mamut Pub
+    url: http://www.mamut-pub.cz/tydenni-menu/
+    selector: '#centerBack3'
+    tags: ['city', 'ns', 'cz']
     filters: [ 'day' ]
+
+  na-tahu:
+    display_name: Na Tahu
+    url: http://www.na-tahu.cz/tydenni-menu/
+    selector: '#centerTop'
+    tags: ['city', 'ns', 'cz']
+    filters: [ 'day' ]
+
+  storey:
+    display_name: STOReY
+    url: http://www.storey.cz
+    selector: 'ul._denni_menu'
+    tags: ['city', 'ns', 'cz']
+    filters: [ 'day' ]
+
