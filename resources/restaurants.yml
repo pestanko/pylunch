@@ -75,7 +75,7 @@ restaurants:
   liquid-bread:
     display_name: Liquid Bread
     url: http://www.liquidbread.cz/liquidbread/liquidbread/mainmenu/daily-menu/
-    selector: '#content .Standard'
+    selector: '#content'
     filters: ['day', 'nl']
     tags: ['rh', 'cz']
 
