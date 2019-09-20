@@ -127,4 +127,4 @@ dmypy.json
 .pyre/
 
 .tool-versions
-internal/
+internal/*
