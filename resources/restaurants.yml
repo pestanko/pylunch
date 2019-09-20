@@ -1,14 +1,17 @@
 restaurants:
   nepal:
     display_name: Nepal
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Nepal
-    tags: ['rh', 'india', 'rhlp', asia]
+    url: http://nepalbrno.cz/weekly-menu/
+    selector: '#Content .the_content_wrapper table'
+    filters: ['day', 'cut']
+    cut_after: 'Seznam alergenů'
+    tags: ['rh', 'india', asia]
 
   globus:
     display_name: Globus
     selector: '.restaurant__menu-table-row--active'
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Globus
-    tags: ['rh', 'fast', 'rhlp']
+    url: https://www.globus.cz/brno/nabidka/restaurace.html
+    tags: ['rh', 'fast']
 
   lloyds:
     display_name: Lloyds
@@ -31,18 +34,24 @@ restaurants:
 
   purkynka:
     display_name: Purkynka
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Purkynka
-    tags: ['rh', 'cz', 'rhlp']
+    url: http://www.napurkynce.cz/daily-menu/
+    selector: '#content pre'
+    filters: ['day', 'nl']
+    tags: ['rh', 'cz']
 
   asport:
     display_name: A-sport hotel
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/Sporthotel
-    tags: ['rh', 'cz', 'rhlp']
+    url: http://www.a-sporthotel.cz/menu/
+    selector: '#left > table'
+    filters: ['day']
+    tags: ['rh', 'cz']
 
   padthai:
     display_name: Pad Thai
-    url: http://rhlp-oskutka.8a09.starter-us-east-2.openshiftapps.com/PadThai
-    tags: ['rh', 'rhlp', 'asia']
+    url: https://www.zomato.com/brno/pad-thai-královo-pole-brno-sever/daily-menu
+    selector: 16506806
+    resolver: 'zomato'
+    tags: ['rh', 'zomato', 'asia']
 
   buddha:
     display_name: Buddha
