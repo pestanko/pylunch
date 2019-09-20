@@ -153,7 +153,7 @@ class WebApplication:
     def gen_context(self, **kwargs):
         tags = self.service.instances.all_tags()
         restaurants = self.service.instances.all()
-        analytics = self._load_analitics()
+        analytics = self._load_analytics()
         return dict(
             version=__version__, 
             all_tags=tags, 
