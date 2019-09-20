@@ -22,6 +22,10 @@ requirements = ['pyyaml',
                 'pdfminer-six',
                 'ipython',
                 'flask',
+                'flask-jwt-extended',
+                'werkzeug',
+                'pytesseract',
+                'pillow',
                 ]
                 
 entry_points = {'console_scripts': ['pylunch = pylunch.cli:main_cli', ]}
