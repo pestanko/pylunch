@@ -563,7 +563,7 @@ class OCRHeavyResolver(RequestResolver):
         url = parsed[0]['src']
         log.info(f"[OCR] Got an URL for [{self.entity.name}]: {url}")
         config = ResolverConfig(entity=self.entity, config=self.entity.config, content=url)
-        
+
         return OcrImgRawResolver(self.service, config=config).resolve(**kwargs)
 
     def resolve_text(self, **kwargs) -> str:
@@ -908,6 +908,9 @@ class LunchService:
             result += f" - {restaurant.name} - {restaurant.url}\n"
         return result
 
+    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+        return self.cache.wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
+
     def _resolve(self, entity, **kwargs):
         content = self._get_resolver(entity).resolve(**kwargs)
 
@@ -937,9 +940,6 @@ class LunchService:
         config = ResolverConfig(config=entity.config, entity=entity, content=None)
 
         return resolver(service=self, config=config)
-
-    def resolve_text(self, entity: LunchEntity, **kwargs) -> str:
-        return self.cache.wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
 
     def _apply_filters(self, entity: 'LunchEntity', content: str, **kwargs):
         filters = self.filters.for_entity(entity)

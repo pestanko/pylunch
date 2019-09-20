@@ -85,6 +85,7 @@ def cli_list(app: CliApplication, limit=None):
 @click.option("--cut-after", help="Remove content after the substring", default=None)
 @click.option("--no-filters", help="Do not apply filters", default=False, is_flag=True)
 @click.option("-F", "--full", help="Show full output - do not apply day filter", default=False, is_flag=True)
+@click.option("-Q", "--with-fails", help="Show also fails at the end", default=False, is_flag=True)
 @pass_app
 def cli_menu(app: CliApplication, selectors: Tuple[str], tags=False, update_cache=False, **kwargs):
     instances = app.select_instances(selectors, tags=tags, with_disabled=False)
@@ -315,14 +316,21 @@ def _params_dict(params: List[str]) -> Mapping:
         (key, val) = param.split('=')
         result[key] = val
 
-def print_instances(service: lunch.LunchService, instances, transform=None, **kwargs):
-    transform = transform if transform is not None else lambda x: resolve_menu(service, x, **kwargs)
+def print_instances(service: lunch.LunchService, instances, transform=None, with_fails=False, **kwargs):
+    fails = list() if with_fails else None
+    transform = transform if transform is not None else lambda x: resolve_menu(service, x, fails=fails, **kwargs)
     utils.write_instances(instances, transform=transform, writer=print)
+    if fails:
+        print("\n~~~~~~~~~~~~~~~~  FAILS  ~~~~~~~~~~~~~~~\n")
+        for fail in fails:
+            print(fail)
 
-def resolve_menu(service: lunch.LunchService, instance: lunch.LunchEntity, **kwargs):
+def resolve_menu(service: lunch.LunchService, instance: lunch.LunchEntity, fails: list=None, **kwargs):
     result = _generate_menu_header(instance)
     content = service.resolve_text(instance, **kwargs)    
-    if not content:    
+    if not content:
+        if fails is not None:
+            fails.append(instance)
         result += f"No content provided for: {instance.name}"
     else:
         result += content
