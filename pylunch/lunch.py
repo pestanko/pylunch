@@ -450,8 +450,9 @@ class HtmlTagsAttributeResolver(AbstractHtmlResolver):
 class ZomatoResolver(AbstractResolver):
     CACHE_EXT='json'
     CACHE_SUFFIX='zomato'
-    ZOMATO_NOT_ENABLED="""Zomato key is not set, please get the zomato key 
-                        and set add it to the configuration as property `zomato_key`."""
+    ZOMATO_NOT_ENABLED="""
+    Zomato key is not set, please get the zomato key and set add it to the configuration as property `zomato_key`.
+    """
     @property
     def zomato(self) -> Pyzomato:
         return self.service.zomato
@@ -469,7 +470,7 @@ class ZomatoResolver(AbstractResolver):
     def resolve_text(self, **kwargs) -> str:
         content = self.resolve(**kwargs)
         if content is None:
-            return ZomatoResolver.ZOMATO_NOT_ENABLED
+            return None
         return "\n".join(self._make_lines(content))
 
     def _make_lines(self, content: dict) -> list:
@@ -594,9 +595,10 @@ class CutFilter(LunchContentFilter):
     def _find_pos(self, content, sub, diacritics=False) -> int:
         if sub is None or content is None:
             return None
-        text = unidecode.unidecode(content)
-        dec_sub = unidecode.unidecode(sub)
-        pos = re.search(dec_sub, text, re.IGNORECASE)
+        text = unidecode.unidecode(content) if not diacritics else content
+        dec_sub = unidecode.unidecode(sub) if not diacritics else sub
+        log.debug(f"[CUT] Matching \"{dec_sub}\" in {text}")
+        pos: re.Match = re.search(dec_sub, text, re.IGNORECASE)
         if pos is None:
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
             return None
@@ -833,10 +835,15 @@ class LunchService:
         self._config: AppConfig = config
         self._zomato: Pyzomato = None
         self._cache: LunchCache = LunchCache(self)
+        self._blacklist: EntityBlacklist = EntityBlacklist(self)
 
     @property
     def cache(self) -> 'LunchCache':
         return self._cache
+
+    @property
+    def blacklist(self) -> 'EntityBlacklist':
+        return self._blacklist
 
     @property
     def zomato(self) -> Pyzomato:
@@ -951,6 +958,69 @@ class LunchService:
             log.debug(f"[FILTER] Using the text filter: {flt.__name__}")
             content = flt(self, entity).filter(content)
         return content
+
+
+class EntityBlacklist:
+    def __init__(self, service: LunchService):
+        self._service = service
+    
+    @property
+    def service(self) -> LunchService:
+        return self._service
+
+    def load(self) -> MutableMapping:
+        path = self.path
+        if not path.exists():
+            return {}
+        return json.load(self.path.open('r'))
+
+    def save(self, blacklist: MutableMapping):
+        json.dump(blacklist, self.path.open('w'))
+
+    @property
+    def path(self) -> Path:
+        return self.service.cache.cache_base / self.service.cache.for_day(day=None) / 'blacklist.json'
+
+    def get(self, entity: LunchEntity=None) -> dict:
+        if self.service.cache.disabled:
+            return None
+        blacklist = self.load()
+        return blacklist.get(entity.name)
+
+    def is_blacklisted(self, entity: LunchEntity) -> bool:
+        metadata = self.get(entity)
+        return self.metadata_blacklisted(metadata)
+        
+
+    def metadata_blacklisted(self, metadata: MutableMapping) -> bool:
+        if not metadata:
+            return False
+        now = datetime.datetime.now()
+        meta_time = datetime.datetime.fromtimestamp(metadata['timestamp'])
+        return meta_time > now
+        
+    def blacklist(self, entity: LunchEntity):
+        name = entity.name
+        if self.service.cache.disabled:
+            log.info("[BLKL] Cache is disabled - not blacklisting")
+            return
+        blacklist = self.load()
+
+        if blacklist is None:
+            return
+
+        if name not in blacklist.keys():
+            log.info(f"[BLKL] Entity {name} not found in the blacklist!")
+            base = dict(name=name, count=1)
+            blacklist[name] = base
+        else:
+            log.info(f"[BLKL] Entity {name} found in the blacklist - increasing the count {blacklist[name]['count'] + 1}")
+            blacklist[name]['count'] += 1
+
+        black_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        blacklist[name]['timestamp'] = black_time.timestamp()
+
+        self.save(blacklist)
 
 
 class LunchCache:
@@ -1074,16 +1144,27 @@ class LunchCache:
 
     def wrap(self, entity: LunchEntity, func, day=None, ext=None, suffix=None, **kwargs) -> str:
         if not self.enabled:
-            return func(entity=entity, **kwargs)
+            return self._execute_func(entity=entity, func=func, **kwargs)
 
         cached = self.get_entity(entity, day=day, ext=ext, suffix=suffix)
         if cached:
             return cached
-        
-        content = func(entity=entity, **kwargs)
+    
+        content = self._execute_func(entity=entity, func=func, **kwargs)
         if content:
             self.store_entity(entity, content=content, ext=ext, suffix=suffix)
         return content
+
+    def _execute_func(self, entity: LunchEntity, func, **kwargs):
+        metadata = self.service.blacklist.get(entity)
+        if metadata and self.service.blacklist.metadata_blacklisted(metadata):
+            log.debug(f"[CACHE] Entity {entity.name} is blaclisted until {datetime.datetime.fromtimestamp(metadata['timestamp'])}.")
+            return None
+        result = func(entity=entity, **kwargs)
+        if not result:
+            log.info(f"[CACHE] Blaclisting {entity.name} for 15 minutes.")
+            self.service.blacklist.blacklist(entity)
+        return result
 
     def content(self, day=None):
         if self.disabled:
