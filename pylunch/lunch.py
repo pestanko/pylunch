@@ -12,6 +12,7 @@ import io
 import os
 import re
 import locale
+import unidecode
 from bs4 import BeautifulSoup, Tag
 from requests import Response
 from pyzomato import Pyzomato
@@ -590,25 +591,27 @@ class NewLinesFilter(LunchContentFilter):
         return self.__class__.PATTERN.sub("\n", content)
 
 class CutFilter(LunchContentFilter):
-    def _find_pos(self, content, sub) -> int:
+    def _find_pos(self, content, sub, diacritics=False) -> int:
         if sub is None or content is None:
             return None
-        pos = re.search(sub, content, re.IGNORECASE)
+        text = unidecode.unidecode(content)
+        dec_sub = unidecode.unidecode(sub)
+        pos = re.search(dec_sub, text, re.IGNORECASE)
         if pos is None:
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
             return None
         log.info(f"[CUT] Found for {self.entity.name} suitable day delimiter for {sub} at {pos}")
         return pos.start()
 
-    def filter(self, content: str, cut_before=None, cut_after=None, **kwargs) -> str:
+    def filter(self, content: str, cut_before=None, cut_after=None, diacritics=False, **kwargs) -> str:
         cut_before = cut_before or self.entity['cut_before']
         cut_after = cut_after or self.entity['cut_after']
 
         if not content:
             return None
 
-        beg = self._find_pos(content, cut_before)
-        end = self._find_pos(content, cut_after)
+        beg = self._find_pos(content, cut_before, diacritics=diacritics)
+        end = self._find_pos(content, cut_after, diacritics=diacritics)
         if beg is None:
             beg = 0
         if end is None:
@@ -636,7 +639,7 @@ class DayResolveFilter(CutFilter):
             return None
         return res
 
-    def find_day(self, day, content):
+    def find_day(self, day, content, diacritics=False):
         if day is None or content is None:
             return None
         day_opts = self.options(day)
@@ -644,21 +647,20 @@ class DayResolveFilter(CutFilter):
             log.warning(f"[DAY] No suitable option for a day {day} for entity {self.entity.name}")
             return None
         for opt in day_opts:
-            pos = self._find_pos(content, opt)
+            pos = self._find_pos(content, opt, diacritics=diacritics)
             if pos is not None:
                 log.info(f"[DAY] Found for {self.entity.name} suitable day delimiter for a day {day}: {opt} at {pos}")
                 return pos
         return None
         
-
-    def filter(self, content, day_from=None, day_to=None, **kwargs):
+    def filter(self, content, day_from=None, day_to=None, diacritics=False, **kwargs):
         if not content:
             return None
 
         day_from = day_from or self._week_day
         day_to = day_to or (day_from + 1)
-        beg = self.find_day(day_from, content)
-        end = self.find_day(day_to, content)
+        beg = self.find_day(day_from, content, diacritics=diacritics)
+        end = self.find_day(day_to, content, diacritics=diacritics)
         if beg is None:
             beg = 0
         if end is None:

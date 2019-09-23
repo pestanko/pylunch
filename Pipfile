@@ -28,6 +28,7 @@ aiohttp = "*"
 aiodns = "*"
 pytesseract = "*"
 pillow = "*"
+unidecode = "*"
 
 [requires]
 python_version = "3.7"

@@ -26,6 +26,7 @@ requirements = ['pyyaml',
                 'werkzeug',
                 'pytesseract',
                 'pillow',
+                'unidecode',
                 ]
                 
 entry_points = {'console_scripts': ['pylunch = pylunch.cli:main_cli', ]}
