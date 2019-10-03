@@ -1174,8 +1174,6 @@ class LunchCache:
         log.info(f"[CACHE] Cache content for {day_path}: {self.cache_base / day_path}")
         full = str(self.cache_base / day_path)
         return list(os.listdir(full))
-        
-
             
 def to_text(content):
     h = html2text.HTML2Text()

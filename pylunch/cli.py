@@ -75,6 +75,12 @@ def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=N
 @pass_app
 def cli_list(app: CliApplication, limit=None):
     print(app.service.to_string())
+
+
+@main_cli.command(name='version', help='Show version')
+@pass_app
+def cli_version(app: CliApplication):
+    print(f"Version: {__version__}")
     
 
 @main_cli.command(name='menu', help='Get menu for a restaurant')

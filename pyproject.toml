@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "pylunch"
+version = "0.2.0"
+description = "Pylunch cli and web tool to get lunch info"
+authors = ["Peter Stanko <peter.stanko0@gmail.com>"]
+repository='https://gitlab.com/pestanko/pylunch'
+homepage='https://gitlab.com/pestanko/pylunch'
+documentation='https://gitlab.com/pestanko/pylunch'
+license = "Apache-2.0"
+readme = 'README.md'
+packages = [
+    { include = "pylunch" }
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    'Programming Language :: Python :: 3.7',
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+    'Intended Audience :: Developers',
+    'Topic :: Utilities',
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+requests = "*"
+python-telegram-bot = "^12.0.0b1"
+pyyaml = "*"
+html2text = "*"
+beautifulsoup4 = "*"
+lxml = "*"
+fuzzywuzzy = "*"
+click = "*"
+python-levenshtein = "*"
+pyzomato = "*"
+pdfminer-six = "*"
+ipython = "*"
+flask = "*"
+flask-jwt-extended = "*"
+werkzeug = "*"
+aiohttp = "*"
+aiodns = "*"
+pytesseract = "*"
+pillow = "*"
+unidecode = "*"
+toml = "^0.10.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pylint = "*"
+rope = "*"
+
+[tool.poetry.scripts]
+pylunch = 'pylunch:cli'
+
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
