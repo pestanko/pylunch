@@ -224,6 +224,14 @@ version = "0.17.0"
 
 [[package]]
 category = "main"
+description = "WSGI HTTP Server for UNIX"
+name = "gunicorn"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*"
+version = "19.9.0"
+
+[[package]]
+category = "main"
 description = "Turn HTML into equivalent Markdown-structured text."
 name = "html2text"
 optional = false
@@ -789,7 +797,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "48928084081b30d5d27b28aa12b40abd0cc96fb0b1a16c172ea33618ac47340b"
+content-hash = "79179414dee3cebab3e563b42879fab088f1be537da9d17771e3c36ec898015d"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -814,6 +822,7 @@ flask = ["13f9f196f330c7c2c5d7a5cf91af894110ca0215ac051b5844701f2bfd934d52", "45
 flask-jwt-extended = ["7e89db96a5d589460853ad4e9cf51ff4ff5848029d65262149375b80ce95d8fe"]
 future = ["67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"]
 fuzzywuzzy = ["5ac7c0b3f4658d2743aa17da53a55598144edbc5bee3c6863840636e6926f254", "6f49de47db00e1c71d40ad16da42284ac357936fa9b66bea1df63fed07122d62"]
+gunicorn = ["aa8e0b40b4157b36a5df5e599f45c9c76d6af43845ba3b3b0efe2c70473c2471", "fa2662097c66f920f53f70621c6c58ca4a3c4d3434205e608e121b5b3b71f4f3"]
 html2text = ["55ce85704f244fc18890c5ded89fa22ff7333e41e9f3cad04d51f48d62ad8834", "6f56057c5c2993b5cc5b347cb099bdf6d095828fef1b53ef4e2a2bf2a1be9b4f"]
 idna = ["c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407", "ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"]
 idna-ssl = ["a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c"]

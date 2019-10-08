@@ -46,6 +46,7 @@ pytesseract = "*"
 pillow = "*"
 unidecode = "*"
 toml = "^0.10.0"
+gunicorn = "^19.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
