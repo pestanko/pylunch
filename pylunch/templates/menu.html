@@ -239,10 +239,6 @@
                 theme: "minimal"
         });
 
-        $("#page-container").mCustomScrollbar({
-                theme: "minimal"
-        });
-
         $("#sidebar-search").on('keyup paste', function(value){
             var value = this.value.toLowerCase();
             console.log("Value text: ", value)
@@ -262,6 +258,14 @@
             $('#sidebar').toggleClass('active');
             $('#page-container').toggleClass('active');
             console.log("Toggle clicked")
+        });
+
+
+        $(document).on('click', 'a[href^="#"]', function (event) {
+            event.preventDefault();
+            $('html, body').animate({
+                scrollTop: $($.attr(this, 'href')).offset().top - 50
+            }, 500);
         });
     });
 </script>
