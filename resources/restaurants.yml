@@ -58,7 +58,7 @@ restaurants:
     url: 'http://www.indian-restaurant-buddha.cz/index.html'
     selector: '#jidelnilisteklong'
     filters: [ 'day' ]
-    tags: ['city', 'india', 'asia']
+    tags: ['city', 'india', 'asia', 'gd']
 
   himalaya:
     display_name: Himalaya
@@ -219,7 +219,7 @@ restaurants:
     display_name: Siwa
     url: https://www.zomato.com/brno/siwa-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 18578705
-    tags: ['city', 'asia', 'gs']
+    tags: ['city', 'asia', 'gd']
     resolver: zomato
 
   dreveny-orol:
@@ -282,7 +282,7 @@ restaurants:
     display_name: Love Patatas
     url: https://www.zomato.com/cs/brno/bistro-love-patatas-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 18390235
-    tags: ['city', 'brambor']
+    tags: ['city', 'brambor', 'gd', 'nl']
     resolver: zomato
 
   statl:
@@ -361,26 +361,26 @@ restaurants:
     url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
     selector: '.tab-content > .tab-pane'
     tags: ['city', 'gd', 'spain']
-    filters: [ 'day', nl ]
+    filters: [ 'day', 'ns', 'gd']
 
   mamut-pub:
     display_name: Mamut Pub
-    url: http://www.mamut-pub.cz/tydenni-menu/
-    selector: '#centerBack3'
+    url: https://www.mamut-pub.cz/cz/page/nabidka.html
+    selector: '#content'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'nl' ]
+    filters: [ 'day', 'ns' ]
 
   na-tahu:
     display_name: Na Tahu
-    url: http://www.na-tahu.cz/tydenni-menu/
-    selector: '#centerTop'
+    url: https://www.na-tahu.cz/cz/page/nabidka.html
+    selector: '#content'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'nl' ]
+    filters: [ 'day', 'ns' ]
 
   storey:
     display_name: STOReY
     url: http://www.storey.cz
     selector: 'ul._denni_menu'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'nl' ]
+    filters: [ 'day', 'ns' ]
 
