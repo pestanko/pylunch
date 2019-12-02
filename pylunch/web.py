@@ -1,12 +1,11 @@
 import flask
-import functools
 import os
 from urllib.error import HTTPError
 import logging
 import click
 import datetime
 from pathlib import Path
-from typing import List, Optional, Mapping, Union
+from typing import List, Mapping
 from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -14,11 +13,10 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     jwt_refresh_token_required, create_refresh_token,
     get_jwt_identity, set_access_cookies,
-    set_refresh_cookies, unset_jwt_cookies
+    set_refresh_cookies
 )
 
 log = logging.getLogger(__name__)
-
 
 # Find the correct template folder when running from a different location
 base_dir = Path(__file__).parent.parent
@@ -28,6 +26,7 @@ APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+
 
 class AdminUsers(utils.CollectionWrapper):
     @property
@@ -39,7 +38,7 @@ class AdminUsers(utils.CollectionWrapper):
         loaded = utils.load_yaml(file)
         if not loaded:
             return
-        
+
         for (name, password) in loaded.items():
             log.info(f"[IMPORT] Importing user: {name}")
             self[name] = password
@@ -59,12 +58,12 @@ class AdminUsers(utils.CollectionWrapper):
         return False
 
     def issue_tokens(self, name) -> dict:
-        access_token = create_access_token(identity = name)
-        refresh_token = create_refresh_token(identity = name)
-        return dict(access_token=access_token, refresh_token = refresh_token, username=name)
+        access_token = create_access_token(identity=name)
+        refresh_token = create_refresh_token(identity=name)
+        return dict(access_token=access_token, refresh_token=refresh_token, username=name)
 
     def issue_access_token(self, name) -> dict:
-        access_token = create_access_token(identity = name)
+        access_token = create_access_token(identity=name)
         return dict(access_token=access_token, username=name)
 
 
@@ -76,8 +75,10 @@ def handle_general_error(e):
     context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
     return flask.render_template('error.html', **context), code
 
+
 def handle_api_error(e: errors.PyLunchApiError):
     return flask.jsonify(e.to_json()), e.code
+
 
 def page_not_found(e: Exception):
     # note that we set the 404 status explicitly
@@ -86,7 +87,7 @@ def page_not_found(e: Exception):
     context = web_app.gen_context(code=code, stacktrace=e, message=str(e))
     return flask.render_template('error.html', **context), 404
 
-    
+
 class WebApplication:
     INSTANCE = None
 
@@ -120,6 +121,10 @@ class WebApplication:
         self.users = AdminUsers()
 
     @property
+    def request(self) -> flask.Request:
+        return flask.request
+
+    @property
     def service(self) -> lunch.LunchService:
         return self._service
 
@@ -142,7 +147,7 @@ class WebApplication:
         self.config_loader.base_dir.mkdir(parents=True)
         self.config_loader.save(data=dict(restaurants='./restaurants.yaml'))
         self.restaurants_loader.save(data={})
-        
+
     def save_restaurants(self):
         log.info("Saving restaurants")
         self.restaurants_loader.save(self.service.instances.to_dict())
@@ -155,9 +160,9 @@ class WebApplication:
         restaurants = self.service.instances.all()
         analytics = self._load_analytics()
         return dict(
-            version=__version__, 
-            all_tags=tags, 
-            all_restaurants=restaurants, 
+            version=__version__,
+            all_tags=tags,
+            all_restaurants=restaurants,
             analytics=analytics,
             **kwargs)
 
@@ -169,7 +174,7 @@ class WebApplication:
 
         log.info(f"[INIT] Analytics loaded: {analytics_path}")
         return analytics_path.read_text(encoding='utf-8')
-        
+
     @classmethod
     def get(cls) -> 'WebApplication':
         if cls.INSTANCE is None:
@@ -179,8 +184,9 @@ class WebApplication:
 
     def parse_request(self):
         rq = flask.request
-        args = rq.args 
-        result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'h'), roll=args.get('roll'))
+        args = rq.args
+        result = dict(selectors=rq.args.getlist('r'), tags=rq.args.getlist('t'), format=rq.args.get('f', 'h'),
+                      roll=args.get('roll'))
         return result
 
     def select_by_request(self):
@@ -189,6 +195,7 @@ class WebApplication:
         selectors = args['selectors']
         format: str = args['format']
         roll = args['roll']
+
         def _inner():
             if selectors:
                 return self.select_instances(selectors)
@@ -196,6 +203,7 @@ class WebApplication:
                 return self.select_instances(tags, tags=True)
             else:
                 return self.select_instances(selectors=None)
+
         result = _inner()
         return roll_filter(result, roll)
 
@@ -203,6 +211,7 @@ class WebApplication:
 app = WebApplication.create_app()
 api = flask.Blueprint('api', __name__)
 admin = flask.Blueprint('admin', __name__)
+
 
 def register_blueprints(app):
     app.register_blueprint(api, url_prefix='/api')
@@ -217,11 +226,13 @@ def roll_filter(items, roll):
     import random
     return random.choices(items, k=int(roll))
 
+
 @app.route('/')
 def index():
     web_app = WebApplication.get()
     context = web_app.gen_context()
     return flask.render_template('index.html', **context)
+
 
 @app.route('/restaurants/<name>')
 def restaurant(name):
@@ -238,6 +249,7 @@ def web_async_menu():
     context = web_app.gen_context()
     return flask.render_template('menu.html', **context)
 
+
 @app.route("/fmenu")
 def web_fallback_menu():
     web_app = WebApplication.get()
@@ -249,7 +261,7 @@ def web_fallback_menu():
         content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
         return flask.Response(content, mimetype='text/plain')
     else:
-        menus = [(restaurant, web_app.service.resolve_text(restaurant)) for restaurant in instances if restaurant]
+        menus = [(rest, web_app.service.resolve_text(rest)) for rest in instances if rest]
         context = web_app.gen_context(restaurants=instances, menus=menus)
         return flask.render_template('fmenu.html', **context)
 
@@ -264,11 +276,13 @@ def route_api_restaurants():
     instances = web_app.select_by_request()
     return flask.jsonify({item.name: item.config for item in instances if item})
 
+
 @api.route("/tags")
 def route_api_tags():
     web_app = WebApplication.get()
     tags = web_app.service.instances.all_tags()
     return flask.jsonify(tags)
+
 
 @api.route("/restaurants/<name>")
 def route_api_restaurants_get(name):
@@ -294,7 +308,8 @@ def route_api_restaurants_get_cache(name):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
     paths = web_app.service.cache.paths_for_entity(instance, relative=True)
-    return flask.jsonify([ str(item) for item in paths])
+    return flask.jsonify([str(item) for item in paths])
+
 
 ###
 # Admin
@@ -307,13 +322,14 @@ def route_api_restaurants_get_cache(name):
 def admin_refresh():
     # Create the new access token
     current_user = get_jwt_identity()
-    web_app=WebApplication.get()
+    web_app = WebApplication.get()
     access_token = web_app.users.issue_access_token(current_user)
 
     # Set the JWT access cookie in the response
     resp = flask.jsonify({'refresh': True, **access_token})
     set_access_cookies(resp, access_token['access_token'])
     return resp, 200
+
 
 # Use the set_access_cookie() and set_refresh_cookie() on a response
 # object to set the JWTs in the response cookies. You can configure
@@ -325,8 +341,8 @@ def admin_login():
     password = flask.request.form.get('password', None)
     if not username or not password:
         return flask.jsonify({'message': 'Username or password is missing'}), 401
-    
-    web_app=WebApplication.get()
+
+    web_app = WebApplication.get()
     if not web_app.users.check_password(username, password):
         return flask.jsonify({'error': 'Invalid password'}), 401
 
@@ -337,6 +353,7 @@ def admin_login():
     set_access_cookies(resp, tokens.get('access_token'))
     set_refresh_cookies(resp, tokens.get('refresh_token'))
     return resp, 200
+
 
 @admin.route('/login', methods=['GET'])
 def admin_login_form():
@@ -353,12 +370,14 @@ def admin_index():
     context = web_app.gen_context(user=user)
     return flask.render_template('admin/index.html', **context)
 
+
 @admin.route('/token/valid', methods=['POST'])
 @jwt_required
 def admin_token_valid():
     web_app = WebApplication.get()
     user = get_jwt_identity()
     return flask.jsonify({'valid': True})
+
 
 @admin.route('/cache-invalidate', methods=['POST'])
 @jwt_required
@@ -367,16 +386,37 @@ def admin_cache_invalidate():
     items = web_app.service.cache.clear()
     return flask.jsonify({'message': "cache updated", "content": items})
 
+
+@admin.route('/config/restaurants')
+@jwt_required
+def admin_config_restaurants_get():
+    web_app = WebApplication.get()
+    return flask.jsonify(dict(content=web_app.restaurants_loader.full_path.read_text(encoding='utf-8')))
+
+
+@admin.route('/config/restaurants', methods=['POST'])
+@jwt_required
+def admin_config_restaurants_post():
+    web_app = WebApplication.get()
+    rq = web_app.request
+    rq_json = rq.json
+    web_app.service.import_string(rq_json.get('content'), override=True)
+    web_app.restaurants_loader.save(web_app.service.instances.to_dict())
+    return flask.jsonify(dict(content=web_app.service.instances.to_dict()))
+
+
 register_blueprints(app)
+
 
 ###
 # Helpers
 ### 
 
-def resolve_menu(service: lunch.LunchEntity, instance):
+def resolve_menu(service: lunch.LunchService, instance):
     result = _generate_menu_header(instance)
     result += service.resolve_text(instance)
-    return result 
+    return result
+
 
 def _generate_menu_header(instance):
     name_str = f"{instance.display_name} ({instance.name})"

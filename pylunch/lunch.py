@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Mapping, Tuple, Union, Any, MutableMapping, Mapping
+from typing import List, Optional, Tuple, Any, MutableMapping, Mapping, Union, Type, ValuesView, Dict
 
 import html2text
 import requests
@@ -11,7 +11,6 @@ import collections
 import io
 import os
 import re
-import locale
 import unidecode
 from bs4 import BeautifulSoup, Tag
 from requests import Response
@@ -21,7 +20,7 @@ from fuzzywuzzy import fuzz, process
 from pathlib import Path
 
 from .tags_evaluator import TagsEvaluator
-from .config import AppConfig, YamlLoader
+from .config import AppConfig
 
 from pdfminer import high_level
 import pdfminer.layout
@@ -29,7 +28,7 @@ import pdfminer.layout
 log = logging.getLogger(__name__)
 
 USER_AGENTS = [
-   #Chrome
+    # Chrome
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
     'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
     'Mozilla/5.0 (Windows NT 5.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36',
@@ -40,7 +39,7 @@ USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
     'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    #Firefox
+    # Firefox
     'Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 6.1)',
     'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
     'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)',
@@ -56,24 +55,25 @@ USER_AGENTS = [
     'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)'
 ]
 
+
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
 
     def __getitem__(self, k):
-         return self._config.get(k)
+        return self._config.get(k)
 
     def __setitem__(self, k, v):
-         self.config[k] = v
-    
+        self.config[k] = v
+
     def __delitem__(self, k):
-         del self.config[k]
-    
+        del self.config[k]
+
     def __iter__(self):
         return iter(self._config)
-    
+
     def __len__(self):
-         return len(self.config)
+        return len(self.config)
 
     @property
     def config(self) -> MutableMapping['str', Any]:
@@ -135,7 +135,7 @@ class LunchEntity(collections.MutableMapping):
 
         if self.tags:
             result += f" {self.tags}"
-        
+
         result += f" {self.url}"
 
         if self.selector:
@@ -156,25 +156,25 @@ class LunchEntity(collections.MutableMapping):
 
 
 class ResolverConfig(collections.MutableMapping):
-    def __init__(self, config: Mapping[str, Any], entity: LunchEntity=None, content=None):
+    def __init__(self, config: Mapping[str, Any], entity: LunchEntity = None, content=None):
         self._config = {**config}
         self._entity = entity
         self._content = content
 
     def __getitem__(self, k):
-         return self._config.get(k)
+        return self._config.get(k)
 
     def __setitem__(self, k, v):
-         self.config[k] = v
-    
+        self.config[k] = v
+
     def __delitem__(self, k):
-         del self.config[k]
-    
+        del self.config[k]
+
     def __iter__(self):
         return iter(self._config)
-    
+
     def __len__(self):
-         return len(self.config)
+        return len(self.config)
 
     @property
     def config(self) -> MutableMapping['str', Any]:
@@ -216,7 +216,7 @@ class ResolverConfig(collections.MutableMapping):
 
     @property
     def allow_cache(self) -> bool:
-       return not self.no_cache
+        return not self.no_cache
 
     @property
     def no_cache(self) -> bool:
@@ -231,9 +231,9 @@ class ResolverConfig(collections.MutableMapping):
 
 
 class AbstractResolver:
-    CACHE_EXT='txt'
-    CACHE_SUFFIX=None
-    CACHE_DISABLED=False
+    CACHE_EXT = 'txt'
+    CACHE_SUFFIX = None
+    CACHE_DISABLED = False
 
     def __init__(self, service: 'LunchService', config: ResolverConfig):
         log.debug(f"[RESOLV] Instance of {self.__class__.__name__} with {config}")
@@ -243,7 +243,7 @@ class AbstractResolver:
     @property
     def config(self) -> ResolverConfig:
         return self._config
-    
+
     @property
     def entity(self) -> LunchEntity:
         return self.config.entity
@@ -260,8 +260,9 @@ class AbstractResolver:
             allow_cache = self.config.allow_cache and not cls.CACHE_DISABLED
             log.debug("[RESOLV] Cache state: {}")
             if allow_cache:
-                return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT, suffix=suffix)
-            
+                return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT,
+                                               suffix=suffix)
+
             return self._resolve(day=day, **kwargs)
         except Exception as ex:
             log.error(f"[RESOLV] Resolved error {cls.__name__}: {ex}", exc_info=True)
@@ -278,8 +279,8 @@ class AbstractResolver:
 
 
 class ResolverChain(AbstractResolver):
-    CACHE_EXT='txt'
-    CACHE_SUFFIX='chain'
+    CACHE_EXT = 'txt'
+    CACHE_SUFFIX = 'chain'
 
     @property
     def chain(self) -> List[MutableMapping]:
@@ -312,10 +313,10 @@ class ResolverChain(AbstractResolver):
             resolved = instance.resolve_text(**kwargs)
         return resolved
 
-        
+
 class RequestResolver(AbstractResolver):
-    CACHE_EXT='dat'
-    CACHE_SUFFIX='raw-request'
+    CACHE_EXT = 'dat'
+    CACHE_SUFFIX = 'raw-request'
 
     @classmethod
     def random_useragent(cls):
@@ -337,7 +338,7 @@ class RequestResolver(AbstractResolver):
             params['headers'] = headers
         return params
 
-    def _resolve(self, **kwargs) -> requests.Response:
+    def _resolve(self, **kwargs) -> Optional[requests.Response]:
         try:
             params = self.get_request_params()
             response = requests.get(self.request_url, **(params))
@@ -351,7 +352,7 @@ class RequestResolver(AbstractResolver):
             log.debug(f"[RES] Response [{response.status_code}] {self.entity.name}: {response.content}")
         return response
 
-    def resolve_text(self, **kwargs) -> str:
+    def resolve_text(self, **kwargs) -> Optional[str]:
         res = self.resolve(**kwargs)
         if res.ok:
             return res.content.decode('utf-8')
@@ -359,8 +360,8 @@ class RequestResolver(AbstractResolver):
 
 
 class HtmlResolver(RequestResolver):
-    CACHE_EXT='html'
-    CACHE_SUFFIX='html'
+    CACHE_EXT = 'html'
+    CACHE_SUFFIX = 'html'
 
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
@@ -368,13 +369,13 @@ class HtmlResolver(RequestResolver):
         log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
-    def resolve_text(self, **kwargs) -> str:
+    def resolve_text(self, **kwargs) -> Optional[str]:
         html_string = self.resolve(**kwargs)
         if html_string is None:
             return None
         return to_text(html_string)
 
-    def _resolve(self, **kwargs) -> str:
+    def _resolve(self, **kwargs) -> Optional[str]:
         response = super()._resolve(**kwargs)
         if response is None:
             return None
@@ -385,8 +386,8 @@ class HtmlResolver(RequestResolver):
             return None
         else:
             log.debug(f"[HTML] Extracted content {self.entity.name}: {content}")
-        return content 
-        
+        return content
+
     @classmethod
     def to_string(cls, parsed) -> str:
         if isinstance(parsed, list):
@@ -397,10 +398,10 @@ class HtmlResolver(RequestResolver):
 
 
 class AbstractHtmlResolver(AbstractResolver):
-    CACHE_EXT='html'
-    CACHE_SUFFIX='html'
+    CACHE_EXT = 'html'
+    CACHE_SUFFIX = 'html'
 
-    def resolve_text(self, **kwargs) -> str:
+    def resolve_text(self, **kwargs) -> Optional[str]:
         html_string = self.resolve(**kwargs)
         if html_string is None:
             return None
@@ -408,7 +409,7 @@ class AbstractHtmlResolver(AbstractResolver):
 
 
 class HtmlTagsSelectorResolver(AbstractHtmlResolver):
-    CACHE_DISABLED=True
+    CACHE_DISABLED = True
 
     def _resolve(self, **kwargs) -> List[Tag]:
         response: requests.Response = self.config.content
@@ -420,7 +421,7 @@ class HtmlTagsSelectorResolver(AbstractHtmlResolver):
 
 
 class ToStringResolver(AbstractResolver):
-    def _resolve(self, **kwargs) -> str:
+    def _resolve(self, **kwargs) -> Optional[str]:
         string = self.config.content
         content = self.to_string(string)
         if not content:
@@ -446,13 +447,13 @@ class HtmlTagsAttributeResolver(AbstractHtmlResolver):
         return super()._resolve()
 
 
-
 class ZomatoResolver(AbstractResolver):
-    CACHE_EXT='json'
-    CACHE_SUFFIX='zomato'
-    ZOMATO_NOT_ENABLED="""
+    CACHE_EXT = 'json'
+    CACHE_SUFFIX = 'zomato'
+    ZOMATO_NOT_ENABLED = """
     Zomato key is not set, please get the zomato key and set add it to the configuration as property `zomato_key`.
     """
+
     @property
     def zomato(self) -> Pyzomato:
         return self.service.zomato
@@ -460,14 +461,14 @@ class ZomatoResolver(AbstractResolver):
     def make_request(self) -> dict:
         return self.zomato.getDailyMenu(self.entity.selector)
 
-    def _resolve(self, **kwargs) -> dict:
+    def _resolve(self, **kwargs) -> Optional[dict]:
         if self.zomato is None:
             return None
         content = self.make_request()
         log.debug(f"[ZOMATO] Response: {json.dumps(content, indent=2)}")
         return content
 
-    def resolve_text(self, **kwargs) -> str:
+    def resolve_text(self, **kwargs) -> Optional[str]:
         content = self.resolve(**kwargs)
         if content is None:
             return None
@@ -486,11 +487,11 @@ class ZomatoResolver(AbstractResolver):
 
 
 class PDFResolver(RequestResolver):
-    CACHE_EXT='pdf'
-    CACHE_SUFFIX='pdf'
+    CACHE_EXT = 'pdf'
+    CACHE_SUFFIX = 'pdf'
 
     def _resolve(self, **kwargs):
-        response =  super()._resolve(**kwargs)
+        response = super()._resolve(**kwargs)
         if not response or not response.ok:
             log.error(f"Unnable to get response from: {self.url}")
             return None
@@ -500,7 +501,7 @@ class PDFResolver(RequestResolver):
 
     def resolve_text(self, **kwargs) -> str:
         text = self.resolve(**kwargs)
-        return f"PDF is available at: {self.entity.url}\n\n{text}" 
+        return f"PDF is available at: {self.entity.url}\n\n{text}"
 
     def _resolve_text_from_content(self, stream: io.BytesIO):
         out = io.BytesIO()
@@ -515,11 +516,11 @@ class PDFResolver(RequestResolver):
 
 
 class OcrImgRawResolver(RequestResolver):
-    CACHE_EXT='img'
-    CACHE_SUFFIX='img-ocr'
+    CACHE_EXT = 'img'
+    CACHE_SUFFIX = 'img-ocr'
 
     def _resolve(self, **kwargs):
-        response =  super()._resolve(**kwargs)
+        response = super()._resolve(**kwargs)
         if not response or not response.ok:
             log.error(f"Unnable to get response from: {self.url}")
             return None
@@ -529,7 +530,7 @@ class OcrImgRawResolver(RequestResolver):
 
     def resolve_text(self, **kwargs) -> str:
         text = self.resolve(**kwargs)
-        return f"PDF is available at: {self.entity.url}\n\n{text}" 
+        return f"PDF is available at: {self.entity.url}\n\n{text}"
 
     def _resolve_text_from_content(self, stream: io.BytesIO):
         import pytesseract
@@ -537,16 +538,10 @@ class OcrImgRawResolver(RequestResolver):
         img = Image.open(stream)
         return pytesseract.image_to_string(img, lang=self.entity.language)
 
-    def resolve_text(self, **kwargs) -> str:
-        html_string = self.resolve(**kwargs)
-        if html_string is None:
-            return None
-        return html_string
-
 
 class OCRHeavyResolver(RequestResolver):
-    CACHE_EXT='html'
-    CACHE_SUFFIX='html-img'
+    CACHE_EXT = 'html'
+    CACHE_SUFFIX = 'html-img'
 
     def _parse_response(self, response: Response) -> List[Tag]:
         soap = BeautifulSoup(response.content, "lxml")
@@ -554,7 +549,7 @@ class OCRHeavyResolver(RequestResolver):
         log.debug(f"[LUNCH] Parsed[{self.entity.name}]: {sub}")
         return sub
 
-    def _resolve(self, **kwargs) -> str:
+    def _resolve(self, **kwargs) -> Optional[str]:
         response = super()._resolve(**kwargs)
         if response is None:
             return None
@@ -567,11 +562,12 @@ class OCRHeavyResolver(RequestResolver):
 
         return OcrImgRawResolver(self.service, config=config).resolve(**kwargs)
 
-    def resolve_text(self, **kwargs) -> str:
+    def resolve_text(self, **kwargs) -> Optional[Any]:
         html_string = self.resolve(**kwargs)
         if html_string is None:
             return None
         return html_string
+
 
 ######
 # Filters
@@ -585,14 +581,17 @@ class LunchContentFilter:
     def filter(self, content: str, **kw) -> str:
         return content
 
+
 class NewLinesFilter(LunchContentFilter):
     PATTERN = re.compile("(\n+)", flags=re.MULTILINE)
+
     def filter(self, content, **kwargs) -> str:
         content: str = super().filter(content)
         return self.__class__.PATTERN.sub("\n", content)
 
+
 class CutFilter(LunchContentFilter):
-    def _find_pos(self, content, sub, diacritics=False) -> int:
+    def _find_pos(self, content, sub, diacritics=False) -> Optional[int]:
         if sub is None or content is None:
             return None
         text = unidecode.unidecode(content) if not diacritics else content
@@ -605,7 +604,7 @@ class CutFilter(LunchContentFilter):
         log.info(f"[CUT] Found for {self.entity.name} suitable day delimiter for {sub} at {pos}")
         return pos.start()
 
-    def filter(self, content: str, cut_before=None, cut_after=None, diacritics=False, **kwargs) -> str:
+    def filter(self, content: str, cut_before=None, cut_after=None, diacritics=False, **kwargs) -> Optional[str]:
         cut_before = cut_before or self.entity['cut_before']
         cut_after = cut_after or self.entity['cut_after']
 
@@ -632,7 +631,7 @@ class DayResolveFilter(CutFilter):
     def _week_day(self) -> int:
         return datetime.datetime.today().weekday()
 
-    def options(self, day) -> List[str]:
+    def options(self, day) -> Optional[List[Union[str, List[str]]]]:
         day = day
         opts = [self.entity.days] if self.entity.days is not None else []
         opts += self.__class__.DAYS
@@ -654,7 +653,7 @@ class DayResolveFilter(CutFilter):
                 log.info(f"[DAY] Found for {self.entity.name} suitable day delimiter for a day {day}: {opt} at {pos}")
                 return pos
         return None
-        
+
     def filter(self, content, day_from=None, day_to=None, diacritics=False, **kwargs):
         if not content:
             return None
@@ -669,25 +668,29 @@ class DayResolveFilter(CutFilter):
             end = len(content)
         return content[beg:end]
 
-    
+
 class LunchCollection(collections.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
-        self._collection = { key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items() } 
+        self._collection = {key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items()}
 
     @property
     def collection(self) -> MutableMapping[str, Any]:
         return self._collection
 
     def __getitem__(self, k):
-         return self.collection.get(k)
+        return self.collection.get(k)
+
     def __setitem__(self, k, v):
-         self.collection[k] = v
+        self.collection[k] = v
+
     def __delitem__(self, k):
-         del self.collection[k]
+        del self.collection[k]
+
     def __iter__(self):
         return iter(self.collection)
+
     def __len__(self):
-         return len(self.collection) 
+        return len(self.collection)
 
 
 class Resolvers(LunchCollection):
@@ -700,7 +703,7 @@ class Resolvers(LunchCollection):
     def get(self, name: str) -> type:
         return self._collection.get(name, HtmlResolver)
 
-    def for_entity(self, entity: LunchEntity) -> AbstractResolver:
+    def for_entity(self, entity: LunchEntity) -> Union[Type[ResolverChain], type]:
         if entity.resolvers is not None or entity.resolver == 'chain':
             log.info("[RESOLV] Using the chain resolver")
             return ResolverChain
@@ -715,14 +718,15 @@ class Filters(LunchCollection):
     def get(self, name: str) -> type:
         return self._collection.get(name, LunchContentFilter)
 
-    def for_entity(self, entity: LunchEntity) -> LunchContentFilter:
+    def for_entity(self, entity: LunchEntity) -> List[type]:
         log.debug(f"[FILTER] Filters for entity {entity.name} ~> {entity.filters}")
-        return [ self.get(flt) for flt in (entity.filters or []) ]
+        return [self.get(flt) for flt in (entity.filters or [])]
 
 
 class Entities(LunchCollection):
     def __init__(self, **kwargs):
         super().__init__(cls_wrap=LunchEntity, **kwargs)
+
     @property
     def entities(self) -> MutableMapping[str, LunchEntity]:
         return self.collection
@@ -744,7 +748,7 @@ class Entities(LunchCollection):
     def find_one(self, name: str) -> LunchEntity:
         return self.get(name) or self.fuz_find_one(name)[0]
 
-    def all(self) -> List[LunchEntity]:
+    def all(self) -> ValuesView:
         return self.values()
 
     def find_all(self, name: str, limit=10):
@@ -761,8 +765,8 @@ class Entities(LunchCollection):
                                   processor=lambda x: x if isinstance(x, str) else x.name,
                                   scorer=fuzz.token_sort_ratio)
 
-    def register(self, name: str, url: str, display_name: str=None, tags=None, 
-                    selector=None, request_params=None, override=False, **kwargs):
+    def register(self, name: str, url: str, display_name: str = None, tags=None,
+                 selector=None, request_params=None, override=False, **kwargs):
         if name is None:
             return
         if name in self.entities.keys():
@@ -771,7 +775,8 @@ class Entities(LunchCollection):
             else:
                 log.info(f"[REG] Skipping {name} since it already exists.")
                 return
-        config = dict(name=name, url=url, selector=selector, display_name=display_name, tags=tags, request_params=request_params, **kwargs)
+        config = dict(name=name, url=url, selector=selector, display_name=display_name, tags=tags,
+                      request_params=request_params, **kwargs)
         instance = LunchEntity(config)
         log.info(f"[REG] Register [{name}]: {instance}")
         self.entities[name] = instance
@@ -779,17 +784,18 @@ class Entities(LunchCollection):
     def all_tags(self) -> List[str]:
         accumulator = set()
         for entity in self.entities.values():
-            accumulator.update(entity.tags if entity.tags else {})
+            if entity.tags:
+                accumulator.update(entity.tags)
         return list(accumulator)
-    
+
     def find_by_tags(self, expression: str):
         tags = TagsEvaluator(expression, self.all_tags())
-        result = [ entity for entity in self.entities.values() if tags.evaluate(entity.tags) ]
+        result = [entity for entity in self.entities.values() if tags.evaluate(entity.tags)]
         log.info(f"[FIND] Found by tags {expression}: {result}")
         return result
 
     def to_dict(self) -> dict:
-        return { 'restaurants': { name: value.config for (name, value) in self.collection.items() } }
+        return {'restaurants': {name: value.config for (name, value) in self.collection.items()}}
 
     def select(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[LunchEntity]:
         def _get() -> List['lunch.LunchEntity']:
@@ -798,42 +804,42 @@ class Entities(LunchCollection):
             if tags:
                 full = " ".join(selectors)
                 return self.find_by_tags(full)
-            return [ self.find_one(select) for select in selectors ]
+            return [self.find_one(select) for select in selectors]
 
         instances = _get()
         instances = [instance for instance in instances if instance is not None]
         if with_disabled:
             return instances
 
-        return [ item for item in instances if item and not item.disabled]
+        return [item for item in instances if item and not item.disabled]
 
     def select_as_dict(self, selectors, tags=False, with_disabled=True) -> Mapping:
-        return { item.name: item for item in self.select(selectors, tags=tags, with_disabled=with_disabled) if item }
-        
+        return {item.name: item for item in self.select(selectors, tags=tags, with_disabled=with_disabled) if item}
+
 
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(
-            default=HtmlResolver, 
-            zomato=ZomatoResolver, 
-            ocr_img=OCRHeavyResolver, 
+            default=HtmlResolver,
+            zomato=ZomatoResolver,
+            ocr_img=OCRHeavyResolver,
             ocr_raw=OcrImgRawResolver,
-            pdf=PDFResolver, 
-            request=RequestResolver, 
-            chain=ResolverChain, 
-            html_tags=HtmlTagsSelectorResolver, 
-            html=HtmlResolver, 
+            pdf=PDFResolver,
+            request=RequestResolver,
+            chain=ResolverChain,
+            html_tags=HtmlTagsSelectorResolver,
+            html=HtmlResolver,
             html_attr=HtmlTagsAttributeResolver
-            )
+        )
         self._filters: Filters = Filters(
-            raw=LunchContentFilter, 
-            day=DayResolveFilter, 
-            nl=NewLinesFilter, 
+            raw=LunchContentFilter,
+            day=DayResolveFilter,
+            nl=NewLinesFilter,
             cut=CutFilter
-            )
+        )
         self._config: AppConfig = config
-        self._zomato: Pyzomato = None
+        self._zomato: Optional[Pyzomato] = None
         self._cache: LunchCache = LunchCache(self)
         self._blacklist: EntityBlacklist = EntityBlacklist(self)
 
@@ -846,13 +852,13 @@ class LunchService:
         return self._blacklist
 
     @property
-    def zomato(self) -> Pyzomato:
+    def zomato(self) -> Optional[Pyzomato]:
         if self._zomato is None:
             if self.config.zomato_key is None:
                 return None
             self._zomato = Pyzomato(self.config.zomato_key)
         return self._zomato
-    
+
     @property
     def config(self) -> AppConfig:
         return self._config
@@ -868,32 +874,34 @@ class LunchService:
     @property
     def instances(self) -> Entities:
         return self._entities
-  
+
     def import_file(self, file: Tuple[Path, str], override=False):
         file = Path(file)
         if not file.exists():
             log.warning(f"[IMPORT] File not exists: {file}")
-            return 
+            return
         with file.open("r", encoding='utf-8') as fp:
             log.info(f"[IMPORT] Importing file: {file}")
             restaurants = yaml.safe_load(fp)
             for (name, restaurant) in restaurants['restaurants'].items():
                 restaurant['name'] = name
                 restaurant['override'] = override
-                if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant['resolver'] not in restaurant['tags']:
+                if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant[
+                    'resolver'] not in restaurant['tags']:
                     restaurant['tags'].append(restaurant['resolver'])
                 self.instances.register(**restaurant)
-        
+
     def import_string(self, string: str, override=False):
         log.info(f"[IMPORT] Importing content: {string}")
         restaurants = yaml.safe_load(string)
         for (name, restaurant) in restaurants['restaurants'].items():
             restaurant['name'] = name
             restaurant['override'] = override
-            if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant['resolver'] not in restaurant['tags']:
+            if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant[
+                'resolver'] not in restaurant['tags']:
                 restaurant['tags'].append(restaurant['resolver'])
             self.instances.register(**restaurant)
-                    
+
     def process_lunch_name(self, name: str) -> str:
         if not name or name == 'list':
             return self.to_string()
@@ -930,7 +938,7 @@ class LunchService:
     def _resolve(self, entity, **kwargs):
         return self._cache_wrap(entity, func=self._resolve, ext='cache', **kwargs)
 
-    def _resolve_text(self, entity: LunchEntity, **kwargs) -> str:
+    def _resolve_text(self, entity: LunchEntity, **kwargs) -> Union[Optional[str], Any]:
         content = self._get_resolver(entity).resolve_text(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
@@ -939,7 +947,7 @@ class LunchService:
         # Do not apply filters if no filters
         if kwargs.get('no_filters'):
             return content
-        
+
         return self._apply_filters(entity, content, **kwargs)
 
     def _get_resolver(self, entity) -> AbstractResolver:
@@ -963,7 +971,7 @@ class LunchService:
 class EntityBlacklist:
     def __init__(self, service: LunchService):
         self._service = service
-    
+
     @property
     def service(self) -> LunchService:
         return self._service
@@ -981,7 +989,7 @@ class EntityBlacklist:
     def path(self) -> Path:
         return self.service.cache.cache_base / self.service.cache.for_day(day=None) / 'blacklist.json'
 
-    def get(self, entity: LunchEntity=None) -> dict:
+    def get(self, entity: LunchEntity = None) -> Optional[Dict]:
         if self.service.cache.disabled:
             return None
         blacklist = self.load()
@@ -990,7 +998,6 @@ class EntityBlacklist:
     def is_blacklisted(self, entity: LunchEntity) -> bool:
         metadata = self.get(entity)
         return self.metadata_blacklisted(metadata)
-        
 
     def metadata_blacklisted(self, metadata: MutableMapping) -> bool:
         if not metadata:
@@ -998,7 +1005,7 @@ class EntityBlacklist:
         now = datetime.datetime.now()
         meta_time = datetime.datetime.fromtimestamp(metadata['timestamp'])
         return meta_time > now
-        
+
     def blacklist(self, entity: LunchEntity):
         name = entity.name
         if self.service.cache.disabled:
@@ -1014,7 +1021,8 @@ class EntityBlacklist:
             base = dict(name=name, count=1)
             blacklist[name] = base
         else:
-            log.info(f"[BLKL] Entity {name} found in the blacklist - increasing the count {blacklist[name]['count'] + 1}")
+            log.info(
+                f"[BLKL] Entity {name} found in the blacklist - increasing the count {blacklist[name]['count'] + 1}")
             blacklist[name]['count'] += 1
 
         black_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
@@ -1035,6 +1043,7 @@ class LunchCache:
     @property
     def enabled(self) -> bool:
         return not self.disabled
+
     @property
     def disabled(self) -> bool:
         return self.config.get('no_cache', False) or self.cache_base is None
@@ -1050,13 +1059,13 @@ class LunchCache:
 
         if content is None:
             log.warning(f"[CACHE] No content provided - not saving: {path}")
-        
+
         log.info(f"[CACHE] Writing content to cache: {path}")
         fp: Path = self._cache_path(path)
         self._create_dir(fp.parent)
         fp.write_text(str(content), encoding='utf-8')
 
-    def get(self, path: Path) -> str:
+    def get(self, path: Path) -> Optional[str]:
         if self.disabled:
             log.debug(f"[CACHE] Cache is not enabled or cache dir not set - no content")
             return None
@@ -1085,7 +1094,7 @@ class LunchCache:
             return None
         return Path(self._today_date if date is None else date)
 
-    def for_day(self, day: str=None) -> Path:
+    def for_day(self, day: str = None) -> Path:
         if day is None:
             day = self._today_date
         return Path(day)
@@ -1094,8 +1103,8 @@ class LunchCache:
         file_name = entity.name
         if suffix is not None:
             file_name += "-" + suffix
-        return self.for_day(day) / f'{file_name}.{ext}' 
-    
+        return self.for_day(day) / f'{file_name}.{ext}'
+
     def store_entity(self, entity: LunchEntity, content: str, suffix=None, day=None, ext='txt'):
         fragment = self.create_fragment(entity, day=day, suffix=None, ext=ext)
         self.save(fragment, content)
@@ -1120,20 +1129,20 @@ class LunchCache:
         fdir = self.cache_base / dir
         paths = list(fdir.glob(f"{entity.name}*"))
         if paths and relative:
-            paths = [ path.relative_to(self.cache_base) for path in paths ]
+            paths = [path.relative_to(self.cache_base) for path in paths]
         return paths
-    
+
     def clear(self, instances=None, day=None):
         if self.disabled:
             log.info("[CACHE] Cache is not enabled.")
             return
-    
+
         if instances is None:
             dir = str(self._cache_path(self.for_day(day)))
             log.info(f"[CACHE] Removing the directory: {dir}")
             shutil.rmtree(dir, ignore_errors=True)
             return [dir]
-        
+
         result = []
         for inst in instances:
             files = self.paths_for_entity(inst, day=day)
@@ -1149,7 +1158,7 @@ class LunchCache:
         cached = self.get_entity(entity, day=day, ext=ext, suffix=suffix)
         if cached:
             return cached
-    
+
         content = self._execute_func(entity=entity, func=func, **kwargs)
         if content:
             self.store_entity(entity, content=content, ext=ext, suffix=suffix)
@@ -1158,7 +1167,8 @@ class LunchCache:
     def _execute_func(self, entity: LunchEntity, func, **kwargs):
         metadata = self.service.blacklist.get(entity)
         if metadata and self.service.blacklist.metadata_blacklisted(metadata):
-            log.debug(f"[CACHE] Entity {entity.name} is blaclisted until {datetime.datetime.fromtimestamp(metadata['timestamp'])}.")
+            log.debug(
+                f"[CACHE] Entity {entity.name} is blaclisted until {datetime.datetime.fromtimestamp(metadata['timestamp'])}.")
             return None
         result = func(entity=entity, **kwargs)
         if not result:
@@ -1174,7 +1184,8 @@ class LunchCache:
         log.info(f"[CACHE] Cache content for {day_path}: {self.cache_base / day_path}")
         full = str(self.cache_base / day_path)
         return list(os.listdir(full))
-            
+
+
 def to_text(content):
     h = html2text.HTML2Text()
     h.ignore_links = True

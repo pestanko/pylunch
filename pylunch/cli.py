@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import yaml
 from pathlib import Path
 from typing import List, Tuple, Mapping
@@ -36,7 +35,7 @@ class CliApplication:
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
         ent = lunch.Entities(**unwrapped)
-        
+
         self.service = lunch.LunchService(cfg, ent)
         return self
 
@@ -45,16 +44,17 @@ class CliApplication:
         self.config_loader.base_dir.mkdir(parents=True)
         self.config_loader.save(data=dict(restaurants='./restaurants.yaml'))
         self.restaurants_loader.save(data={})
-        
+
     def save_restaurants(self):
         log.info("Saving restaurants")
         self.restaurants_loader.save(self.service.instances.to_dict())
-    
+
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
         return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
- 
+
 
 pass_app = click.make_pass_decorator(CliApplication)
+
 
 @click.group(help=f'{APP_NAME} CLI tool', context_settings=CONTEXT_SETTINGS)
 @click.version_option(version=__version__)
@@ -81,7 +81,7 @@ def cli_list(app: CliApplication, limit=None):
 @pass_app
 def cli_version(app: CliApplication):
     print(f"Version: {__version__}")
-    
+
 
 @main_cli.command(name='menu', help='Get menu for a restaurant')
 @click.argument('selectors', nargs=-1)
@@ -114,6 +114,7 @@ def cli_roll(app: CliApplication, selectors: Tuple[str], tags=False, limit=1, **
     else:
         print("No instance found :-(")
 
+
 @main_cli.command(name='info', help='Get info for the restaurant')
 @click.argument('selectors', nargs=-1)
 @click.option("-t", "--tags", help="Search by tags", default=False, is_flag=True)
@@ -135,6 +136,7 @@ def cli_import(app: CliApplication, restaurants=None, override=False):
         app.service.import_file(rest_file, override=override)
     app.save_restaurants()
 
+
 @main_cli.command(name='export', help='Export restaurants')
 @click.option("-f", "--file", help="Export to file", default=None)
 @pass_app
@@ -145,7 +147,7 @@ def cli_export(app: CliApplication, file=None):
             print(content)
         else:
             print(f"Error: Restaurants file not exists: {app.restaurants_loader.full_path}")
-        
+
     else:
         # not a hack :-)
         copyfile(src=str(app.restaurants_loader.full_path), dst=file)
@@ -161,7 +163,7 @@ def cli_export(app: CliApplication, file=None):
 @click.option("-O", "--override", help="Overide the restaurant if exists", default=False, is_flag=True)
 @pass_app
 def cli_add(app: CliApplication, name, display_name, url, selector, tags, params, override=False):
-    tags = list(tags) if tags else []        
+    tags = list(tags) if tags else []
     config = dict(name=name, url=url, display_name=display_name, tags=tags, selector=selector)
     if params:
         config.update(**_params_dict(params), override=override)
@@ -237,11 +239,11 @@ def cli_cache_clear(app: CliApplication, selectors: Tuple[str], fuzzy=False, tag
     if not app.service.config.use_cache:
         print("Not using the cache - no action.")
         return
-    
+
     if not selectors:
         for item in app.service.cache.clear():
             print(f"Clearing: {item}")
-    else: 
+    else:
         instances = app.select_instances(selectors, fuzzy=fuzzy, tags=tags)
         for item in app.service.cache.clear(instances):
             print(f"Clearing: {item}")
@@ -254,14 +256,14 @@ def cli_cache_content(app: CliApplication):
         print("Not using the cache - no action.")
         return
 
-    content =  app.service.cache.content()
+    content = app.service.cache.content()
     if not content:
         print("No content in cache for today")
     else:
         for path in content:
             print(path)
- 
-            
+
+
 @main_cli.command(name='cfg-set', help='Set a config value in the user configuration')
 @click.argument('name')
 @click.argument('value')
@@ -293,6 +295,7 @@ def cli_start_console(app: CliApplication):
     except ImportError:
         print('\nIPython modeule is not available')
 
+
 @main_cli.command(name='telegram-bot', help='Start the telegram bot')
 @pass_app
 def cli_start_console(app: CliApplication):
@@ -309,6 +312,7 @@ def cli_start_console(app: CliApplication):
 " Helper tools
 """
 
+
 def yaml_edit(cfg) -> dict:
     content = click.edit(yaml.safe_dump(cfg))
     if content is not None:
@@ -322,6 +326,7 @@ def _params_dict(params: List[str]) -> Mapping:
         (key, val) = param.split('=')
         result[key] = val
 
+
 def print_instances(service: lunch.LunchService, instances, transform=None, with_fails=False, **kwargs):
     fails = list() if with_fails else None
     transform = transform if transform is not None else lambda x: resolve_menu(service, x, fails=fails, **kwargs)
@@ -331,16 +336,18 @@ def print_instances(service: lunch.LunchService, instances, transform=None, with
         for fail in fails:
             print(fail)
 
-def resolve_menu(service: lunch.LunchService, instance: lunch.LunchEntity, fails: list=None, **kwargs):
+
+def resolve_menu(service: lunch.LunchService, instance: lunch.LunchEntity, fails: list = None, **kwargs):
     result = _generate_menu_header(instance)
-    content = service.resolve_text(instance, **kwargs)    
+    content = service.resolve_text(instance, **kwargs)
     if not content:
         if fails is not None:
             fails.append(instance)
         result += f"No content provided for: {instance.name}"
     else:
         result += content
-    return result 
+    return result
+
 
 def _generate_menu_header(instance):
     name_str = f"{instance.display_name} ({instance.name})"
