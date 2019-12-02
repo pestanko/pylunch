@@ -136,8 +136,9 @@ class WebApplication:
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
+        updated: str = loaded.get('updated')
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
-        ent = lunch.Entities(**unwrapped)
+        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(updated))
         self._service = lunch.LunchService(cfg, ent)
         self.users.import_users(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         return self

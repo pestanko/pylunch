@@ -1,3 +1,4 @@
+import datetime
 import logging
 import yaml
 from pathlib import Path
@@ -34,7 +35,8 @@ class CliApplication:
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
-        ent = lunch.Entities(**unwrapped)
+        updated = loaded.get('timestamp')
+        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(updated))
 
         self.service = lunch.LunchService(cfg, ent)
         return self

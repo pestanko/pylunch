@@ -724,8 +724,27 @@ class Filters(LunchCollection):
 
 
 class Entities(LunchCollection):
-    def __init__(self, **kwargs):
-        super().__init__(cls_wrap=LunchEntity, **kwargs)
+    def __init__(self, entities: dict, updated: datetime.datetime = None):
+        super().__init__(cls_wrap=LunchEntity, **entities)
+        self._timestamp = datetime.datetime.now()
+        self._updated = updated
+
+    @property
+    def timestamp(self) -> datetime.datetime:
+        return self._timestamp
+
+    def check_timestamp(self):
+        incr = self._timestamp + datetime.timedelta(minutes=10)
+        if datetime.datetime.now() > incr:
+            self._collection = None
+
+    @property
+    def collection(self) -> MutableMapping[str, Any]:
+        self.check_timestamp()
+        if self._collection is None:
+            self._collection = {}
+            self._timestamp = datetime.datetime.now()
+        return self._collection
 
     @property
     def entities(self) -> MutableMapping[str, LunchEntity]:
@@ -795,10 +814,13 @@ class Entities(LunchCollection):
         return result
 
     def to_dict(self) -> dict:
-        return {'restaurants': {name: value.config for (name, value) in self.collection.items()}}
+        return {
+            'restaurants': {name: value.config for (name, value) in self.entities.items()},
+            'timestamp': self._updated.isoformat()
+            }
 
     def select(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[LunchEntity]:
-        def _get() -> List['lunch.LunchEntity']:
+        def _get() -> List['LunchEntity']:
             if selectors is None or len(selectors) == 0:
                 return list(self.values())
             if tags:
