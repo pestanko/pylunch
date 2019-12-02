@@ -1,0 +1,51 @@
+{% extends "template.html" %}
+{% block title %}Admin{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1 class="row">Edit restaurants</h1>
+        <div id="editor" class="row" style="min-width: 800px; height: 800px">
+        </div>
+        <div class="row" style="margin: 30px">
+            <button id="save-config" name="save-config" class="btn btn-primary">Save!</button>
+        </div>
+    </div>
+
+<script src="https://pagecdn.io/lib/ace/1.4.6/ace.js" crossorigin="anonymous"></script>
+<script src="https://pagecdn.io/lib/ace/1.4.6/mode-yaml.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/yaml");
+
+        var restUrl = "/admin/config/restaurants";
+
+        getJson(restUrl).done(function(res){
+            var content = res['content'];
+            editor.setValue(content);
+        });
+
+        $("#save-config").on('click', function() {
+            var value = editor.getValue();
+            var data = {
+                content: value
+            };
+
+            console.log(data);
+
+            postJson(restUrl, data).done(function(){
+                console.log("Submit successfull!");
+            });
+        });
+    });
+</script>
+{% endblock %}

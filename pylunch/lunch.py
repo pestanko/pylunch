@@ -145,6 +145,8 @@ class LunchEntity(collections.MutableMapping):
 
         if self.resolver and self.resolver != 'default':
             result += f' resolver={self.resolver}'
+        if self.filters:
+            result += f' filters={self.filters}'
         return result
 
     def __repr__(self) -> str:
@@ -804,7 +806,7 @@ class Entities(LunchCollection):
     def to_dict(self) -> dict:
         return {
             'restaurants': {name: value.config for (name, value) in self.entities.items()},
-            'timestamp': self._updated.isoformat()
+            'timestamp': self._updated.isoformat() if self._updated is not None else None
             }
 
     def select(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[LunchEntity]:
@@ -899,6 +901,7 @@ class LunchService:
                 if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant[
                     'resolver'] not in restaurant['tags']:
                     restaurant['tags'].append(restaurant['resolver'])
+                log.info(f"[IMP] Importing restaurant: {restaurant}")
                 self.instances.register(**restaurant)
 
     def import_string(self, string: str, override=False):
@@ -907,9 +910,10 @@ class LunchService:
         for (name, restaurant) in restaurants['restaurants'].items():
             restaurant['name'] = name
             restaurant['override'] = override
-            if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant[
-                'resolver'] not in restaurant['tags']:
+            if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' \
+                    and restaurant['resolver'] not in restaurant['tags']:
                 restaurant['tags'].append(restaurant['resolver'])
+            log.info(f"[IMP] Importing restaurant: {restaurant}")
             self.instances.register(**restaurant)
 
     def process_lunch_name(self, name: str) -> str:

@@ -46,6 +46,7 @@ class YamlLoader:
 
     def save(self, data: MutableMapping):
         file = self.real_path(self.file)
+        log.info(f"[SAVE] Saving content ({file}): {data}")
         save_yaml(file, data)
 
     def real_path(self, path: Union[str, Path] = None) -> Path:

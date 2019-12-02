@@ -361,26 +361,26 @@ restaurants:
     url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
     selector: '.tab-content > .tab-pane'
     tags: ['city', 'gd', 'spain']
-    filters: [ 'day', 'ns', 'gd']
+    filters: [ 'day', 'nl', 'gd']
 
   mamut-pub:
     display_name: Mamut Pub
     url: https://www.mamut-pub.cz/cz/page/nabidka.html
     selector: '#content'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'ns' ]
+    filters: [ 'day', 'nl' ]
 
   na-tahu:
     display_name: Na Tahu
     url: https://www.na-tahu.cz/cz/page/nabidka.html
     selector: '#content'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'ns' ]
+    filters: [ 'day', 'nl' ]
 
   storey:
     display_name: STOReY
     url: http://www.storey.cz
     selector: 'ul._denni_menu'
     tags: ['city', 'ns', 'cz']
-    filters: [ 'day', 'ns' ]
+    filters: [ 'day', 'nl' ]
 

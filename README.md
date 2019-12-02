@@ -130,3 +130,10 @@ PYLUNCH_SECRET=<JWT_SECRET>
 PYLUNCH_USERS=PATH_TO_USERS_FILE
 ```
 
+
+Admin user credentials:
+
+```
+Username: admin
+Password: foobar1
+```

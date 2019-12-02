@@ -43,6 +43,7 @@ class AdminUsers(utils.CollectionWrapper):
             log.info(f"[IMPORT] Importing user: {name}")
             self[name] = password
 
+    @classmethod
     def generate_hash(self, password):
         return generate_password_hash(password)
 
@@ -128,8 +129,8 @@ class WebApplication:
 
     @property
     def service(self) -> lunch.LunchService:
-        if self._service is None or ((self._timestamp + datetime.timedelta(minutes=10)) > datetime.datetime.now()):
-            self._service = self._load_restaurants(self._config)
+        if self._service is None or ((self._timestamp + datetime.timedelta(minutes=10)) < datetime.datetime.now()):
+            self.reload_restaurants()
         return self._service
 
     def init(self, **kwargs) -> 'WebApplication':
@@ -138,11 +139,10 @@ class WebApplication:
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
         self._config = config.AppConfig(**cfg_dict)
-        self._load_restaurants(self._config)
         self.users.import_users(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         return self
 
-    def _load_restaurants(self, cfg: config.AppConfig):
+    def reload_restaurants(self):
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
@@ -150,7 +150,7 @@ class WebApplication:
         updated = datetime.datetime.fromisoformat(upsdated_str) if upsdated_str is not None else None
         ent = lunch.Entities(unwrapped, updated=updated)
         self._timestamp = datetime.datetime.now()
-        return lunch.LunchService(cfg, ent)
+        self._service = lunch.LunchService(self._config, ent)
 
     def _first_run(self):
         log.info(f"First run detected, crearing config folder: {self.config_loader.base_dir}")
@@ -381,6 +381,15 @@ def admin_index():
     return flask.render_template('admin/index.html', **context)
 
 
+@admin.route('/restaurants/edit', methods=['GET'])
+@jwt_required
+def admin_edit_restaurants():
+    web_app = WebApplication.get()
+    user = get_jwt_identity()
+    context = web_app.gen_context(user=user)
+    return flask.render_template('admin/edit.html', **context)
+
+
 @admin.route('/token/valid', methods=['POST'])
 @jwt_required
 def admin_token_valid():
@@ -408,9 +417,13 @@ def admin_config_restaurants_get():
 @jwt_required
 def admin_config_restaurants_post():
     web_app = WebApplication.get()
-    rq = web_app.request
-    rq_json = rq.json
-    web_app.service.import_string(rq_json.get('content'), override=True)
+
+    # little not nice hack
+    # we need to have "fresh" data in order not hit the timeout
+    web_app.reload_restaurants()
+    rq = flask.request
+    content = rq.form.get('content', None)
+    web_app.service.import_string(content, override=True)
     web_app.restaurants_loader.save(web_app.service.instances.to_dict())
     return flask.jsonify(dict(content=web_app.service.instances.to_dict()))
 
