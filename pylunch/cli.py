@@ -35,8 +35,9 @@ class CliApplication:
         cfg = config.AppConfig(**cfg_dict)
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
-        updated = loaded.get('timestamp')
-        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(updated))
+        upsdated_str = loaded.get('updated')
+        updated = datetime.datetime.fromisoformat(upsdated_str) if upsdated_str is not None else None
+        ent = lunch.Entities(unwrapped, updated=updated)
 
         self.service = lunch.LunchService(cfg, ent)
         return self

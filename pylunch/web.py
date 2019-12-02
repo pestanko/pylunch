@@ -146,7 +146,9 @@ class WebApplication:
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
-        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(loaded.get('updated')))
+        upsdated_str = loaded.get('updated')
+        updated = datetime.datetime.fromisoformat(upsdated_str) if upsdated_str is not None else None
+        ent = lunch.Entities(unwrapped, updated=updated)
         self._timestamp = datetime.datetime.now()
         return lunch.LunchService(cfg, ent)
 
