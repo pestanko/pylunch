@@ -726,24 +726,12 @@ class Filters(LunchCollection):
 class Entities(LunchCollection):
     def __init__(self, entities: dict, updated: datetime.datetime = None):
         super().__init__(cls_wrap=LunchEntity, **entities)
-        self._timestamp = datetime.datetime.now()
         self._updated = updated
 
     @property
-    def timestamp(self) -> datetime.datetime:
-        return self._timestamp
-
-    def check_timestamp(self):
-        incr = self._timestamp + datetime.timedelta(minutes=10)
-        if datetime.datetime.now() > incr:
-            self._collection = None
-
-    @property
     def collection(self) -> MutableMapping[str, Any]:
-        self.check_timestamp()
         if self._collection is None:
             self._collection = {}
-            self._timestamp = datetime.datetime.now()
         return self._collection
 
     @property

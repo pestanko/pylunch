@@ -5,7 +5,7 @@ import logging
 import click
 import datetime
 from pathlib import Path
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -114,11 +114,13 @@ class WebApplication:
         return flask_app
 
     def __init__(self, config_dir=None):
-        self._service: lunch.LunchService = None
+        self._service: Optional[lunch.LunchService] = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
         self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
         self.users = AdminUsers()
+        self._timestamp = None
+        self._config = None
 
     @property
     def request(self) -> flask.Request:
@@ -126,6 +128,8 @@ class WebApplication:
 
     @property
     def service(self) -> lunch.LunchService:
+        if self._service is None or ((self._timestamp + datetime.timedelta(minutes=10)) > datetime.datetime.now()):
+            self._service = self._load_restaurants(self._config)
         return self._service
 
     def init(self, **kwargs) -> 'WebApplication':
@@ -133,15 +137,18 @@ class WebApplication:
         if not self.config_loader.base_dir.exists():
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
-        cfg = config.AppConfig(**cfg_dict)
-        loaded = self.restaurants_loader.load() or dict(restaurants={})
-        unwrapped = loaded.get('restaurants') or loaded
-        updated: str = loaded.get('updated')
-        log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
-        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(updated))
-        self._service = lunch.LunchService(cfg, ent)
+        self._config = config.AppConfig(**cfg_dict)
+        self._load_restaurants(self._config)
         self.users.import_users(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         return self
+
+    def _load_restaurants(self, cfg: config.AppConfig):
+        loaded = self.restaurants_loader.load() or dict(restaurants={})
+        unwrapped = loaded.get('restaurants') or loaded
+        log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
+        ent = lunch.Entities(unwrapped, updated=datetime.datetime.fromisoformat(loaded.get('updated')))
+        self._timestamp = datetime.datetime.now()
+        return lunch.LunchService(cfg, ent)
 
     def _first_run(self):
         log.info(f"First run detected, crearing config folder: {self.config_loader.base_dir}")
