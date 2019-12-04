@@ -110,8 +110,9 @@ restaurants:
 
   capone:
     display_name: Al Capone
-    url: http://www.pizzaalcapone.cz/brno/poledni-menu
-    selector: 'p.active-day'
+    url: http://www.pizzaalcapone.cz/cz/poledni-menu
+    selector: 'section.about-us-block table'
+    filters: ['day', 'nl']
     tags: ['fi', 'italian', 'pizza', 'ita']
 
   beranek:
@@ -147,7 +148,7 @@ restaurants:
     display_name: U seminaru
     url: 'http://www.useminaru.cz/menu.php'
     selector: '.maintab .bold'
-    tags: ['city', 'cz']
+    tags: ['city', 'cz', 'fi', 'gd']
     
   tripoli:
     display_name: Tripoli Vankovka
@@ -282,7 +283,7 @@ restaurants:
     display_name: Love Patatas
     url: https://www.zomato.com/cs/brno/bistro-love-patatas-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 18390235
-    tags: ['city', 'brambor', 'gd', 'nl']
+    tags: ['city', 'brambor', 'gd', 'ns']
     resolver: zomato
 
   statl:
@@ -361,7 +362,7 @@ restaurants:
     url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
     selector: '.tab-content > .tab-pane'
     tags: ['city', 'gd', 'spain']
-    filters: [ 'day', 'nl', 'gd']
+    filters: [ 'day', 'nl']
 
   mamut-pub:
     display_name: Mamut Pub
