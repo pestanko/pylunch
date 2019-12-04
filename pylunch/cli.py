@@ -135,7 +135,9 @@ def cli_info(app: CliApplication, selectors=None, tags=False):
 def cli_import(app: CliApplication, restaurants=None, override=False):
     if not restaurants:
         print("Importing from the stdin. [EOF for END]")
-        app.service.import_string(sys.stdin.read(), override=override)
+        content = sys.stdin.read()
+        log.info(f"Importing: {content}")
+        app.service.import_string(content, override=override)
     else:
         for rest_file in restaurants:
             print(f"Importing restaurant: {rest_file}")
