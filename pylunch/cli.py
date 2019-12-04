@@ -1,6 +1,7 @@
 import datetime
 import logging
 import yaml
+import sys
 from pathlib import Path
 from typing import List, Tuple, Mapping
 from shutil import copyfile
@@ -133,10 +134,12 @@ def cli_info(app: CliApplication, selectors=None, tags=False):
 @pass_app
 def cli_import(app: CliApplication, restaurants=None, override=False):
     if not restaurants:
-        print("Not provided any files to import from")
-    for rest_file in restaurants:
-        print(f"Importing restaurant: {rest_file}")
-        app.service.import_file(rest_file, override=override)
+        print("Importing from the stdin. [EOF for END]")
+        app.service.import_string(sys.stdin.read(), override=override)
+    else:
+        for rest_file in restaurants:
+            print(f"Importing restaurant: {rest_file}")
+            app.service.import_file(rest_file, override=override)
     app.save_restaurants()
 
 
