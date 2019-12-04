@@ -69,7 +69,13 @@ Also if you have already created or exported database of the restaurants, you an
 Example file is located in: `resources/restaurants.yml` available [here](https://gitlab.com/pestanko/pylunch/raw/master/resources/restaurants.yml).
 
 ```bash
-$ pylunch import restaurants.yml
+$ pylunch import -O restaurants.yml
+```
+
+If you wish to load example from the repository you can use the `curl` and just pipe it to the `import` subcommand.
+
+```bash
+$ curl 'https://gitlab.com/pestanko/pylunch/raw/master/resources/restaurants.yml' | pylunch import -O 
 ```
 
 In order to export the restaurants database file, you can use the export command.

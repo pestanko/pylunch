@@ -4,10 +4,13 @@ from urllib.error import HTTPError
 import logging
 import click
 import datetime
+import requests
+
 from pathlib import Path
 from typing import List, Mapping, Optional
 from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
@@ -423,7 +426,15 @@ def admin_config_restaurants_post():
     web_app.reload_restaurants()
     rq = flask.request
     content = rq.form.get('content', None)
-    web_app.service.import_string(content, override=True)
+    url = rq.form.get('url', None)
+    
+    if content:
+        web_app.service.import_string(content, override=True)
+        
+    if url:
+        res = requests.get(url)
+        if res.ok:
+            web_app.service.import_string(res.content, override=True)
     web_app.restaurants_loader.save(web_app.service.instances.to_dict())
     return flask.jsonify(dict(content=web_app.service.instances.to_dict()))
 

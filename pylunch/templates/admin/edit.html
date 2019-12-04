@@ -14,6 +14,11 @@
         <div class="row" style="margin: 30px">
             <button id="save-config" name="save-config" class="btn btn-primary">Save!</button>
         </div>
+
+        <div class="row">
+            <input type="text" class="style" id="update-url" value="https://gitlab.com/pestanko/pylunch/raw/master/resources/restaurants.yml">
+            <button id="update-by-url">Update</button>
+        </div>
     </div>
 
 <script src="https://pagecdn.io/lib/ace/1.4.6/ace.js" crossorigin="anonymous"></script>
@@ -41,6 +46,16 @@
             };
 
             console.log(data);
+
+            postJson(restUrl, data).done(function(){
+                console.log("Submit successfull!");
+            });
+        });
+
+        $("#update-by-url").on('click', function() {
+            var data = {
+                url: value
+            };
 
             postJson(restUrl, data).done(function(){
                 console.log("Submit successfull!");
