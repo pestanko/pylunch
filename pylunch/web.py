@@ -430,11 +430,10 @@ def admin_config_restaurants_post():
     
     if content:
         web_app.service.import_string(content, override=True)
+
+    elif url:
+        web_app.service.import_url(url, override=True)
         
-    if url:
-        res = requests.get(url)
-        if res.ok:
-            web_app.service.import_string(res.content, override=True)
     web_app.restaurants_loader.save(web_app.service.instances.to_dict())
     return flask.jsonify(dict(content=web_app.service.instances.to_dict()))
 

@@ -895,18 +895,21 @@ class LunchService:
         with file.open("r", encoding='utf-8') as fp:
             log.info(f"[IMPORT] Importing file: {file}")
             restaurants = yaml.safe_load(fp)
-            for (name, restaurant) in restaurants['restaurants'].items():
-                restaurant['name'] = name
-                restaurant['override'] = override
-                if restaurant.get('tags') and restaurant.get('resolver', 'default') != 'default' and restaurant[
-                    'resolver'] not in restaurant['tags']:
-                    restaurant['tags'].append(restaurant['resolver'])
-                log.info(f"[IMP] Importing restaurant: {restaurant}")
-                self.instances.register(**restaurant)
+            self._import_restaurants(restaurants, override=override)
 
     def import_string(self, string: str, override=False):
         log.info(f"[IMPORT] Importing content: {string}")
         restaurants = yaml.safe_load(string)
+        self._import_restaurants(restaurants, override=override)
+
+    def import_url(self, url: str, override=False):
+        res = requests.get(url=url)
+        if not res.ok:
+            log.error(f"[IMPORT] Unable to get from \"{url}\"[{res.status_code}]: {res.content}")
+            return
+        self.import_string(res.content, override=override)
+
+    def _import_restaurants(self, restaurants, override=False):
         for (name, restaurant) in restaurants['restaurants'].items():
             restaurant['name'] = name
             restaurant['override'] = override
