@@ -1,13 +1,15 @@
 import flask
+from flask.cli import AppGroup
 import os
 from urllib.error import HTTPError
 import logging
 import click
 import datetime
 import requests
+import yaml
 
 from pathlib import Path
-from typing import List, Mapping, Optional
+from typing import List, Mapping, Optional, Union
 from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -32,6 +34,10 @@ static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
 class AdminUsers(utils.CollectionWrapper):
+    @classmethod
+    def generate_hash(cls, password):
+        return generate_password_hash(password)
+
     @property
     def users(self) -> Mapping:
         return self.collection
@@ -46,11 +52,26 @@ class AdminUsers(utils.CollectionWrapper):
             log.info(f"[IMPORT] Importing user: {name}")
             self[name] = password
 
-    @classmethod
-    def generate_hash(self, password):
-        return generate_password_hash(password)
+    def export_users(self, file: Union[Path, str]):
+        utils.save_yaml(file, self.users)
 
-    def check_password(self, name, passwd) -> bool:
+    def add_user(self, name: str, password: str) -> bool:
+        if name in self.users:
+            log.error(f"User with name already exists: {name}")
+            return False
+        self.users[name] = self.generate_hash(password)
+        return True
+    
+    def set_password(self, name: str, password: str):
+        if name not in self.users:
+            log.error(f"User with name already exists: {name}")
+            return False
+        
+        log.info(f"Setting the password for a user: {name}")
+        self.users[name] = self.generate_hash(password)
+        return True
+
+    def check_password(self, name: str, passwd: str) -> bool:
         userhash = self.get(name)
         if not userhash:
             log.info(f"[USER] Password check failed: User {name} not exists.")
@@ -125,6 +146,7 @@ class WebApplication:
         self.users = AdminUsers()
         self._timestamp = None
         self._config = None
+        self._users_file: Optional[Path] = None
 
     @property
     def request(self) -> flask.Request:
@@ -142,7 +164,8 @@ class WebApplication:
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
         self._config = config.AppConfig(**cfg_dict)
-        self.users.import_users(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
+        self._users_file = Path(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
+        self.users.import_users(self._users_file)
         return self
 
     def reload_restaurants(self):
@@ -219,6 +242,10 @@ class WebApplication:
 
         result = _inner()
         return roll_filter(result, roll)
+
+    def save_users(self):
+        log.info(f"[SAVE] Saving users to: {self._users_file}")
+        self.users.export_users(self._users_file)
 
 
 app = WebApplication.create_app()
@@ -457,3 +484,45 @@ def _generate_menu_header(instance):
     name_str = f"{instance.display_name} ({instance.name})"
     tags_str = "Tags: " + (", ".join(instance.tags) if instance.tags else '')
     return utils.generate_nice_header(name_str, instance.url, tags_str)
+
+
+###
+# CLI
+###
+
+management_cli = AppGroup('mgmt', help='Pylunch Server Management')
+
+app.cli.add_command(management_cli)
+
+@management_cli.command("pwd-hash", help="Generate password hash for a given password")
+@click.option('-p', '--password', help='Users password', prompt=True, hide_input=True,
+              confirmation_prompt=False)
+def flask_cli_pwd_hash(password: str):
+    web_app = WebApplication.get()
+    print(web_app.users.generate_hash(password))
+
+
+@management_cli.command("add-user")
+@click.argument('name')
+@click.option('-p', '--password', help='Users password', prompt=True, hide_input=True,
+              confirmation_prompt=True)
+def flask_cli_add_user(name: str, password: str):
+    web_app = WebApplication.get()
+    if web_app.users.add_user(name, password):
+        print("Success")
+        web_app.save_users()
+    else:
+        print(f"Failed to add: {name}")
+
+
+@management_cli.command("set-pass", help="Set password for a user")
+@click.argument('name')
+@click.option('-p', '--password', help='Users password', prompt=True, hide_input=True,
+              confirmation_prompt=True)
+def flask_cli_set_pass(name: str, password: str):
+    web_app = WebApplication.get()
+    if web_app.users.set_password(name, password):
+        print("Success")
+        web_app.save_users()
+    else:
+        print(f"Failed to set: {name}")
