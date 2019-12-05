@@ -10,14 +10,15 @@
     <div class="container">
         <h1 class="row">Admin pages</h1>
         <p class="important row">
-            Welcome Admin {{user}}
+            Welcome Admin: {{user}}
         </p>
 
-        <div class="row">
-            <h3 id="cache-invalidate">Invalidate the cache</h3><br>
-            <p><a href="/admin/restaurants/edit">Edit restaurants</a></p>
-        </div>
-    
+        <ul>
+            <li><a href="javascript:void(0)" id="cache-invalidate">
+                Invalidate the cache
+            </button></li>
+            <li id="edit-restaurants"><a href="/admin/restaurants/edit">Edit restaurants</a></li>
+        </ul>
     </div>
 {% endblock %}
 

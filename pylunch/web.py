@@ -376,6 +376,8 @@ def admin_login_form():
 
 
 @admin.route('/index', methods=['GET'])
+@admin.route('', methods=['GET'])
+@admin.route('/', methods=['GET'])
 @jwt_required
 def admin_index():
     web_app = WebApplication.get()
@@ -433,7 +435,7 @@ def admin_config_restaurants_post():
 
     elif url:
         web_app.service.import_url(url, override=True)
-        
+
     web_app.restaurants_loader.save(web_app.service.instances.to_dict())
     return flask.jsonify(dict(content=web_app.service.instances.to_dict()))
 
