@@ -143,6 +143,10 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        var app = {
+            restaurants: {},
+            disabled: {}
+        }
 
         function addRestaurantMenuItem(restaurant){
             var restRoot = $("#nav-restaurants-list")
@@ -157,6 +161,12 @@
             var name = restaurant.name;
             var dname = restaurant.display_name;
             var tags = restaurant.tags;
+            var disabled = restaurant.disabled;
+            
+            if(disabled === true) {
+                console.log(`Restaurant: ${name} is disabled`)
+                return;
+            }
 
             var tags_content = "";
             tags.forEach(function(tag) {
@@ -186,19 +196,18 @@
             loadMenuForRestaurant(name);
         }
 
-        function loadMenuForRestaurant(name) {
+        function setContent(name, content) {
+            $("#" + name + "-menu-content").text(content);
+        }
 
-            function setContent(name, content) {
-                $("#" + name + "-menu-content").text(content);
-            }
-
-            function setError(name, err) {
-                var errContent = err.responseJSON;
+        function setError(name, err) {
+            var errContent = err.responseJSON;
                 $(`#${name}-section`).removeClass('not-loaded');
                 $(`#${name}-section`).addClass('error');
                 setContent(name, `Error [${errContent.status}] - ${errContent.message}`);
             }
 
+        function loadMenuForRestaurant(name) {
             var request = getJson('/api/restaurants/' + name + '/menu').done(function(result) {
                 console.log("Restaurants menu Result [ " + name + " ]: ", result);
                 setContent(name, result.content)
@@ -214,8 +223,17 @@
             if(!restaurants) 
                 return;
             Object.values(restaurants).forEach(function(restaurant) {
-                addRestaurantMenuItem(restaurant);
-                addRestaurantMenuContent(restaurant);
+                if(restaurant.disabled === true) 
+                {
+                    console.log(`Restaurant ${restaurant.name} is disabled!`);
+                    app.disabled[restaurant.name] = restaurant;
+                }
+                else 
+                {
+                    app.restaurants[restaurant.name] = restaurant;
+                    addRestaurantMenuItem(restaurant);
+                    addRestaurantMenuContent(restaurant);
+                }
             });
         }
 

@@ -728,7 +728,7 @@ class Filters(LunchCollection):
 class Entities(LunchCollection):
     def __init__(self, entities: dict, updated: datetime.datetime = None):
         super().__init__(cls_wrap=LunchEntity, **entities)
-        self._updated = updated
+        self._updated = updated        
 
     @property
     def collection(self) -> MutableMapping[str, Any]:
@@ -945,6 +945,9 @@ class LunchService:
         return self.cache.wrap(entity, func=self._resolve_text, ext='txt', **kwargs)
 
     def _resolve(self, entity, **kwargs):
+        if entity.disabled:
+            return None
+
         content = self._get_resolver(entity).resolve(**kwargs)
 
         if not content:
@@ -952,10 +955,13 @@ class LunchService:
             return None
         return content
 
-    def _resolve(self, entity, **kwargs):
+    def resolve(self, entity, **kwargs):
         return self._cache_wrap(entity, func=self._resolve, ext='cache', **kwargs)
 
     def _resolve_text(self, entity: LunchEntity, **kwargs) -> Union[Optional[str], Any]:
+        if entity.disabled:
+            return None
+
         content = self._get_resolver(entity).resolve_text(**kwargs)
         if not content:
             log.warning(f"[SERVICE] No content for {entity.name}")
@@ -994,12 +1000,14 @@ class EntityBlacklist:
         return self._service
 
     def load(self) -> MutableMapping:
-        path = self.path
-        if not path.exists():
+        if not self.path.exists():
             return {}
         return json.load(self.path.open('r'))
 
     def save(self, blacklist: MutableMapping):
+        parent: Path = self.path.parent
+        if not parent.exists():
+            parent.mkdir(parents=True)
         json.dump(blacklist, self.path.open('w'))
 
     @property
@@ -1009,6 +1017,7 @@ class EntityBlacklist:
     def get(self, entity: LunchEntity = None) -> Optional[Dict]:
         if self.service.cache.disabled:
             return None
+            
         blacklist = self.load()
         return blacklist.get(entity.name)
 
