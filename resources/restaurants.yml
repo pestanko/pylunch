@@ -63,7 +63,7 @@ restaurants:
   himalaya:
     display_name: Himalaya
     url: 'https://www.himalayarestaurace.cz/en/daily-menu/'
-    selector: 'div#main-content div.et_pb_text_inner > p'
+    selector: '#Sekce1 table'
     filters: [ 'day', 'cut', nl ]
     cut_after: 'PŘÍLOHA'
     tags: ['city', 'india', 'asia', 'ns']
