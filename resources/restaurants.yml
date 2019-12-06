@@ -346,7 +346,8 @@ restaurants:
     display_name: Annapurna
     url: http://www.indicka-restaurace-annapurna.cz/images/tydenijidelnicek/menu.pdf
     tags: ['city', 'ns', 'india', 'asia']
-    filters: [ 'day' ]
+    filters: [ 'day', nl, cut ]
+    cut_after: 'Polední menu podáváme do 15 hodin'
     resolver: pdf
   
   avast:
