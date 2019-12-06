@@ -177,8 +177,11 @@ restaurants:
   varna:
     display_name: Varna
     url: http://www.restauracevarna.cz/denni-menu/
-    selector: '#pravy-sloupec-obsah p'
+    selector: '#pravy-sloupec-obsah'
     tags: ['city', 'cz', 'gd']
+    filters: ['day', 'nl', 'cut']
+    cut_after: 'SEZNAM ALERGENŮ'
+    cut_before: 'PIZZA TÝDNE - Polévka + pizza týdne + Bonaqua'
 
   zlata-lod:
     display_name: Zlata Lod
