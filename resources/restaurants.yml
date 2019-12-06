@@ -188,7 +188,7 @@ restaurants:
     url: http://www.zlatalod.com/menu
     selector: '.menu-for-one-day'
     filters: ['day', 'cut']
-    cut_after: 'Nabídka baru'
+    cut_after: ['Nabídka baru', 'Zvýhodněná cena nápojů se vztahuje']
     tags: ['city', 'cz', 'gd']
 
   dreveny-vlk:

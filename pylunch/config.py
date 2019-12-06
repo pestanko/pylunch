@@ -5,6 +5,9 @@ import tempfile
 import logging
 import yaml
 import os
+import functools
+
+from pylunch import utils
 
 log = logging.getLogger(__name__)
 CACHE_DIR = Path(tempfile.gettempdir()) / 'pylunch'
@@ -102,3 +105,8 @@ class AppConfig(collections.MutableMapping):
     @property
     def telegram_token(self) -> str:
         return self.config.get('telegram_token', None)
+
+    @property
+    def default_source(self) -> str:
+        return self.get('default_source')
+

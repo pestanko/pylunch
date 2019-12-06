@@ -21,6 +21,7 @@ from pathlib import Path
 
 from .tags_evaluator import TagsEvaluator
 from .config import AppConfig
+from pylunch import utils
 
 from pdfminer import high_level
 import pdfminer.layout
@@ -607,18 +608,27 @@ class CutFilter(LunchContentFilter):
         return pos.start()
 
     def filter(self, content: str, cut_before=None, cut_after=None, diacritics=False, **kwargs) -> Optional[str]:
-        cut_before = cut_before or self.entity['cut_before']
-        cut_after = cut_after or self.entity['cut_after']
-
         if not content:
             return None
 
-        beg = self._find_pos(content, cut_before, diacritics=diacritics)
-        end = self._find_pos(content, cut_after, diacritics=diacritics)
-        if beg is None:
-            beg = 0
-        if end is None:
-            end = len(content)
+        cut_before = cut_before or self.entity['cut_before']
+        cut_after = cut_after or self.entity['cut_after']
+
+        cut_before = [cut_before] if isinstance(cut_before, str) else cut_before
+        cut_after = [cut_after] if isinstance(cut_after, str) else cut_after
+
+        def _finder(substr: str):
+            return self._find_pos(content, substr, diacritics)
+
+        def _filter_none(lst: list) -> list:
+            return [item for item in lst if item is not None]
+
+        beg_positions = _filter_none([_finder(pos) for pos in cut_before])
+        end_positions = _filter_none([_finder(pos) for pos in cut_after])
+
+        beg = 0 if not beg_positions else max(beg_positions)
+        end = len(content) if not end_positions else min(end_positions)
+
         return content[beg:end]
 
 
@@ -829,6 +839,57 @@ class Entities(LunchCollection):
         return {item.name: item for item in self.select(selectors, tags=tags, with_disabled=with_disabled) if item}
 
 
+class RemoteSource(utils.CollectionWrapper):
+    @property
+    def config(self):
+        return self.collection
+    
+    @property
+    def url(self) -> str:
+        return self.get('url')
+
+    @property
+    def name(self) -> str:
+        return self.get('name')
+
+    @property
+    def disabled(self) -> bool:
+        return self.get('disabled', False)
+
+    @property
+    def remote(self) -> bool:
+        return self.get('remote', True)
+
+class RemoteSources(utils.CollectionWrapper):
+    def __init__(self, service: 'LunchService', **kwargs):
+        super().__init__(cls_wrap=RemoteSource, **kwargs)
+        self.service = service
+
+    @property
+    def sources(self) -> MutableMapping[str, RemoteSource]:
+        return self.collection
+
+    @property
+    def enabled(self) -> List[RemoteSource]:
+        return [item for item in self.sources.values() if not item.disabled]
+
+    def import_sources(self):
+        for source in self.enabled:
+            self.import_source(source)
+
+    def import_source(self, source: RemoteSource, override: False):
+        if source.disabled:
+            log.debug(f"Not importing disabled source - {source.name} ({source.url})")
+            return False
+        if source.url:
+            self.service.import_url(source.url, override=override)
+        return True
+
+    def add(self, name: str, url: str, remote=True):
+        self[name] = RemoteSource(name=name, url=url, remote=remote)
+        return True
+
+
 class LunchService:
     def __init__(self, config: AppConfig, entities: Entities):
         self._entities: Entities = entities
@@ -854,6 +915,7 @@ class LunchService:
         self._zomato: Optional[Pyzomato] = None
         self._cache: LunchCache = LunchCache(self)
         self._blacklist: EntityBlacklist = EntityBlacklist(self)
+        self._sources = RemoteSources(self)
 
     @property
     def cache(self) -> 'LunchCache':

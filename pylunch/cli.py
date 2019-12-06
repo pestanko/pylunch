@@ -316,6 +316,19 @@ def cli_start_console(app: CliApplication):
         print('\n Telegram bot is not available modeule is not available')
 
 
+@main_cli.group(name='sources', help='Manage default sources for autoupdate everyday')
+def cli_sources():
+    pass
+
+@cli_sources.command(name='add', help='Add new source to update from')
+@click.option('-U', '--url', help='It is remote source', is_flag=True, default=False)
+@click.argument('name')
+@click.argument('path')
+@pass_app
+def cli_sources_add(app: CliApplication, url: bool=False, name: str=None, path: str = None):
+    pass
+
+
 """
 " Helper tools
 """
