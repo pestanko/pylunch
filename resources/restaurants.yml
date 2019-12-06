@@ -289,10 +289,12 @@ restaurants:
 
   statl:
     display_name: Statl
-    url: https://www.zomato.com/brno/%C5%A1tatl-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 18494615
+    selector: '.main .blog-post img'
+    url: http://statlbrno.cz/denni-menu/
+    resolver: ocr_img
+    language: ces
     tags: ['city', 'gd', 'cz']
-    resolver: zomato
+    filters: ['day', 'nl']
 
   formanka:
     display_name: Formanka
@@ -365,6 +367,7 @@ restaurants:
     selector: '.tab-content > .tab-pane'
     tags: ['city', 'gd', 'spain']
     filters: [ 'day', 'nl']
+    disabled: true
 
   mamut-pub:
     display_name: Mamut Pub

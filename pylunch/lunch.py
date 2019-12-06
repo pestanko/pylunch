@@ -1017,7 +1017,7 @@ class EntityBlacklist:
     def get(self, entity: LunchEntity = None) -> Optional[Dict]:
         if self.service.cache.disabled:
             return None
-            
+
         blacklist = self.load()
         return blacklist.get(entity.name)
 
@@ -1036,11 +1036,11 @@ class EntityBlacklist:
         name = entity.name
         if self.service.cache.disabled:
             log.info("[BLKL] Cache is disabled - not blacklisting")
-            return
+            return False
         blacklist = self.load()
 
         if blacklist is None:
-            return
+            return False
 
         if name not in blacklist.keys():
             log.info(f"[BLKL] Entity {name} not found in the blacklist!")
@@ -1053,6 +1053,26 @@ class EntityBlacklist:
 
         black_time = datetime.datetime.now() + datetime.timedelta(minutes=15)
         blacklist[name]['timestamp'] = black_time.timestamp()
+
+        self.save(blacklist)
+        return True
+
+    def whitelist(self, entity: LunchEntity):
+        name = entity.name
+        if self.service.cache.disabled:
+            log.info("[BLKL] Cache is disabled - not blacklisting")
+            return False
+        
+        blacklist = self.load()
+
+        if blacklist is None:
+            return False
+
+        if name not in blacklist:
+            log.info(f"[BLKL] Entity {name} not found in the blacklist!")
+            return False
+        
+        del blacklist[name]
 
         self.save(blacklist)
 
@@ -1172,6 +1192,7 @@ class LunchCache:
         result = []
         for inst in instances:
             files = self.paths_for_entity(inst, day=day)
+            self.service.blacklist.whitelist(inst)
             for file in files:
                 result.append(str(file))
                 file.unlink()
