@@ -107,7 +107,7 @@ restaurants:
     url: 'http://www.amphone.eu/restaurace'
     selector: 'li:first-child'
     filters: ['day']
-    tags: ['city', 'asia']
+    tags: ['city', 'asia', gd]
 
   capone:
     display_name: Al Capone
