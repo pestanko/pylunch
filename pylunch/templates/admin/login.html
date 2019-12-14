@@ -2,19 +2,95 @@
 {% block title %}Login{% endblock %}
 {% block head %}
     {{ super() }}
+
+    <style type="text/css">
+     #login-box {
+        box-sizing: border-box;
+        width: 350px;
+        box-shadow: 1px 1px 3px #DDD;
+        margin: 50px auto;
+        line-height: 20px;
+        display: block;
+        border: 1px solid #EAEAEA;
+        padding: 20px;
+        font-family: 'Open Sans', 'Helvetica', sans-serif;
+        font-size: 14px;
+    }
+
+    #container {
+        width: 100%;
+        min-height: 100vh;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -moz-box;
+        display: -ms-flexbox;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        position: relative;
+        z-index: 1;
+    }
+
+    img.logo-img {
+        max-width: 250px;
+        max-height: 100px;
+    }
+
+    .form-input {
+        width: 100%;
+    }
+    </style>
 {% endblock %}
 {% block content %}
     <div class="container">
-        <h1 class="row">Login</h1>
-            <div class="form-group col-sm-5">
-                <label for="username">Email</label>
-                <input type="text" class="form-control" name="username" id="username" placeholder="Username">
+        <div class="box" id="login-box">
+            <div class="wrap-image text-center mb-4">
+                <img class="logo-img" src="/static/img/dish.svg" alt="Company logo" />
             </div>
-            <div class="form-group col-sm-5">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" name="password" id="password" placeholder="Password">
-            </div>
-            <button type="submit" class="btn btn-primary" id="submit">Sign in</button>
+
+            <form method="post" id="login-form" class="validate-form">
+                <div class="mb-2 row">
+                    <div class="col-12">
+                        Log In to PyLunch
+                    </div>
+                </div>
+
+                <div class="row wrap-input validate-input mb-2"
+                        data-validate="Valid username is required:">
+                        <div class="col-12">
+                            <input class="login-email form-input" type="text" id="username" name="username" placeholder="Username">
+                        </div>
+                </div>
+
+                <div class="row wrap-input validate-input mb-4" data-validate="Password is required">
+                    <div class="col-12">
+                        <input class="login-password form-input" type="password" name="password" placeholder="Password">
+                    </div>
+                </div>
+
+                <div class="row check-forgot-section mb-4">
+                    <div class="form-checkbox col-6">
+                        <input class="input-checkbox" id="login-checkbox" type="checkbox" name="remember_me">
+                        <label class="label-checkbox" for="login-checkbox">
+                            Remember me
+                        </label>
+                    </div>
+                    <div class="forgot-password col-6">
+                        <a class="link" href="#">Forgot password</a>
+                    </div>
+                </div>
+
+                <div class="wrap-button mb-3 row">
+                    <div class="col-12">
+                        <button type="submit" class="submit-button form-input btn btn-primary" id="login-submit">
+                            Log In
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 {% endblock %}
 
