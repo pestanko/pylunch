@@ -594,12 +594,15 @@ class NewLinesFilter(LunchContentFilter):
 
 
 class CutFilter(LunchContentFilter):
-    def _find_pos(self, content, sub, diacritics=False) -> Optional[int]:
+    def _find_pos(self, content: str, sub: str, diacritics=False, shift: int = 0) -> Optional[int]:
         if sub is None or content is None:
             return None
         text = unidecode.unidecode(content) if not diacritics else content
         dec_sub = unidecode.unidecode(sub) if not diacritics else sub
-        log.debug(f"[CUT] Matching \"{dec_sub}\" in {text}")
+
+        text = text if shift is None or shift == 0 or len(text) <= shift else text[shift:]
+
+        log.debug(f"[CUT] Matching \"{dec_sub}\" in {text} from position {shift}")
         pos: re.Match = re.search(dec_sub, text, re.IGNORECASE)
         if pos is None:
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
@@ -611,25 +614,21 @@ class CutFilter(LunchContentFilter):
         if not content:
             return None
 
-        cut_before = cut_before or self.entity['cut_before']
-        cut_after = cut_after or self.entity['cut_after']
-
-        cut_before = [cut_before] if isinstance(cut_before, str) else cut_before
-        cut_after = [cut_after] if isinstance(cut_after, str) else cut_after
-
-        def _finder(substr: str):
-            return self._find_pos(content, substr, diacritics)
-
-        def _filter_none(lst: list) -> list:
-            return [item for item in lst if item is not None]
-
-        beg_positions = _filter_none([_finder(pos) for pos in cut_before])
-        end_positions = _filter_none([_finder(pos) for pos in cut_after])
+        beg_positions = self._filter_positions('cut_before', content=content, diacritics=diacritics)
+        end_positions = self._filter_positions('cut_after', content=content, diacritics=diacritics)
 
         beg = 0 if not beg_positions else max(beg_positions)
         end = len(content) if not end_positions else min(end_positions)
 
         return content[beg:end]
+
+    def _filter_positions(self, what, content: str, diacritics: bool=False):
+            ent = self.entity.get(what)
+            if ent is None:
+                return None
+            ents = [ent] if not isinstance(ent, list) else ent
+            positions = [self._find_pos(content, pos, diacritics) for pos in ents]
+            positions = [pos for pos in positions if pos != None]
 
 
 class DayResolveFilter(CutFilter):
@@ -652,7 +651,7 @@ class DayResolveFilter(CutFilter):
             return None
         return res
 
-    def find_day(self, day, content, diacritics=False):
+    def find_day(self, day, content, diacritics=False, shift: int=0):
         if day is None or content is None:
             return None
         day_opts = self.options(day)
@@ -660,7 +659,7 @@ class DayResolveFilter(CutFilter):
             log.warning(f"[DAY] No suitable option for a day {day} for entity {self.entity.name}")
             return None
         for opt in day_opts:
-            pos = self._find_pos(content, opt, diacritics=diacritics)
+            pos = self._find_pos(content, opt, diacritics=diacritics, shift=shift)
             if pos is not None:
                 log.info(f"[DAY] Found for {self.entity.name} suitable day delimiter for a day {day}: {opt} at {pos}")
                 return pos
@@ -673,7 +672,8 @@ class DayResolveFilter(CutFilter):
         day_from = day_from or self._week_day
         day_to = day_to or (day_from + 1)
         beg = self.find_day(day_from, content, diacritics=diacritics)
-        end = self.find_day(day_to, content, diacritics=diacritics)
+        shift = beg if beg is not None else 0
+        end = self.find_day(day_to, content, diacritics=diacritics, shift=shift)
         if beg is None:
             beg = 0
         if end is None:

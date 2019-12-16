@@ -179,7 +179,7 @@ restaurants:
     url: http://www.restauracevarna.cz/denni-menu/
     selector: '#pravy-sloupec-obsah'
     tags: ['city', 'cz', 'gd']
-    filters: ['day', 'nl', 'cut']
+    filters: ['cut', 'day', 'nl']
     cut_after: 'SEZNAM ALERGENŮ'
     cut_before: 'PIZZA TÝDNE - Polévka + pizza týdne + Bonaqua'
 
