@@ -61,12 +61,12 @@ class AdminUsers(utils.CollectionWrapper):
             return False
         self.users[name] = self.generate_hash(password)
         return True
-    
+
     def set_password(self, name: str, password: str):
         if name not in self.users:
             log.error(f"User with name already exists: {name}")
             return False
-        
+
         log.info(f"Setting the password for a user: {name}")
         self.users[name] = self.generate_hash(password)
         return True
@@ -350,6 +350,19 @@ def route_api_restaurants_get_cache(name):
     paths = web_app.service.cache.paths_for_entity(instance, relative=True)
     return flask.jsonify([str(item) for item in paths])
 
+@api.route("/restaurants/<name>/cache/content")
+def route_api_restaurants_cache_content(name):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    rq = flask.request
+    file = rq.args.get('file')
+    content = web_app.service.cache.file_content(file)
+    return flask.jsonify({
+        'name': file,
+        'content': content
+    })
+
+
 
 ###
 # Admin
@@ -456,7 +469,7 @@ def admin_config_restaurants_post():
     rq = flask.request
     content = rq.form.get('content', None)
     url = rq.form.get('url', None)
-    
+
     if content:
         web_app.service.import_string(content, override=True)
 
@@ -472,7 +485,7 @@ register_blueprints(app)
 
 ###
 # Helpers
-### 
+###
 
 def resolve_menu(service: lunch.LunchService, instance):
     result = _generate_menu_header(instance)

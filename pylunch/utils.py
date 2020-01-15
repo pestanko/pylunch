@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 from typing import List, Optional, Mapping, Union, MutableMapping, Any
 import collections
+import os.path
 
 
 log = logging.getLogger(__name__)
@@ -19,13 +20,13 @@ def load_yaml(file: Union[Path, str]) -> MutableMapping[str, Any]:
 
 def save_yaml(file: Union[Path, str], content: dict):
     file = Path(file)
-    
+
     if not file.parent.exists():
         log.warning(f"[SAFE] Unnable to safe config file (directory not exists): {file}")
         return
     with file.open("w") as fp:
         yaml.safe_dump(content, fp)
-        
+
 
 def write_instances(instances, transform=None, writer=None):
     writer = writer or print
@@ -49,13 +50,13 @@ def generate_nice_header(*strings):
     def _print_text(max_l, text):
         buffer = ''
         buffer += f"\n===  {text}"
-        buffer +=_for_print(max_l, len(text), char=' ') 
+        buffer +=_for_print(max_l, len(text), char=' ')
         buffer += "  ==="
         return buffer
 
     def _beg_end_line(max_l):
         return f"\n{_for_print(max_l + 10, 0)}"
-    
+
     max_len = max(len(text) for text in strings)
 
     result = _beg_end_line(max_len)
@@ -83,4 +84,20 @@ class CollectionWrapper(collections.MutableMapping):
     def __iter__(self):
         return iter(self.collection)
     def __len__(self):
-         return len(self.collection) 
+         return len(self.collection)
+
+
+AnyPath = Union[str, Path]
+
+
+def is_forward_path(root: AnyPath, path: AnyPath) -> bool:
+    root = Path(root)
+    path = Path(path)
+    abs_path = os.path.abspath(root / path)
+    abs_path = Path(abs_path)
+    try:
+        relative = abs_path.relative_to(root)
+        relative_str = str(relative)
+        return not relative_str.startswith("../")
+    except ValueError:
+        return False

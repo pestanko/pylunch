@@ -60,6 +60,7 @@ USER_AGENTS = [
 class LunchEntity(collections.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
+        self._logger = None
 
     def __getitem__(self, k):
         return self._config.get(k)
@@ -239,9 +240,11 @@ class AbstractResolver:
     CACHE_DISABLED = False
 
     def __init__(self, service: 'LunchService', config: ResolverConfig):
-        log.debug(f"[RESOLV] Instance of {self.__class__.__name__} with {config}")
         self._service = service
         self._config = config
+        self._log = self.service.log_factory.get_logger(self.config.entity.name)
+        log.debug(f"[RESOLV] Instance of {self.__class__.__name__} with {config}")
+        self._log.debug(f"[RESOLV] Instance of {self.__class__.__name__} with {config}")
 
     @property
     def config(self) -> ResolverConfig:
@@ -258,10 +261,12 @@ class AbstractResolver:
     def resolve(self, day=None, **kwargs) -> Any:
         cls = self.__class__
         log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
+        self._log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
         try:
             suffix = cls.CACHE_SUFFIX or cls.__name__
             allow_cache = self.config.allow_cache and not cls.CACHE_DISABLED
             log.debug("[RESOLV] Cache state: {}")
+            self._log.debug("[RESOLV] Cache state: {}")
             if allow_cache:
                 return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT,
                                                suffix=suffix)
@@ -269,6 +274,7 @@ class AbstractResolver:
             return self._resolve(day=day, **kwargs)
         except Exception as ex:
             log.error(f"[RESOLV] Resolved error {cls.__name__}: {ex}", exc_info=True)
+            self._log.error(f"[RESOLV] Resolved error {cls.__name__}: {ex}", exc_info=True)
             return None
 
     def resolve_text(self, **kwargs) -> str:
@@ -298,8 +304,10 @@ class ResolverChain(AbstractResolver):
 
             if not resolved:
                 log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name}: no content")
+                self._log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name}: no content")
             else:
                 log.info(f"[CHAIN] Resolver {config.name} for {self.entity.name}: {resolved}")
+                self._log.info(f"[CHAIN] Resolver {config.name} for {self.entity.name}: {resolved}")
             content = resolved
         return content
 
@@ -307,8 +315,9 @@ class ResolverChain(AbstractResolver):
         resolver = self.service.resolvers.get(config.name)
         if not resolver:
             log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name} was not found, skipping.")
+            self._log.warning(f"[CHAIN] Resolver {config.name} for {self.entity.name} was not found, skipping.")
             return None
-        log.info(f"[CHAIN] Using the resolver {config.name} for entity: {self.entity.name}: {resolver.__name__}")
+        self._log.info(f"[CHAIN] Using the resolver {config.name} for entity: {self.entity.name}: {resolver.__name__}")
         instance: AbstractResolver = resolver(service=self.service, config=config)
         if config.text:
             resolved = instance.resolve(**kwargs)
@@ -602,7 +611,7 @@ class CutFilter(LunchContentFilter):
 
         text = text if shift is None or shift == 0 or len(text) <= shift else text[shift:]
 
-        log.debug(f"[CUT] Matching \"{dec_sub}\" in {text} from position {shift}")
+        log.debug(f"[CUT] Matching \"{dec_sub}\" in {text}, text-shift={shift}")
         pos: re.Match = re.search(dec_sub, text, re.IGNORECASE)
         if pos is None:
             log.warning(f"[CUT] Not found position of {sub} in the content for {self.entity.name}.")
@@ -678,6 +687,9 @@ class DayResolveFilter(CutFilter):
             beg = 0
         if end is None:
             end = len(content)
+
+        end = end + shift
+
         return content[beg:end]
 
 
@@ -738,7 +750,7 @@ class Filters(LunchCollection):
 class Entities(LunchCollection):
     def __init__(self, entities: dict, updated: datetime.datetime = None):
         super().__init__(cls_wrap=LunchEntity, **entities)
-        self._updated = updated        
+        self._updated = updated
 
     @property
     def collection(self) -> MutableMapping[str, Any]:
@@ -843,7 +855,7 @@ class RemoteSource(utils.CollectionWrapper):
     @property
     def config(self):
         return self.collection
-    
+
     @property
     def url(self) -> str:
         return self.get('url')
@@ -916,6 +928,11 @@ class LunchService:
         self._cache: LunchCache = LunchCache(self)
         self._blacklist: EntityBlacklist = EntityBlacklist(self)
         self._sources = RemoteSources(self)
+        self._log_factory = LunchLoggerFactory(self.cache)
+
+    @property
+    def log_factory(self) -> 'LunchLoggerFactory':
+        return self._log_factory
 
     @property
     def cache(self) -> 'LunchCache':
@@ -1124,7 +1141,7 @@ class EntityBlacklist:
         if self.service.cache.disabled:
             log.info("[BLKL] Cache is disabled - not blacklisting")
             return False
-        
+
         blacklist = self.load()
 
         if blacklist is None:
@@ -1133,7 +1150,7 @@ class EntityBlacklist:
         if name not in blacklist:
             log.info(f"[BLKL] Entity {name} not found in the blacklist!")
             return False
-        
+
         del blacklist[name]
 
         self.save(blacklist)
@@ -1160,7 +1177,7 @@ class LunchCache:
     def cache_base(self) -> Path:
         return Path(self.config.cache_dir)
 
-    def save(self, path: Path, content):
+    def save(self, path: Path, content: str):
         if self.disabled:
             log.info(f"[CACHE] Cache is not enabled or cache dir not set - not saving")
             return
@@ -1174,18 +1191,37 @@ class LunchCache:
         fp.write_text(str(content), encoding='utf-8')
 
     def get(self, path: Path) -> Optional[str]:
+        return self.file_content(path)
+
+
+    def file_content(self, file: str) -> str:
         if self.disabled:
             log.debug(f"[CACHE] Cache is not enabled or cache dir not set - no content")
             return None
-        fp: Path = self._cache_path(path)
+
+        fp = Path(file)
+        fp = fp if fp.is_absolute() else self._cache_path(file)
+
         if not fp.exists():
-            log.debug(f"[CACHE] Cache for item not exists: {fp}")
+            log.warning(f"[CACHE] Cache for item not exists: {fp}")
             return None
+
+        if not utils.is_forward_path(self.cache_base, file):
+            log.error(f"[CACHE] Cache path is not forward item not exists: {fp}")
+            return None
+
         return fp.read_text(encoding='utf-8')
+
 
     def _cache_path(self, fragment: Path) -> Path:
         fragment = Path(fragment)
-        return self.cache_base / fragment
+        fp = self.cache_base / fragment
+        return fp.resolve()
+
+    def cache_path(self, fragment: Path) -> Path:
+        fp =  self._cache_path(fragment)
+        self._create_dir(fp.parent)
+        return fp
 
     def _create_dir(self, dir: Path) -> Path:
         dir = Path(dir)
@@ -1293,6 +1329,35 @@ class LunchCache:
         log.info(f"[CACHE] Cache content for {day_path}: {self.cache_base / day_path}")
         full = str(self.cache_base / day_path)
         return list(os.listdir(full))
+
+
+class LunchLoggerFactory:
+    def __init__(self, cache: 'LunchCache'):
+        self._cache = cache
+        self._loggers = {}
+
+    def get_logger(self, name: str) -> logging.Logger:
+        if name in self._loggers:
+            return self._loggers[name]
+        logger = self.create_logger(name)
+        self._loggers[name] = logger
+        return logger
+
+    def create_logger(self, name:str) -> logging.Logger:
+        logger = logging.getLogger(f"_ent_{name}")
+        formatter = logging.Formatter('%(levelname)s %(asctime)s - %(module)s: %(message)s')
+        if self._cache.enabled:
+            fd = self._cache.cache_path(f"{name}.log")
+            handler = logging.FileHandler(str(fd))
+        else:
+            handler = logging.StreamHandler()
+
+        handler.setLevel(logging.DEBUG)
+
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+        return logger
 
 
 def to_text(content):

@@ -9,7 +9,6 @@ def make_cfg(level=None):
     if level is not None:
         lvl = LVL_MAP.get(level.lower(), LOG_LEVEL)
 
-    
     return {
     'version': 1,
     'disable_existing_loggers': False,
