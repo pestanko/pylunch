@@ -197,7 +197,7 @@ restaurants:
     selector: 16507597
     tags: ['city', 'cz', 'ns']
     resolver: zomato
-  
+
   portoriko:
     display_name: Portoriko
     url: https://www.zomato.com/brno/portoriko-královo-pole-brno-sever

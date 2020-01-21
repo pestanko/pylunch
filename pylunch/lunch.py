@@ -1047,10 +1047,8 @@ class LunchService:
             return None
 
         # Do not apply filters if no filters
-        if kwargs.get('no_filters'):
-            return content
-
-        return self._apply_filters(entity, content, **kwargs)
+        content = content if kwargs.get('no_filters') else self._apply_filters(entity, content, **kwargs)
+        return content.strip()
 
     def _get_resolver(self, entity) -> AbstractResolver:
         resolver = self.resolvers.for_entity(entity)
