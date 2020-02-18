@@ -400,4 +400,11 @@ restaurants:
     tags: ['fi', 'cz']
     filters: [ 'day', 'nl' ]
 
+  diva_bara:
+    display_name: Diva bara
+    url: http://www.restauracedivabara.cz/menu__trashed-2/
+    selector: 'div.daily-menu'
+    tags: ['fi', 'cz']
+    filters: [ 'day', 'nl' ]
+
   
