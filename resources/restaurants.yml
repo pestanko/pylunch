@@ -393,3 +393,11 @@ restaurants:
     tags: ['city', 'ns', 'cz']
     filters: [ 'day', 'nl' ]
 
+  montenegro:
+    display_name: Montenegro
+    url: http://www.montenegro-pub.cz/
+    selector: 'div.b-content--full.b-content'
+    tags: ['fi', 'cz']
+    filters: [ 'day', 'nl' ]
+
+  
