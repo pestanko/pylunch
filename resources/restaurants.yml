@@ -123,13 +123,13 @@ restaurants:
     filters: [ 'day', 'nl' ]
     tags: ['fi', 'cz']
 
-  vivo-bene:
-    display_name: Vivo Bene Gusto
-    url: http://www.vivobene-gusto.cz/obedove-menu
-    selector: '#main .article > .bd'
-    cut_after: 'OBĚDOVÁ NABÍDKA'
+  jean-pauls:
+    display_name: Jean Pauls
+    url: http://jpbistro.cz/menu/index.php
+    selector: 'div.denni-menu'
+    cut_after: 'TÝDENNÍ MENU'
     filters: ['day', 'cut']
-    tags: ['ns', 'ita', 'city']
+    tags: ['ns', 'gd', 'ita', 'city']
 
   drevak:
     display_name: Drevak
