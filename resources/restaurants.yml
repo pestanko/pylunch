@@ -398,13 +398,13 @@ restaurants:
     url: http://www.montenegro-pub.cz/
     selector: 'div.b-content--full.b-content'
     tags: ['fi', 'cz']
-    filters: [ 'day', 'nl' ]
+    filters: [ 'day', 'fi' ]
 
   diva_bara:
     display_name: Diva bara
     url: http://www.restauracedivabara.cz/menu__trashed-2/
     selector: 'div.daily-menu'
     tags: ['fi', 'cz']
-    filters: [ 'day', 'nl' ]
+    filters: [ 'day', 'fi' ]
 
   
