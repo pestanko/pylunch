@@ -128,7 +128,7 @@ restaurants:
     url: http://jpbistro.cz/menu/index.php
     selector: 'div.denni-menu'
     cut_after: 'TÝDENNÍ MENU'
-    filters: ['day', 'cut']
+    filters: ['day', 'cut', 'nl']
     tags: ['ns', 'gd', 'ita', 'city']
 
   drevak:
@@ -398,13 +398,13 @@ restaurants:
     url: http://www.montenegro-pub.cz/
     selector: 'div.b-content--full.b-content'
     tags: ['fi', 'cz']
-    filters: [ 'day', 'fi' ]
+    filters: [ 'day', 'nl' ]
 
   diva_bara:
     display_name: Diva bara
     url: http://www.restauracedivabara.cz/menu__trashed-2/
     selector: 'div.daily-menu'
     tags: ['fi', 'cz']
-    filters: [ 'day', 'fi' ]
+    filters: [ 'day', 'nl' ]
 
   
