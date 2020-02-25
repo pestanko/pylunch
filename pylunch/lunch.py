@@ -632,12 +632,13 @@ class CutFilter(LunchContentFilter):
         return content[beg:end]
 
     def _filter_positions(self, what, content: str, diacritics: bool=False):
-            ent = self.entity.get(what)
-            if ent is None:
-                return None
-            ents = [ent] if not isinstance(ent, list) else ent
-            positions = [self._find_pos(content, pos, diacritics) for pos in ents]
-            positions = [pos for pos in positions if pos != None]
+        ent = self.entity.get(what)
+        if ent is None:
+            return None
+        ents = [ent] if not isinstance(ent, list) else ent
+        positions = [self._find_pos(content, pos, diacritics) for pos in ents]
+        positions = [pos for pos in positions if pos != None]
+        return positions
 
 
 class DayResolveFilter(CutFilter):
