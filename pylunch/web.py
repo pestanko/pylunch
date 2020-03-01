@@ -13,7 +13,6 @@ from typing import List, Mapping, Optional, Union
 from pylunch import config, lunch, utils, __version__, log_config, errors
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     jwt_refresh_token_required, create_refresh_token,
@@ -350,8 +349,9 @@ def route_api_restaurants_get_cache(name):
     paths = web_app.service.cache.paths_for_entity(instance, relative=True)
     return flask.jsonify([str(item) for item in paths])
 
+
 @api.route("/restaurants/<name>/cache/content")
-def route_api_restaurants_cache_content(name):
+def route_api_restaurants_cache_content(name: str):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
     rq = flask.request
@@ -362,6 +362,15 @@ def route_api_restaurants_cache_content(name):
         'content': content
     })
 
+
+@api.route("/restaurants/<name>/cache/invalidate", methods=['POST'])
+@jwt_refresh_token_required
+def route_api_restaurants_cache_invalidate(name: str):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    web_app.service.cache.clear(instances=[instance])
+
+    return flask.jsonify(dict(message='ok'))
 
 
 ###
@@ -506,6 +515,7 @@ def _generate_menu_header(instance):
 management_cli = AppGroup('mgmt', help='Pylunch Server Management')
 
 app.cli.add_command(management_cli)
+
 
 @management_cli.command("pwd-hash", help="Generate password hash for a given password")
 @click.option('-p', '--password', help='Users password', prompt=True, hide_input=True,
