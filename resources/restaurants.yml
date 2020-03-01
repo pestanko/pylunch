@@ -78,7 +78,7 @@ restaurants:
   rubin:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
-    selector: '#content #center_pannel'
+    selector: '.content .page-content'
     filters: ['day', 'nl']
     tags: ['rh', 'cz']
 
