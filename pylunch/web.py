@@ -373,6 +373,17 @@ def route_api_restaurants_cache_invalidate(name: str):
     return flask.jsonify(dict(message='ok'))
 
 
+@api.route("/restaurants/<name>", methods=['DELETE'])
+@jwt_refresh_token_required
+def route_api_restaurants_delete(name: str):
+    web_app = WebApplication.get()
+    instance = web_app.service.instances.find_one(name)
+    if instance is not None:
+        del web_app.service.instances[instance.name]
+        web_app.save_restaurants()
+    return flask.jsonify(dict(message='ok'))
+
+
 ###
 # Admin
 ###
