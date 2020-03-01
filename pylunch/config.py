@@ -107,6 +107,10 @@ class AppConfig(collections.MutableMapping):
         return self.config.get('telegram_token', None)
 
     @property
+    def discord_token(self) -> str:
+        return self.config.get('discord_token', None)
+
+    @property
     def default_source(self) -> str:
         return self.get('default_source')
 

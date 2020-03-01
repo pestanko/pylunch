@@ -65,6 +65,13 @@ To get the telegram bot token please take a look [here](https://core.telegram.or
 $ pylunch cfg-set telegram_token "<YOUR_KEY>"
 ```
 
+To use the discord integration, you need to set the discord bot token property `discord_token`.
+For more information how to get them you go [here](https://discordapp.com/developers/applications).
+
+```bash
+$ pylunch cfg-set discord_token "<YOUR_KEY>"
+```
+
 Also if you have already created or exported database of the restaurants, you an import it using the command `import`:
 Example file is located in: `resources/restaurants.yml` available [here](https://gitlab.com/pestanko/pylunch/raw/master/resources/restaurants.yml).
 

@@ -47,6 +47,7 @@ pillow = "*"
 unidecode = "*"
 toml = "^0.10.0"
 gunicorn = "^19.9"
+"discord.py" = "^1.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
