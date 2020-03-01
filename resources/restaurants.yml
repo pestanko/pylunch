@@ -25,7 +25,7 @@ restaurants:
 
   kocka:
     display_name: Zelena Kocka
-    selector: '.elementor-container .elementor-image img'
+    selector: '.elementor-widget-container .elementor-image img'
     url: https://www.zelenakocka.cz/poledni-nabidka/
     resolver: ocr_img
     language: ces
@@ -407,4 +407,12 @@ restaurants:
     tags: ['fi', 'cz']
     filters: [ 'day', 'nl' ]
 
-  
+  spravne_misto:
+    display_name: Spravne misto
+    url: https://spravnemisto.cz/denni-menu
+    selector: 'div.elementor-container.elementor-column-gap-default'
+    tags: ['rh']
+    filters: [ 'day', 'nl' ]
+
+
+
