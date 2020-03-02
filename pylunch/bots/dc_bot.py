@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 
 from pylunch import lunch
@@ -13,28 +14,32 @@ def register_commands(bot: commands.Bot):
     bot.add_command(discord_cmd_menu)
 
 
-class PyLunchDiscordContext(commands.Context):
-    def __init__(self, service: lunch.LunchService, **attrs):
-        super().__init__(**attrs)
+class PyLunchDiscordBot:
+    __instance = None
+
+    @classmethod
+    def get(cls) -> 'PyLunchDiscordBot':
+        return cls.__instance
+
+    @classmethod
+    def create(cls, *args, **kwargs):
+        cls.__instance = cls(*args, **kwargs)
+        return cls.__instance
+
+    def __init__(self, service: lunch.LunchService, prefix="$"):
         self._service = service
+        self._bot = commands.Bot(prefix)
 
     @property
     def service(self) -> lunch.LunchService:
         return self._service
 
 
-class PyLunchDiscordBot(commands.Bot):
-    async def get_context(self, message, *, cls=PyLunchDiscordContext):
-        # when you override this method, you pass your new Context
-        # subclass to the super() method, which tells the bot to
-        # use the new MyContext class
-        return await super().get_context(message, cls=cls)
-
-
 @commands.command(name='menu')
-async def discord_cmd_menu(ctx: PyLunchDiscordContext, *args):
+async def discord_cmd_menu(ctx: commands.Context, *args):
+    app = PyLunchDiscordBot.get()
     tags = " ".join(args)
-    instances = ctx.service.instances.select(tags, fuzzy=True, tags=True)
+    instances = app.service.instances.select(tags, fuzzy=True, tags=True)
     log.debug(f"Printing: {instances}")
 
     if instances is None or not instances:
@@ -43,5 +48,15 @@ async def discord_cmd_menu(ctx: PyLunchDiscordContext, *args):
     for instance in instances:
         if instance is not None:
             log.info(f"Sending one response from list: {instances}")
-            content = ctx.service.resolve_text(instance)
+            content = app.service.resolve_text(instance)
             await ctx.send(content)
+
+
+@commands.command(name='tags')
+async def discord_cmd_tags(ctx: commands.Context):
+    app = PyLunchDiscordBot.get()
+    tags = app.service.instances.all_tags()
+    content = "TAGS:\n\n" + ("\n".join(tags))
+    log.info(f"Sending the tags: {tags}")
+    await ctx.send(content)
+

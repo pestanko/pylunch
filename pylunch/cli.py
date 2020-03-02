@@ -322,7 +322,7 @@ def cli_start_telegram_bot(app: CliApplication):
     try:
         from pylunch.bots.dc_bot import PyLunchDiscordBot
         print("Starting the discord bot")
-        bot = PyLunchDiscordBot(app.service)
+        bot = PyLunchDiscordBot.create(app.service)
         bot.run()
     except ImportError:
         print('\n Telegram bot is not available module is not available')
