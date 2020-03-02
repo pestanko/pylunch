@@ -320,9 +320,10 @@ def cli_start_telegram_bot(app: CliApplication):
 @pass_app
 def cli_start_telegram_bot(app: CliApplication):
     try:
-        from pylunch.bots.dc_bot import PyLunchDiscordBot
+        from pylunch.bots.dc_bot import PyLunchDiscordBot, register_commands
         print("Starting the discord bot")
         bot = PyLunchDiscordBot.create(app.service)
+        register_commands(bot.bot)
         bot.run()
     except ImportError:
         print('\n Telegram bot is not available module is not available')
@@ -332,12 +333,13 @@ def cli_start_telegram_bot(app: CliApplication):
 def cli_sources():
     pass
 
+
 @cli_sources.command(name='add', help='Add new source to update from')
 @click.option('-U', '--url', help='It is remote source', is_flag=True, default=False)
 @click.argument('name')
 @click.argument('path')
 @pass_app
-def cli_sources_add(app: CliApplication, url: bool=False, name: str=None, path: str = None):
+def cli_sources_add(app: CliApplication, url: bool = False, name: str = None, path: str = None):
     pass
 
 
