@@ -15,13 +15,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
 class CommandHandlers:
     def __init__(self, pylunch_bot: 'PyLunchTelegramBot'):
         self.pylunch_bot = pylunch_bot
         self._commands = {}
-    
+
     def select_instances(self, selectors, fuzzy=False, tags=False, with_disabled=True) -> List[lunch.LunchEntity]:
-        
         return self.service.instances.select(selectors, fuzzy=fuzzy, tags=tags, with_disabled=with_disabled)
 
     def _instance_transform(self, instance):
@@ -31,9 +31,11 @@ class CommandHandlers:
 
     def print_instances(self, update, instances, transform=None):
         transform = transform if transform is not None else self._instance_transform
+
         def _write(content): self.send_msg(update, content)
+
         pylunch.utils.write_instances(instances, transform=transform, writer=_write)
-    
+
     @property
     def service(self) -> lunch.LunchService:
         return self.pylunch_bot.service
@@ -102,7 +104,7 @@ class CommandHandlers:
         query = update.inline_query.query
         log.info(f"[INLINE] Inline query: {query}")
         food_content = InputTextMessageContent(self.service.instances.find_one(query))
-        results = [InlineQueryResultArticle(id=uuid4(), title="Get", input_message_content=food_content),]
+        results = [InlineQueryResultArticle(id=uuid4(), title="Get", input_message_content=food_content), ]
         update.inline_query.answer(results)
 
     def error(self, update, context):
@@ -149,7 +151,6 @@ def register_handlers(bot):
     cmd.add_cmd_handler('tags', 'Get list of all available tags', cmd.get_avaliable_tags)
     cmd.add_cmd_handler('tmenu', '<expr> Get menu for restaurant based on tags', cmd.get_menu_by_tags)
     cmd.add_cmd_handler('menu', '<restaurant> Get menu by restaurant name', cmd.get_menu_one)
-
 
     # Inline handler
     dispatcher.add_handler(InlineQueryHandler(cmd.inline_query_handler))
