@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pylunch"
-version = "0.2.8"
+version = "0.2.9"
 description = "Pylunch cli and web tool to get lunch info"
 authors = ["Peter Stanko <peter.stanko0@gmail.com>"]
 repository='https://gitlab.com/pestanko/pylunch'
