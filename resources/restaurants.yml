@@ -15,9 +15,9 @@ restaurants:
 
   lloyds:
     display_name: Lloyds
-    selector: '#dnesni-menu'
-    url: http://restauracelloyds.cz/ke-stazeni/denni_menu.jpg
-    resolver: ocr_raw
+    selector: '#content img.attachment-large'
+    url: https://restauracelloyds.cz/denni-menu/
+    resolver: ocr_img
     language: ces
     filters: ['nl', 'cut']
     cut_after: 'NÁPOJE ROZLÉVANÉ K OBĚDOVÉMU MENU'
