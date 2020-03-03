@@ -99,7 +99,8 @@ restaurants:
   krava:
     display_name: Monte Bu
     url: 'https://www.monte-bu.cz/menu.php#poledni-section'
-    selector: '.menu-details'
+    selector: '.menu-details .today'
+    filters: ['day']
     tags: ['rh', 'ns', 'cz', 'steak']
 
   sabaidy:
