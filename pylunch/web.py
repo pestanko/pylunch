@@ -26,7 +26,8 @@ RESOURCES = base_dir / 'resources'
 INTERNAL = base_dir / 'internal'
 APP_NAME = 'PyLunch'
 CONFIG_DIR = click.get_app_dir(APP_NAME.lower())
-tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+tmpl_dir = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "templates")
 static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
@@ -94,7 +95,8 @@ def handle_general_error(e):
     if isinstance(e, HTTPError):
         code = e.code
     web_app = WebApplication.get()
-    context = web_app.gen_context(code=code, stacktrace=e, message=str(e), flash='')
+    context = web_app.gen_context(
+        code=code, stacktrace=e, message=str(e), flash='')
     return flask.render_template('error.html', **context), code
 
 
@@ -115,15 +117,19 @@ class WebApplication:
 
     @classmethod
     def create_app(cls):
-        flask_app = flask.Flask(__name__, template_folder=tmpl_dir, static_folder=static_dir)
-        flask_app.config['JWT_SECRET_KEY'] = os.getenv('PYLUNCH_SECRET', 'jwt-secret-string')
+        flask_app = flask.Flask(
+            __name__, template_folder=tmpl_dir, static_folder=static_dir)
+        flask_app.config['JWT_SECRET_KEY'] = os.getenv(
+            'PYLUNCH_SECRET', 'jwt-secret-string')
         flask_app.config['JWT_TOKEN_LOCATION'] = ('cookies', 'headers')
         flask_app.config['JWT_ACCESS_COOKIE_PATH'] = '/'
         flask_app.config['JWT_REFRESH_COOKIE_PATH'] = '/'
         flask_app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 
-        flask_app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=7)
-        flask_app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(days=30)
+        flask_app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(
+            days=7)
+        flask_app.config['JWT_REFRESH_TOKEN_EXPIRES'] = datetime.timedelta(
+            days=30)
 
         JWTManager(flask_app)
         if flask_app.debug:
@@ -132,14 +138,16 @@ class WebApplication:
         else:
             flask_app.register_error_handler(404, page_not_found)
             flask_app.register_error_handler(Exception, handle_general_error)
-            flask_app.register_error_handler(errors.PyLunchApiError, handle_api_error)
+            flask_app.register_error_handler(
+                errors.PyLunchApiError, handle_api_error)
         return flask_app
 
     def __init__(self, config_dir=None):
         self._service: Optional[lunch.LunchService] = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
-        self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
+        self.restaurants_loader = config.YamlLoader(
+            config_dir, 'restaurants.yaml')
         self.users = AdminUsers()
         self._timestamp = None
         self._config = None
@@ -161,7 +169,8 @@ class WebApplication:
             self._first_run()
         cfg_dict = {**self.config_loader.load(), **kwargs}
         self._config = config.AppConfig(**cfg_dict)
-        self._users_file = Path(os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
+        self._users_file = Path(
+            os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         self.users.import_users(self._users_file)
         return self
 
@@ -170,13 +179,15 @@ class WebApplication:
         unwrapped = loaded.get('restaurants') or loaded
         log.info(f"[INIT] Loaded: {[name for name in unwrapped.keys()]}")
         upsdated_str = loaded.get('updated')
-        updated = datetime.datetime.fromisoformat(upsdated_str) if upsdated_str is not None else None
+        updated = datetime.datetime.fromisoformat(
+            upsdated_str) if upsdated_str is not None else None
         ent = lunch.Entities(unwrapped, updated=updated)
         self._timestamp = datetime.datetime.now()
         self._service = lunch.LunchService(self._config, ent)
 
     def _first_run(self):
-        log.info(f"First run detected, crearing config folder: {self.config_loader.base_dir}")
+        log.info(
+            f"First run detected, crearing config folder: {self.config_loader.base_dir}")
         self.config_loader.base_dir.mkdir(parents=True)
         self.config_loader.save(data=dict(restaurants='./restaurants.yaml'))
         self.restaurants_loader.save(data={})
@@ -295,10 +306,12 @@ def web_fallback_menu():
     format = web_app.parse_request()['format']
 
     if format is not None and format.startswith('t'):
-        content = "\n".join(resolve_menu(web_app.service, inst) for inst in instances)
+        content = "\n".join(resolve_menu(web_app.service, inst)
+                            for inst in instances)
         return flask.Response(content, mimetype='text/plain')
     else:
-        menus = [(rest, web_app.service.resolve_text(rest)) for rest in instances if rest]
+        menus = [(rest, web_app.service.resolve_text(rest))
+                 for rest in instances if rest]
         context = web_app.gen_context(restaurants=instances, menus=menus)
         return flask.render_template('fmenu.html', **context)
 
