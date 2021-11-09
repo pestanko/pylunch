@@ -263,7 +263,7 @@ admin = flask.Blueprint('admin', __name__)
 
 def register_blueprints(app):
     app.register_blueprint(api, url_prefix='/api')
-    app.register_blueprint(admin, url_prefix='/admin')
+    app.register_blueprint(admin, url_prefix='/site-admin')
 
 
 def roll_filter(items, roll):
