@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    jwt_refresh_token_required, create_refresh_token,
+    create_refresh_token,
     get_jwt_identity, set_access_cookies,
     set_refresh_cookies
 )
@@ -375,7 +375,7 @@ def route_api_restaurants_cache_content(name: str):
 
 
 @api.route("/restaurants/<name>/cache/invalidate", methods=['POST'])
-@jwt_refresh_token_required
+@jwt_required()
 def route_api_restaurants_cache_invalidate(name: str):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
@@ -385,7 +385,7 @@ def route_api_restaurants_cache_invalidate(name: str):
 
 
 @api.route("/restaurants/<name>", methods=['DELETE'])
-@jwt_refresh_token_required
+@jwt_required()
 def route_api_restaurants_delete(name: str):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
@@ -402,7 +402,7 @@ def route_api_restaurants_delete(name: str):
 # Same thing as login here, except we are only setting a new cookie
 # for the access token.
 @admin.route('/token/refresh', methods=['POST'])
-@jwt_refresh_token_required
+@jwt_required(refresh = True)
 def admin_refresh():
     # Create the new access token
     current_user = get_jwt_identity()
@@ -475,7 +475,7 @@ def admin_token_valid():
 
 
 @admin.route('/cache-invalidate', methods=['POST'])
-@jwt_required
+@jwt_required()
 def admin_cache_invalidate():
     web_app = WebApplication.get()
     items = web_app.service.cache.clear()
@@ -483,14 +483,14 @@ def admin_cache_invalidate():
 
 
 @admin.route('/config/restaurants')
-@jwt_required
+@jwt_required()
 def admin_config_restaurants_get():
     web_app = WebApplication.get()
     return flask.jsonify(dict(content=web_app.restaurants_loader.full_path.read_text(encoding='utf-8')))
 
 
 @admin.route('/config/restaurants', methods=['POST'])
-@jwt_required
+@jwt_required()
 def admin_config_restaurants_post():
     web_app = WebApplication.get()
 

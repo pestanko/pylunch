@@ -304,31 +304,6 @@ def cli_start_console(app: CliApplication):
         print('\nIPython modeule is not available')
 
 
-@main_cli.command(name='telegram-bot', help='Start the telegram bot')
-@pass_app
-def cli_start_telegram_bot(app: CliApplication):
-    try:
-        from pylunch.bots.telegram_bot import PyLunchTelegramBot
-        print("Starting the telegram bot")
-        bot = PyLunchTelegramBot(app.service)
-        bot.run()
-    except ImportError:
-        print('\n Telegram bot is not available module is not available')
-
-
-@main_cli.command(name='discord-bot', help='Start the discord bot')
-@pass_app
-def cli_start_telegram_bot(app: CliApplication):
-    try:
-        from pylunch.bots.dc_bot import PyLunchDiscordBot, register_commands
-        print("Starting the discord bot")
-        bot = PyLunchDiscordBot.create(app.service)
-        register_commands(bot.bot)
-        bot.run()
-    except ImportError:
-        print('\n Telegram bot is not available module is not available')
-
-
 @main_cli.group(name='sources', help='Manage default sources for autoupdate everyday')
 def cli_sources():
     pass

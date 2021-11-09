@@ -103,14 +103,6 @@ class AppConfig(collections.MutableMapping):
         return self.config.get('zomato_key', None)
 
     @property
-    def telegram_token(self) -> str:
-        return self.config.get('telegram_token', None)
-
-    @property
-    def discord_token(self) -> str:
-        return self.config.get('discord_token', None)
-
-    @property
     def default_source(self) -> str:
         return self.get('default_source')
 

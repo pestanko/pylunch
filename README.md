@@ -58,20 +58,6 @@ In order to get the zomato key you need to go to the [Zomato Api documentation](
 $ pylunch cfg-set zomato_key "<YOUR_KEY>"
 ```
 
-To use the telegram integration, you need to set the telegram bot token property ``telegram_token``.
-To get the telegram bot token please take a look [here](https://core.telegram.org/bots).
-
-```bash
-$ pylunch cfg-set telegram_token "<YOUR_KEY>"
-```
-
-To use the discord integration, you need to set the discord bot token property `discord_token`.
-For more information how to get them you go [here](https://discordapp.com/developers/applications).
-
-```bash
-$ pylunch cfg-set discord_token "<YOUR_KEY>"
-```
-
 Also if you have already created or exported database of the restaurants, you an import it using the command `import`:
 Example file is located in: `resources/restaurants.yml` available [here](https://gitlab.com/pestanko/pylunch/raw/master/resources/restaurants.yml).
 
@@ -127,7 +113,6 @@ Commands:
   ls             List all available restaurants
   menu           Get menu for a restaurant
   rm             Removes the restaurant
-  telegram-bot   Start the telegram bot
 ```
 
 ### Runnig the server
