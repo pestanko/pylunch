@@ -1,8 +1,8 @@
 {% extends "template.html" %}
 {% block title %}Async Menu{% endblock %}
 {% block head %}
-    {{ super() }}
-    <style>
+{{ super() }}
+<style>
         #sidebar {
             width: 250px;
             position: fixed;
@@ -111,33 +111,33 @@
             font-size: 15px;
             background-color: #343a40;
         }
-    </style>
+
+</style>
 {% endblock %}
 {% block content %}
-      <!-- Sidebar -->
-      <nav id="sidebar" class="sidebar active">
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar active">
 
-            <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
-                <h3>PyLunch Restaurants</h3>
-            </div>
-    
-            <div class="sidebar-search">
-                <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
-            </div>
-
-            <ul id="nav-restaurants-list" class="list-unstyled components">
-                
-            </ul>
-        </nav>
-
-        <button type="button" id="sidebarCollapse" class="btn btn-dark">
-            <i class="fas fa-align-left"></i>
-            <span>Restaurants</span>
-        </button>
-
-        <div id="menus" style="margin-left: 10px" class="container-fluid">
-        </div>
+    <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
+        <h3>PyLunch Restaurants</h3>
     </div>
+
+    <div class="sidebar-search">
+        <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
+    </div>
+
+    <ul id="nav-restaurants-list" class="list-unstyled components">
+
+    </ul>
+</nav>
+
+<button type="button" id="sidebarCollapse" class="btn btn-dark">
+    <i class="fas fa-align-left"></i>
+    <span>Restaurants</span>
+</button>
+
+<div id="menus" style="margin-left: 10px" class="container-fluid">
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -286,5 +286,6 @@
             }, 500);
         });
     });
+
 </script>
 {% endblock %}

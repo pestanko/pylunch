@@ -1,8 +1,8 @@
 {% extends "template.html" %}
 {% block title %}Menu{% endblock %}
 {% block head %}
-    {{ super() }}
-    <style>
+{{ super() }}
+<style>
         #sidebar {
             width: 250px;
             position: fixed;
@@ -111,65 +111,67 @@
             font-size: 15px;
             background-color: #343a40;
         }
-    </style>
+
+</style>
 {% endblock %}
 {% block content %}
-      <!-- Sidebar -->
-      <nav id="sidebar" class="sidebar active">
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar active">
 
-            <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
-                <h3>PyLunch Restaurants</h3>
-            </div>
-    
-            <div class="sidebar-search">
-                <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
-            </div>
+    <div style="margin-top: 30px; color: #FFF; z-index: 1100;" class="sidebar-header">
+        <h3>PyLunch Restaurants</h3>
+    </div>
 
-            <ul class="list-unstyled components">
-                {% if restaurants %}
-                    {% for entity in restaurants %}
-                    <li class="menu-item" id="{{entity.name}}-item">
-                        <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}} ({{entity.name}})</a>
-                    </li>
-                    {% endfor %}
-                {%else%}
-                    <li class="menu-item" id="message-item">
-                        No restaurants found
-                    </li>
-                {% endif %}
-            </ul>
-            
-        </nav>
+    <div class="sidebar-search">
+        <input type="text" id="sidebar-search" placeholder="Filter Restaurants">
+    </div>
 
-        <button type="button" id="sidebarCollapse" class="btn btn-dark">
-            <i class="fas fa-align-left"></i>
-            <span>Restaurants</span>
-        </button>
+    <ul class="list-unstyled components">
+        {% if restaurants %}
+        {% for entity in restaurants %}
+        <li class="menu-item" id="{{entity.name}}-item">
+            <a class="menu-item-link" id="{{entity.name}}-item-link" href="#{{entity.name}}_section">{{entity.display_name}}
+                ({{entity.name}})</a>
+        </li>
+        {% endfor %}
+        {%else%}
+        <li class="menu-item" id="message-item">
+            No restaurants found
+        </li>
+        {% endif %}
+    </ul>
 
-        <div id="menus" style="margin-left: 10px" class="container-fluid">
-            {% for entity in menus %}
-            <div class="row container-fluid" style="width: 100%" id="{{entity.0.name}}_section">
-                <h3 class="restaurant-header" style="text-align: left; width: 100%">
-                    <a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a>
-                </h3>
-                <p class="" style="margin-right: 20px" style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
-                <p class="restaurant-tags" style="width: 100%" class="row">
-                        {% for tag in entity.0.tags %}
-                            <a href="/fmenu?t={{tag}}">{{tag}}</a>&nbsp;
-                        {% endfor %}
-                </p>
-                <div class="restaurant-content" style="width: 100%" class="row">
+</nav>
+
+<button type="button" id="sidebarCollapse" class="btn btn-dark">
+    <i class="fas fa-align-left"></i>
+    <span>Restaurants</span>
+</button>
+
+<div id="menus" style="margin-left: 10px" class="container-fluid">
+    {% for entity in menus %}
+    <div class="row container-fluid" style="width: 100%" id="{{entity.0.name}}_section">
+        <h3 class="restaurant-header" style="text-align: left; width: 100%">
+            <a href="/restaurants/{{entity.0.name}}">{{entity.0.display_name}}</a>
+        </h3>
+        <p class="" style="width: 100%"><a href="{{entity.0.url}}">Restaurant's webpage</a></p>
+        <p class="restaurant-tags row" style="width: 100%">
+            {% for tag in entity.0.tags %}
+            <a href="/fmenu?t={{tag}}">{{tag}}</a>&nbsp;
+            {% endfor %}
+        </p>
+        <div class="restaurant-content row" style="width: 100%">
                     <pre>
                         <code>
                         {{entity.1}}
                         </code>
                     </pre>
-                </div>
-            </div>
-            {% endfor %}
-
         </div>
     </div>
+    {% endfor %}
+
+</div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -222,5 +224,6 @@
         // Set the offset when entering page with hash present in the url
         window.setTimeout(offsetAnchor, 0);
     });
+
 </script>
 {% endblock %}

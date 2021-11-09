@@ -44,7 +44,7 @@
         editor.setTheme("ace/theme/monokai");
         editor.getSession().setMode("ace/mode/yaml");
 
-        var restUrl = "/admin/config/restaurants";
+        var restUrl = "/site-admin/config/restaurants";
 
         getJson(restUrl).done(function(res){
             var content = res['content'];

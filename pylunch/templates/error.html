@@ -1,20 +1,21 @@
 {% extends "template.html" %}
 {% block title %}Error{% endblock %}
 {% block head %}
-    {{ super() }}
-    <style type="text/css">
+{{ super() }}
+<style type="text/css">
         .important { color: #336699; }
-    </style>
+
+</style>
 {% endblock %}
 {% block content %}
-    <div class="container">
-            <h1 class="row">Error {{code}}</h1>
-            <p class="important row">
-                An error has occured: {{message}}
-            </p>
+<div class="container">
+    <h1 class="row">Error {{code}}</h1>
+    <p class="important row">
+        An error has occurred: {{message}}
+    </p>
 
-            <pre class="row" style="width: 100%">
+    <pre class="row" style="width: 100%">
                 {{stacktrace}}
             </pre>
-    </div>
+</div>
 {% endblock %}

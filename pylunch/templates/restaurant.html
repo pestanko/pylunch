@@ -1,47 +1,47 @@
 {% extends "template.html" %}
 {% block title %} {{entity.name}} {% endblock %}
 {% block head %}
-    {{ super() }}
+{{ super() }}
 {% endblock %}
 {% block content %}
-    <div style="margin-top: 30px" id="restaurant" class="container">
-        <h1> {{entity.display_name}} </h1>
-        <table class="table row">
-            <tr>
-                <td>Name</td>
-                <td>{{entity.name}}</td>
-            </tr>
-            <tr>
-                <td>Display Name</td>
-                <td>{{entity.display_name}}</td>
-            </tr>
-            <tr>
-                <td>Url</td>
-                <td><a href="{{entity.url}}">{{entity.url}}</a></td>
-            </tr>
-            <tr>
-                <td>Tags</td>
-                <td> 
-                    {% for tag in entity.tags %}
-                        <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td>Resolver</td>
-                <td>{{entity.resolver}}</td>
-            </tr>
-        </table>
+<div style="margin-top: 30px" id="restaurant" class="container">
+    <h1> {{entity.display_name}} </h1>
+    <table class="table row">
+        <tr>
+            <td>Name</td>
+            <td>{{entity.name}}</td>
+        </tr>
+        <tr>
+            <td>Display Name</td>
+            <td>{{entity.display_name}}</td>
+        </tr>
+        <tr>
+            <td>Url</td>
+            <td><a href="{{entity.url}}">{{entity.url}}</a></td>
+        </tr>
+        <tr>
+            <td>Tags</td>
+            <td>
+                {% for tag in entity.tags %}
+                <a href="/menu?t={{tag}}">{{tag}}</a>&nbsp;
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <td>Resolver</td>
+            <td>{{entity.resolver}}</td>
+        </tr>
+    </table>
 
-        <div class="container row">
-            <h3 class="row">Menu: </h1>
-                <pre style="margin-top: 20px" class="row">
+    <div class="container row">
+        <h3 class="row">Menu: </h3>
+        <pre style="margin-top: 20px" class="row">
                     <code>
                         {{menu}}
                     </code>
                 </pre>
-        </div>
-    </div>  
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -57,5 +57,7 @@
             });
         
         });
+
+
 </script>
 {% endblock %}

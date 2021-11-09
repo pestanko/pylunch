@@ -1,25 +1,26 @@
 {% extends "template.html" %}
 {% block title %}Admin{% endblock %}
 {% block head %}
-    {{ super() }}
-    <style type="text/css">
+{{ super() }}
+<style type="text/css">
         .important { color: #336699; }
-    </style>
+
+</style>
 {% endblock %}
 {% block content %}
-    <div class="container">
-        <h1 class="row">Admin pages</h1>
-        <p class="important row">
-            Welcome Admin: {{user}}
-        </p>
+<div class="container">
+    <h1 class="row">Admin pages</h1>
+    <p class="important row">
+        Welcome Admin: {{user}}
+    </p>
 
-        <ul>
-            <li><a href="javascript:void(0)" id="cache-invalidate">
-                Invalidate the cache
-            </button></li>
-            <li id="edit-restaurants"><a href="/admin/restaurants/edit">Edit restaurants</a></li>
-        </ul>
-    </div>
+    <ul>
+        <li><a href="javascript:void(0)" id="cache-invalidate">
+            Invalidate the cache
+        </a></li>
+        <li id="edit-restaurants"><a href="/site-admin/restaurants/edit">Edit restaurants</a></li>
+    </ul>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -28,7 +29,7 @@
        
         $('#cache-invalidate').on('click', function() {
             console.log("cache invalidate: ");
-            postJson("/admin/cache-invalidate", {})
+            postJson("/site-admin/cache-invalidate", {})
             .done(function(result) {
                     console.log("Success Result", result);
             }).fail(function(result){
@@ -36,5 +37,6 @@
             });
         });
     });
+
 </script>
 {% endblock %}

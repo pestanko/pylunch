@@ -108,9 +108,9 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
-        postJson("/admin/token/valid", {}).done(function(result) {
+        postJson("/site-admin/token/valid", {}).done(function(result) {
             console.log("Success Result", result);
-                    window.location.href = '/admin/index';
+                    window.location.href = '/site-admin/index';
             }).fail(function(result){
                     console.log("Fail Result", result);
             });
@@ -123,10 +123,10 @@
                 password: password
             };
             console.log("Login: ", data);
-            postJson("/admin/token/auth", data)
+            postJson("/site-admin/token/auth", data)
             .done(function(result) {
                 console.log("Success Result", result);
-                window.location.href = '/admin/index';
+                window.location.href = '/site-admin/index';
             }).fail(function(result){
                 res = result.responseJSON
                 message = res['message']
