@@ -25,7 +25,8 @@ class CliApplication:
         self.service: lunch.LunchService = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
-        self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
+        self.restaurants_loader = config.YamlLoader(
+            config_dir, 'restaurants.yaml')
 
     def init(self, no_zomato=False, **kwargs) -> 'CliApplication':
         if not self.config_loader.base_dir.exists():
@@ -37,14 +38,16 @@ class CliApplication:
         loaded = self.restaurants_loader.load() or dict(restaurants={})
         unwrapped = loaded.get('restaurants') or loaded
         upsdated_str = loaded.get('updated')
-        updated = datetime.datetime.fromisoformat(upsdated_str) if upsdated_str is not None else None
+        updated = datetime.datetime.fromisoformat(
+            upsdated_str) if upsdated_str is not None else None
         ent = lunch.Entities(unwrapped, updated=updated)
 
         self.service = lunch.LunchService(cfg, ent)
         return self
 
     def _first_run(self):
-        log.info(f"First run detected, crearing config folder: {self.config_loader.base_dir}")
+        log.info(
+            f"First run detected, crearing config folder: {self.config_loader.base_dir}")
         self.config_loader.base_dir.mkdir(parents=True)
         self.config_loader.save(data=dict(restaurants='./restaurants.yaml'))
         self.restaurants_loader.save(data={})
@@ -71,7 +74,8 @@ pass_app = click.make_pass_decorator(CliApplication)
 def main_cli(ctx=None, log_level=None, format=None, no_cache=False, config_dir=None, no_zomato=False, **kwargs):
     log_config.load(log_level)
     app = CliApplication(config_dir=config_dir)
-    ctx.obj = app.init(no_cache=no_cache, format=format, log_level=log_level, no_zomato=no_zomato)
+    ctx.obj = app.init(no_cache=no_cache, format=format,
+                       log_level=log_level, no_zomato=no_zomato)
 
 
 @main_cli.command(name='ls', help='List all available restaurants')
@@ -154,7 +158,8 @@ def cli_export(app: CliApplication, file=None):
             content = app.restaurants_loader.full_path.read_text('utf-8')
             print(content)
         else:
-            print(f"Error: Restaurants file not exists: {app.restaurants_loader.full_path}")
+            print(
+                f"Error: Restaurants file not exists: {app.restaurants_loader.full_path}")
 
     else:
         # not a hack :-)
@@ -162,17 +167,18 @@ def cli_export(app: CliApplication, file=None):
 
 
 @main_cli.command(name='add', help='Adds a new restaurant')
-@click.option("-n", "--name", help="Restaurant name", default=False)
-@click.option("-d", "--display-name", help="Restaurant name", default=False)
-@click.option("-u", "--url", help="Restaurant url", default=False)
-@click.option("-s", "--selector", help="Restaurant css selector", default=False)
-@click.option("-t", "--tags", help="Restaurant tags", default=False, multiple=True)
-@click.option("-p", "--param", help="Additional param", default=False, multiple=True)
+@click.option("-n", "--name", help="Restaurant name")
+@click.option("-d", "--display-name", help="Restaurant name", default=None)
+@click.option("-u", "--url", help="Restaurant url")
+@click.option("-s", "--selector", help="Restaurant css selector", default=None)
+@click.option("-t", "--tags", help="Restaurant tags", default=None, multiple=True)
+@click.option("-p", "--param", help="Additional param", default=None, multiple=True)
 @click.option("-O", "--override", help="Overide the restaurant if exists", default=False, is_flag=True)
 @pass_app
 def cli_add(app: CliApplication, name, display_name, url, selector, tags, params, override=False):
     tags = list(tags) if tags else []
-    config = dict(name=name, url=url, display_name=display_name, tags=tags, selector=selector)
+    config = dict(name=name, url=url, display_name=display_name,
+                  tags=tags, selector=selector)
     if params:
         config.update(**_params_dict(params), override=override)
     app.service.instances.register(**config)
@@ -339,7 +345,8 @@ def _params_dict(params: List[str]) -> Mapping:
 
 def print_instances(service: lunch.LunchService, instances, transform=None, with_fails=False, **kwargs):
     fails = list() if with_fails else None
-    transform = transform if transform is not None else lambda x: resolve_menu(service, x, fails=fails, **kwargs)
+    transform = transform if transform is not None else lambda x: resolve_menu(
+        service, x, fails=fails, **kwargs)
     utils.write_instances(instances, transform=transform, writer=print)
     if fails:
         print("\n~~~~~~~~~~~~~~~~  FAILS  ~~~~~~~~~~~~~~~\n")
