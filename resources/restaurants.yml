@@ -360,19 +360,19 @@ restaurants:
 
   annapurna:
     display_name: Annapurna
-    url: http://www.indicka-restaurace-annapurna.cz/images/tydenijidelnicek/menu.pdf
+    url: http://www.indicka-restaurace-annapurna.cz/
+    selector: "div#T_menu"
     tags: ["city", "ns", "india", "asia"]
-    filters: ["day", nl, cut]
-    cut_after: "Polední menu podáváme do 15 hodin"
-    resolver: pdf
+    filters: ["day", nl]
 
   avast:
     display_name: Avast
-    url: http://menu.perfectcanteen.cz/pdf/21/cz/a/a3
+    url: "https://nonexisting.local"
     tags: ["city", "ns", "avast"]
     filters: ["day", "cut"]
     cut_after: "Legenda alergenů"
-    resolver: pdf
+    enabled: false
+    disabled: true
 
   casa-fuego:
     display_name: Casa Fuego
