@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 import yaml
 from typing import List, Optional, Mapping, Union, MutableMapping, Any
-import collections
 import os.path
+import collections.abc
 
 
 log = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ def generate_nice_header(*strings):
 
 
 
-class CollectionWrapper(collections.MutableMapping):
+class CollectionWrapper(collections.abc.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
         self._collection = { key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items() } 
 

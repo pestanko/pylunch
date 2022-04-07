@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "pylunch"
-version = "0.2.9"
+version = "0.3.0"
 description = "Pylunch cli and web tool to get lunch info"
 authors = ["Peter Stanko <peter.stanko0@gmail.com>"]
-repository='https://gitlab.com/pestanko/pylunch'
-homepage='https://gitlab.com/pestanko/pylunch'
-documentation='https://gitlab.com/pestanko/pylunch'
+repository='https://github.com/pestanko/pylunch'
+homepage='https://github.com/pestanko/pylunch'
+documentation='https://github.com/pestanko/pylunch'
 license = "Apache-2.0"
 readme = 'README.md'
 packages = [
@@ -35,7 +35,6 @@ fuzzywuzzy = "*"
 click = "*"
 python-levenshtein = "*"
 pyzomato = "*"
-#pdfminer-six = "*"
 ipython = "*"
 flask = "*"
 flask-jwt-extended = "*"

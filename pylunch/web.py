@@ -1,3 +1,4 @@
+from crypt import methods
 import flask
 from flask.cli import AppGroup
 import os
@@ -374,8 +375,8 @@ def route_api_restaurants_cache_content(name: str):
     })
 
 
-@api.route("/restaurants/<name>/cache/invalidate", methods=['POST'])
 @jwt_required()
+@api.route("/restaurants/<name>/cache/invalidate", methods=['POST'])
 def route_api_restaurants_cache_invalidate(name: str):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
@@ -384,8 +385,8 @@ def route_api_restaurants_cache_invalidate(name: str):
     return flask.jsonify(dict(message='ok'))
 
 
-@api.route("/restaurants/<name>", methods=['DELETE'])
 @jwt_required()
+@api.route("/restaurants/<name>", methods=['DELETE'])
 def route_api_restaurants_delete(name: str):
     web_app = WebApplication.get()
     instance = web_app.service.instances.find_one(name)
@@ -401,8 +402,8 @@ def route_api_restaurants_delete(name: str):
 
 # Same thing as login here, except we are only setting a new cookie
 # for the access token.
-@admin.route('/token/refresh', methods=['POST'])
 @jwt_required(refresh = True)
+@admin.route('/token/refresh', methods=['POST'])
 def admin_refresh():
     # Create the new access token
     current_user = get_jwt_identity()
@@ -446,19 +447,25 @@ def admin_login_form():
     return flask.render_template('admin/login.html', **context)
 
 
-@admin.route('/index', methods=['GET'])
-@admin.route('', methods=['GET'])
-@admin.route('/', methods=['GET'])
 @jwt_required
+@admin.route('', methods=['GET'])
 def admin_index():
     web_app = WebApplication.get()
     user = get_jwt_identity()
     context = web_app.gen_context(user=user)
     return flask.render_template('admin/index.html', **context)
 
-
-@admin.route('/restaurants/edit', methods=['GET'])
 @jwt_required
+@admin.route('/', methods=['GET'])
+def admin_index_root():
+    web_app = WebApplication.get()
+    user = get_jwt_identity()
+    context = web_app.gen_context(user=user)
+    return flask.render_template('admin/index.html', **context)
+
+
+@jwt_required
+@admin.route('/restaurants/edit', methods=['GET'])
 def admin_edit_restaurants():
     web_app = WebApplication.get()
     user = get_jwt_identity()
@@ -466,31 +473,31 @@ def admin_edit_restaurants():
     return flask.render_template('admin/edit.html', **context)
 
 
-@admin.route('/token/valid', methods=['POST'])
 @jwt_required
+@admin.route('/token/valid', methods=['POST'])
 def admin_token_valid():
     web_app = WebApplication.get()
     user = get_jwt_identity()
     return flask.jsonify({'valid': True})
 
 
-@admin.route('/cache-invalidate', methods=['POST'])
 @jwt_required()
+@admin.route('/cache-invalidate', methods=['POST'])
 def admin_cache_invalidate():
     web_app = WebApplication.get()
     items = web_app.service.cache.clear()
     return flask.jsonify({'message': "cache updated", "content": items})
 
 
-@admin.route('/config/restaurants')
 @jwt_required()
+@admin.route('/config/restaurants', methods=['GET'])
 def admin_config_restaurants_get():
     web_app = WebApplication.get()
     return flask.jsonify(dict(content=web_app.restaurants_loader.full_path.read_text(encoding='utf-8')))
 
 
-@admin.route('/config/restaurants', methods=['POST'])
 @jwt_required()
+@admin.route('/config/restaurants', methods=['POST'])
 def admin_config_restaurants_post():
     web_app = WebApplication.get()
 
