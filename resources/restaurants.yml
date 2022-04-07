@@ -80,7 +80,7 @@ restaurants:
   alvin:
     display_name: Alvin
     url: "https://www.alvinrestaurace.cz/obchod/"
-    selector: "div.contant"
+    selector: "div.content"
     filters: ["day", "cut", nl]
     tags: ["rh", "cz", "medlanky"]
 
