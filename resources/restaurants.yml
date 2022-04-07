@@ -296,13 +296,6 @@ restaurants:
     tags: ["fi", "pizza", "ita"]
     resolver: zomato
 
-  patatas:
-    display_name: Love Patatas
-    url: https://www.zomato.com/cs/brno/bistro-love-patatas-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 18390235
-    tags: ["city", "brambor", "gd", "ns"]
-    resolver: zomato
-
   statl:
     display_name: Statl
     selector: ".main .blog-post img"
@@ -311,6 +304,12 @@ restaurants:
     language: ces
     tags: ["city", "gd", "cz"]
     filters: ["day", "nl"]
+
+  sargam_india:
+    display_name: "Sargam India"
+    resolved: url_only
+    url: "https://www.facebook.com/sargamrestaurace/"
+    tags: ["city", "ns", "india"]
 
   formanka:
     display_name: Formanka
