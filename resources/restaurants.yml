@@ -106,6 +106,22 @@ restaurants:
     filters: ["day"]
     tags: ["city", "asia", gd]
 
+  charliesmill:
+    display_name: "Charlie's mill"
+    url: "https://www.charliesmill.cz/"
+    selector: "div.entry-content"
+    filters: ["day", "cut", "nl"]
+    cut_after: "Nabídka baru"
+    tags: ["rh", "cz"]
+
+  charliessquare:
+    display_name: "Charlie's square"
+    url: "https://www.charliessquare.cz/"
+    selector: "div.entry-content"
+    filters: ["day", "cut", "nl"]
+    cut_after: "Nabídka baru"
+    tags: ["ns", "city", "cz"]
+
   capone:
     display_name: Al Capone
     url: http://www.pizzaalcapone.cz/cz/poledni-menu
