@@ -13,17 +13,6 @@ restaurants:
     url: https://www.globus.cz/brno/nabidka/restaurace.html
     tags: ["rh", "fast"]
 
-  lloyds:
-    display_name: Lloyds
-    selector: "#content img.attachment-large"
-    url: https://restauracelloyds.cz/denni-menu/
-    resolver: ocr_img
-    language: ces
-    disabled: true
-    filters: ["nl", "cut"]
-    cut_after: "NÁPOJE ROZLÉVANÉ K OBĚDOVÉMU MENU"
-    tags: ["rh", "cz"]
-
   kocka:
     display_name: Zelena Kocka
     selector: ".elementor-widget-container .elementor-image img"
@@ -66,10 +55,8 @@ restaurants:
   himalaya:
     display_name: Himalaya
     url: "https://www.himalayarestaurace.cz/en/daily-menu/"
-    selector: "#Sekce1 table"
-    filters: ["day", "cut", nl]
-    cut_after: "PŘÍLOHA"
     tags: ["city", "india", "asia", "ns"]
+    resolver: url_only
 
   kytnerka:
     display_name: Pivovarska restaurace moravia

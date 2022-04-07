@@ -278,10 +278,18 @@ class AbstractResolver:
         content = self.resolve(**kwargs)
         return None if not content else str(content)
 
-    def _resolve(**kwargs) -> Any:
+    def _resolve(self, **kwargs) -> Any:
         """ This method should be overriden - abstract method
         """
         return None
+
+
+
+class NoopResolver(AbstractResolver):
+    CACHE_DISABLED = True
+
+    def _resolve(self, **kwargs) -> Any:
+        return f"Take a look at the webpage: {self.entity.url}"
 
 
 class ResolverChain(AbstractResolver):
@@ -908,6 +916,7 @@ class LunchService:
         self._entities: Entities = entities
         self._resolvers: Resolvers = Resolvers(
             default=HtmlResolver,
+            url_only=NoopResolver,
             zomato=ZomatoResolver,
             ocr_img=OCRHeavyResolver,
             ocr_raw=OcrImgRawResolver,
@@ -916,7 +925,7 @@ class LunchService:
             chain=ResolverChain,
             html_tags=HtmlTagsSelectorResolver,
             html=HtmlResolver,
-            html_attr=HtmlTagsAttributeResolver
+            html_attr=HtmlTagsAttributeResolver,
         )
         self._filters: Filters = Filters(
             raw=LunchContentFilter,
