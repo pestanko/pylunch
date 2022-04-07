@@ -10,4 +10,3 @@ git pull --force origin master
 poetry install
 
 poetry run python -m pyluch import -O "${PROJECT_ROOT}/resources/restaurants.yml"
-

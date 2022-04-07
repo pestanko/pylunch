@@ -23,9 +23,6 @@ from .tags_evaluator import TagsEvaluator
 from .config import AppConfig
 from pylunch import utils
 
-from pdfminer import high_level
-import pdfminer.layout
-
 log = logging.getLogger(__name__)
 
 USER_AGENTS = [
@@ -57,7 +54,7 @@ USER_AGENTS = [
 ]
 
 
-class LunchEntity(collections.MutableMapping):
+class LunchEntity(collections.abc.MutableMapping):
     def __init__(self, config: Mapping[str, Any]):
         self._config = {**config}
         self._logger = None
@@ -159,7 +156,7 @@ class LunchEntity(collections.MutableMapping):
         return cls(origin.config)
 
 
-class ResolverConfig(collections.MutableMapping):
+class ResolverConfig(collections.abc.MutableMapping):
     def __init__(self, config: Mapping[str, Any], entity: LunchEntity = None, content=None):
         self._config = {**config}
         self._entity = entity
@@ -516,6 +513,9 @@ class PDFResolver(RequestResolver):
         return f"PDF is available at: {self.entity.url}\n\n{text}"
 
     def _resolve_text_from_content(self, stream: io.BytesIO):
+        from pdfminer import high_level
+        import pdfminer.layout
+
         out = io.BytesIO()
         laparams = pdfminer.layout.LAParams()
         for param in ("all_texts", "detect_vertical", "word_margin", "char_margin", "line_margin", "boxes_flow"):
@@ -694,7 +694,7 @@ class DayResolveFilter(CutFilter):
         return content[beg:end]
 
 
-class LunchCollection(collections.MutableMapping):
+class LunchCollection(collections.abc.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
         self._collection = {key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items()}
 

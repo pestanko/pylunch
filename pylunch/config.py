@@ -59,7 +59,7 @@ class YamlLoader:
         return self.base_dir / path
 
 
-class AppConfig(collections.MutableMapping):
+class AppConfig(collections.abc.MutableMapping):
     def __init__(self, **kwargs):
         self._config = {**kwargs}
 
