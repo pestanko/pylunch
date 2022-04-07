@@ -28,11 +28,23 @@
             align-items: center;
             flex-direction: column;
         }
+
+        .footer {
+            align-self: flex-end;
+        }
+
+        .topnavbar {
+            align-self: flex-start;
+        }
+
+        .page-content {
+            align-self: center;
+        }
     </style>
 </head>
 <body>
     <div id="page-container">
-        <nav id="topnavbar" class="container-fluid nav navbar-dark bg-dark">
+        <nav id="topnavbar" class="container-fluid nav navbar-dark bg-dark topnavbar">
             <ul class="list-inline" style="width: 100%">
                 <li style="margin-left: 150px" class="item">
                     <a class="link" href="/">Home</a>
@@ -52,7 +64,7 @@
             </ul>
         </nav>
 
-        <div id="content" class="wrapper">
+        <div id="content" class="wrapper page-content">
             <div id="flash" class="flash">
                 {% if flash %}
                 <pre>
@@ -63,7 +75,7 @@
             {% block content %}{% endblock %}
         </div>
 
-        <div id="footer">
+        <div id="footer" class="footer">
             {% block footer %}
             &copy; Copyright <span id="copyrightYear">2022</span> by <a href="https://gitlab.com/pestanko/">Peter Stanko</a>. Version: {{version}} <small><a style="margin-left: 50px" href="/site-admin/login">[ADMIN]</a></small>
             
