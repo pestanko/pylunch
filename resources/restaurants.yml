@@ -34,7 +34,7 @@ restaurants:
   asport:
     display_name: A-sport hotel
     url: http://www.a-sporthotel.cz/menu/
-    selector: "#left > table"
+    selector: "section .tydenni-menu"
     filters: ["day"]
     tags: ["rh", "cz"]
 
@@ -75,13 +75,6 @@ restaurants:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: ".content .page-content"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
-
-  liquid-bread:
-    display_name: Liquid Bread
-    url: http://www.liquidbread.cz/liquidbread/liquidbread/mainmenu/daily-menu/
-    selector: "#content"
     filters: ["day", "nl"]
     tags: ["rh", "cz"]
 
