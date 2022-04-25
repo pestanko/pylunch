@@ -1,4 +1,3 @@
-from crypt import methods
 import flask
 from flask.cli import AppGroup
 import os
