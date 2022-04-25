@@ -85,13 +85,6 @@ restaurants:
     filters: ["day", "nl"]
     tags: ["rh", "cz"]
 
-  winston:
-    display_name: Winston
-    url: https://www.menicka.cz/3875-pekarna-crocus-s.r.o..html
-    selector: ".obsah .menicka"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
-
   krava:
     display_name: Monte Bu
     url: "https://www.monte-bu.cz/menu.php#poledni-section"
