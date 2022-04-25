@@ -26,15 +26,15 @@ restaurants:
 
   purkynka:
     display_name: Purkynka
-    url: http://www.napurkynce.cz/daily-menu/
-    selector: "#content"
+    url: https://www.menicka.cz/2647-na-purkynce.html
+    selector: ".menicka"
     filters: ["day", "nl"]
     tags: ["rh", "cz"]
 
   asport:
     display_name: A-sport hotel
     url: http://www.a-sporthotel.cz/menu/
-    selector: "#left > table"
+    selector: "section .tydenni-menu"
     filters: ["day"]
     tags: ["rh", "cz"]
 
@@ -75,20 +75,6 @@ restaurants:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: ".content .page-content"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
-
-  liquid-bread:
-    display_name: Liquid Bread
-    url: http://www.liquidbread.cz/liquidbread/liquidbread/mainmenu/daily-menu/
-    selector: "#content"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
-
-  winston:
-    display_name: Winston
-    url: https://www.menicka.cz/3875-pekarna-crocus-s.r.o..html
-    selector: ".obsah .menicka"
     filters: ["day", "nl"]
     tags: ["rh", "cz"]
 
@@ -137,12 +123,20 @@ restaurants:
     tags: ["fi", "cz"]
 
   jean-pauls:
-    display_name: Jean Pauls
-    url: http://jpbistro.cz/menu/index.php
+    display_name: Jean Pauls Behounska
+    url: https://jpbistro.cz/menu/index.php
     selector: "div.denni-menu"
     cut_after: "TÝDENNÍ MENU"
     filters: ["day", "cut", "nl"]
     tags: ["ns", "gd", "ita", "city"]
+
+  jp-technopark:
+    display_name: Jean Pauls Technopark
+    url: https://jpbistro.cz/menu-technopark/index.php
+    selector: "div.denni-menu"
+    cut_after: "TÝDENNÍ MENU"
+    filters: ["day", "cut", "nl"]
+    tags: ["ita", "rh", "medlanky"]
 
   drevak:
     display_name: Drevak
