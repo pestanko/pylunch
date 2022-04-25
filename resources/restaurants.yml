@@ -123,12 +123,20 @@ restaurants:
     tags: ["fi", "cz"]
 
   jean-pauls:
-    display_name: Jean Pauls
-    url: http://jpbistro.cz/menu/index.php
+    display_name: Jean Pauls Behounska
+    url: https://jpbistro.cz/menu/index.php
     selector: "div.denni-menu"
     cut_after: "TÝDENNÍ MENU"
     filters: ["day", "cut", "nl"]
     tags: ["ns", "gd", "ita", "city"]
+
+  jp-technopark:
+    display_name: Jean Pauls Technopark
+    url: https://jpbistro.cz/menu-technopark/index.php
+    selector: "div.denni-menu"
+    cut_after: "TÝDENNÍ MENU"
+    filters: ["day", "cut", "nl"]
+    tags: ["ita", "rh", "medlanky"]
 
   drevak:
     display_name: Drevak
