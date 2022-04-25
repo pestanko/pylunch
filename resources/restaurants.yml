@@ -26,8 +26,8 @@ restaurants:
 
   purkynka:
     display_name: Purkynka
-    url: http://www.napurkynce.cz/daily-menu/
-    selector: "#content"
+    url: https://www.menicka.cz/2647-na-purkynce.html
+    selector: ".menicka"
     filters: ["day", "nl"]
     tags: ["rh", "cz"]
 
