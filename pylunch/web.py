@@ -298,24 +298,6 @@ def web_async_menu():
     return flask.render_template('menu.html', **context)
 
 
-@app.route("/fmenu")
-def web_fallback_menu():
-    web_app = WebApplication.get()
-    instances = web_app.select_by_request()
-    instances = instances if instances is not None else []
-    format = web_app.parse_request()['format']
-
-    if format is not None and format.startswith('t'):
-        content = "\n".join(resolve_menu(web_app.service, inst)
-                            for inst in instances)
-        return flask.Response(content, mimetype='text/plain')
-    else:
-        menus = [(rest, web_app.service.resolve_text(rest))
-                 for rest in instances if rest]
-        context = web_app.gen_context(restaurants=instances, menus=menus)
-        return flask.render_template('fmenu.html', **context)
-
-
 ###
 # API
 ###
@@ -401,7 +383,7 @@ def route_api_restaurants_delete(name: str):
 
 # Same thing as login here, except we are only setting a new cookie
 # for the access token.
-@jwt_required(refresh = True)
+@jwt_required(refresh=True)
 @admin.route('/token/refresh', methods=['POST'])
 def admin_refresh():
     # Create the new access token
@@ -453,6 +435,7 @@ def admin_index():
     user = get_jwt_identity()
     context = web_app.gen_context(user=user)
     return flask.render_template('admin/index.html', **context)
+
 
 @jwt_required
 @admin.route('/', methods=['GET'])
