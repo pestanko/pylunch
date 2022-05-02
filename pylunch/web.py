@@ -268,11 +268,27 @@ class WebApplication:
         self._visitors.store(visitorId, VisitorInfo(
             id=visitorId,
             ua=self.request.user_agent.string,
-            ip=self.request.remote_addr,
+            ip=self.client_ip,
             query=self.request.query_string.decode(encoding='utf-8'),
         ))
 
         return visitorId
+
+    @property
+    def client_ip(self) -> str:
+        route = self.request.access_route
+        if route:
+            return route[-1]
+        route = self.request.environ.get('REMOTE_ADDR')
+
+        if route:
+            return route
+
+        route = self.request.environ.get('X-Real-IP')
+        if route:
+            return route
+
+        return ''
 
 
 app = WebApplication.create_app()

@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 from pathlib import Path
 
 from pylunch import log_config
