@@ -95,6 +95,10 @@ class AppConfig(collections.abc.MutableMapping):
         return Path(self.config.get('cache_dir', os.getenv('PYLUNCH_CACHE_DIR', CACHE_DIR)))
 
     @property
+    def visitors(self) -> Path:
+        return Path(self.config.get('visitors', os.getenv('PYLUNCH_VISITORS', self.cache_dir)))
+
+    @property
     def format(self) -> str:
         return self.config.get('format', 'text')
 
@@ -105,4 +109,3 @@ class AppConfig(collections.abc.MutableMapping):
     @property
     def default_source(self) -> str:
         return self.get('default_source')
-
