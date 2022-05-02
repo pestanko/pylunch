@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     {% block head %}
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="icon" href="/static/img/dish.png" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <link rel="icon" href="/static/img/dish.png"/>
     {% if analytics is defined and analytics is not none %} {{analytics|safe}}
     {% endif %}
     <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
+            rel="stylesheet"
+            href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+            integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+            crossorigin="anonymous"
     />
     <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css"
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css"
     />
     <!-- Font Awesome JS -->
     <script
-      defer
-      src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
-      integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
-      crossorigin="anonymous"
+            defer
+            src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+            integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+            crossorigin="anonymous"
     ></script>
     <script
-      defer
-      src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
-      integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
-      crossorigin="anonymous"
+            defer
+            src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+            integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+            crossorigin="anonymous"
     ></script>
     <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
     />
     <title>{% block title %}{% endblock %} - Py Lunch {{ version }}</title>
     {% endblock %}
@@ -62,80 +62,72 @@
       .page-content {
         align-self: center;
       }
-    </style>
-  </head>
-  <body>
-    <div id="page-container">
-      <nav
-        id="topnavbar"
-        class="container-fluid nav navbar-dark bg-dark topnavbar"
-      >
-        <ul class="list-inline" style="width: 100%">
-          <li style="margin-left: 150px" class="item">
-            <a class="link" href="/">Home</a>
-          </li>
-          <li class="item">
-            <a class="link" href="/menu">Menu</a>
-          </li>
-          <li class="item">
-            <a class="link" href="/fmenu">Fallback Menu</a>
-          </li>
-          <li class="item">
-            <a class="link" onclick="handleRoll(3)">Roll</a>
-          </li>
-          <li style="margin-left: 100px" class="item">
-            <a
-              class="link"
-              target="blank"
-              href="https://gitlab.com/pestanko/pylunch"
-              >Repository</a
-            >
-          </li>
-        </ul>
-      </nav>
 
-      <div id="content" class="wrapper page-content">
+
+    </style>
+</head>
+<body>
+<div id="page-container">
+    <nav
+            id="topnavbar"
+            class="container-fluid nav navbar-dark bg-dark topnavbar"
+    >
+        <ul class="list-inline" style="width: 100%">
+            <li style="margin-left: 150px" class="item">
+                <a class="link" href="/">Home</a>
+            </li>
+            <li class="item">
+                <a class="link" href="/menu">Menu</a>
+            </li>
+            <li class="item">
+                <a class="link" onclick="handleRoll(3)">Roll</a>
+            </li>
+            <li style="margin-left: 100px" class="item">
+                <a
+                        class="link"
+                        target="blank"
+                        href="https://github.com/pestanko/pylunch">Repository</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div id="content" class="wrapper page-content">
         <div id="flash" class="flash">
-          {% if flash %}
-          <pre>
-                    {{flash}}
-                </pre
-          >
-          {% endif %}
+            {% if flash %}
+            <pre>
+                {{flash}}
+            </pre>
+            {% endif %}
         </div>
         {% block content %}{% endblock %}
-      </div>
-
-      <div id="footer" class="footer">
-        {% block footer %} &copy; Copyright
-        <span id="copyrightYear">2022</span> by
-        <a href="https://gitlab.com/pestanko/">Peter Stanko</a>. Version:
-        {{version}}
-        <small
-          ><a style="margin-left: 50px" href="/site-admin/login"
-            >[ADMIN]</a
-          ></small
-        >
-
-        {% endblock %}
-      </div>
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-      crossorigin="anonymous"
-    ></script>
-    <!-- jQuery Custom Scroller CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
-    <script src="{{ url_for('static', filename='default.js') }}"></script>
-    <script>
+    <div id="footer" class="footer">
+        {% block footer %} &copy; Copyright
+        <span id="copyrightYear">2022</span> by
+        <a href="https://github.com/pestanko/">Peter Stanko</a>. Version:
+        {{version}}
+        <small><a style="margin-left: 50px" href="/site-admin/login">[ADMIN]</a></small>
+
+        {% endblock %}
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script
+        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"
+></script>
+<script
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"
+></script>
+<!-- jQuery Custom Scroller CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
+<script src="{{ url_for('static', filename='default.js') }}"></script>
+<script>
       function handleRoll(num) {
         var path = window.location.pathname;
         var query = window.location.search;
@@ -157,8 +149,10 @@
       }
       document.getElementById("copyrightYear").innerHTML =
         new Date().getFullYear();
-    </script>
 
-    {% block scripts %} {% endblock %}
-  </body>
+
+</script>
+
+{% block scripts %} {% endblock %}
+</body>
 </html>

@@ -1,10 +1,11 @@
 import logging
+import random
+import string
 from pathlib import Path
 import yaml
 from typing import List, Optional, Mapping, Union, MutableMapping, Any
 import os.path
 import collections.abc
-
 
 log = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ def load_yaml(file: Union[Path, str]) -> MutableMapping[str, Any]:
         return {}
     with file.open("r") as fp:
         return yaml.safe_load(fp)
+
 
 def save_yaml(file: Union[Path, str], content: dict):
     file = Path(file)
@@ -43,6 +45,7 @@ def write_instances(instances, transform=None, writer=None):
         log.info(f"Sending one response: {instances}")
         writer(transform(instances))
 
+
 def generate_nice_header(*strings):
     def _for_print(max_l, curr, char='='):
         return char * (max_l - curr)
@@ -50,7 +53,7 @@ def generate_nice_header(*strings):
     def _print_text(max_l, text):
         buffer = ''
         buffer += f"\n===  {text}"
-        buffer +=_for_print(max_l, len(text), char=' ')
+        buffer += _for_print(max_l, len(text), char=' ')
         buffer += "  ==="
         return buffer
 
@@ -66,25 +69,28 @@ def generate_nice_header(*strings):
     return result + "\n\n"
 
 
-
 class CollectionWrapper(collections.abc.MutableMapping):
     def __init__(self, cls_wrap=None, **kwargs):
-        self._collection = { key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items() } 
+        self._collection = {key: cls_wrap(val) if cls_wrap else val for (key, val) in kwargs.items()}
 
     @property
     def collection(self) -> MutableMapping[str, Any]:
         return self._collection
 
     def __getitem__(self, k):
-         return self.collection.get(k)
+        return self.collection.get(k)
+
     def __setitem__(self, k, v):
-         self.collection[k] = v
+        self.collection[k] = v
+
     def __delitem__(self, k):
-         del self.collection[k]
+        del self.collection[k]
+
     def __iter__(self):
         return iter(self.collection)
+
     def __len__(self):
-         return len(self.collection)
+        return len(self.collection)
 
 
 AnyPath = Union[str, Path]
@@ -101,3 +107,10 @@ def is_forward_path(root: AnyPath, path: AnyPath) -> bool:
         return not relative_str.startswith("../")
     except ValueError:
         return False
+
+
+def random_string(length: int =16, charset=None) -> str:
+    if charset is None:
+        charset = string.ascii_letters + string.digits
+
+    return ''.join(random.choice(charset) for _ in range(length))

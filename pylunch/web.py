@@ -18,6 +18,10 @@ from flask_jwt_extended import (
     set_refresh_cookies
 )
 
+from pylunch.visitor_store import VisitorService, VisitorInfo
+
+VISITOR_COOKIE = 'VISITOR'
+
 log = logging.getLogger(__name__)
 
 # Find the correct template folder when running from a different location
@@ -146,12 +150,12 @@ class WebApplication:
         self._service: Optional[lunch.LunchService] = None
         config_dir = config_dir if config_dir is not None else CONFIG_DIR
         self.config_loader = config.YamlLoader(config_dir, 'config.yaml')
-        self.restaurants_loader = config.YamlLoader(
-            config_dir, 'restaurants.yaml')
+        self.restaurants_loader = config.YamlLoader(config_dir, 'restaurants.yaml')
         self.users = AdminUsers()
         self._timestamp = None
         self._config = None
         self._users_file: Optional[Path] = None
+        self._visitors: VisitorService = None
 
     @property
     def request(self) -> flask.Request:
@@ -172,6 +176,7 @@ class WebApplication:
         self._users_file = Path(
             os.getenv('PYLUNCH_USERS', RESOURCES / 'users.yml'))
         self.users.import_users(self._users_file)
+        self._visitors = VisitorService(self._config.visitors)
         return self
 
     def reload_restaurants(self):
@@ -255,6 +260,20 @@ class WebApplication:
         log.info(f"[SAVE] Saving users to: {self._users_file}")
         self.users.export_users(self._users_file)
 
+    def handle_visitor(self) -> str:
+        visitorId = self.request.cookies.get(VISITOR_COOKIE)
+        if not visitorId:
+            visitorId = utils.random_string(32)
+
+        self._visitors.store(visitorId, VisitorInfo(
+            id=visitorId,
+            ua=self.request.user_agent.string,
+            ip=self.request.remote_addr,
+            query=self.request.query_string.decode(encoding='utf-8'),
+        ))
+
+        return visitorId
+
 
 app = WebApplication.create_app()
 api = flask.Blueprint('api', __name__)
@@ -294,26 +313,18 @@ def restaurant(name):
 @app.route('/menu')
 def web_async_menu():
     web_app = WebApplication.get()
+
+    visitor_id = web_app.handle_visitor()
+
     context = web_app.gen_context()
-    return flask.render_template('menu.html', **context)
-
-
-@app.route("/fmenu")
-def web_fallback_menu():
-    web_app = WebApplication.get()
-    instances = web_app.select_by_request()
-    instances = instances if instances is not None else []
-    format = web_app.parse_request()['format']
-
-    if format is not None and format.startswith('t'):
-        content = "\n".join(resolve_menu(web_app.service, inst)
-                            for inst in instances)
-        return flask.Response(content, mimetype='text/plain')
-    else:
-        menus = [(rest, web_app.service.resolve_text(rest))
-                 for rest in instances if rest]
-        context = web_app.gen_context(restaurants=instances, menus=menus)
-        return flask.render_template('fmenu.html', **context)
+    template = flask.render_template('menu.html', **context)
+    response = flask.make_response(template)
+    response.set_cookie(
+        VISITOR_COOKIE, visitor_id,
+        max_age=datetime.timedelta(days=30),
+        httponly=True
+    )
+    return response
 
 
 ###
@@ -401,7 +412,7 @@ def route_api_restaurants_delete(name: str):
 
 # Same thing as login here, except we are only setting a new cookie
 # for the access token.
-@jwt_required(refresh = True)
+@jwt_required(refresh=True)
 @admin.route('/token/refresh', methods=['POST'])
 def admin_refresh():
     # Create the new access token
@@ -453,6 +464,7 @@ def admin_index():
     user = get_jwt_identity()
     context = web_app.gen_context(user=user)
     return flask.render_template('admin/index.html', **context)
+
 
 @jwt_required
 @admin.route('/', methods=['GET'])
