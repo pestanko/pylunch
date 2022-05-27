@@ -261,8 +261,8 @@ class AbstractResolver:
         self._log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
         try:
             allow_cache = self.config.allow_cache and not cls.CACHE_DISABLED
-            log.debug("[RESOLV] Cache is enabled: %b", allow_cache)
-            self._log.debug("[RESOLV] Cache is enabled: %b", allow_cache)
+            log.debug("[RESOLV] Cache is enabled: %r", allow_cache)
+            self._log.debug("[RESOLV] Cache is enabled: %r", allow_cache)
             if allow_cache:
                 return self.service.cache.wrap(
                     entity=self.entity,
