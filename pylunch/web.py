@@ -377,7 +377,7 @@ def route_api_restaurants_get_menu(name):
         result = {**instance.config, 'content': content}
         return flask.jsonify(result)
     else:
-        return flask.jsonify(errors.UnnableToLoadContent(name).to_json()), 400
+        return flask.jsonify(errors.UnableToLoadContent(name, url=instance.url).to_json()), 400
 
 
 @api.route("/restaurants/<name>/cache")
