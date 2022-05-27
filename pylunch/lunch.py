@@ -260,13 +260,17 @@ class AbstractResolver:
         log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
         self._log.info(f"[RESOLV] Resolving {self.entity.name} using the {cls.__name__}.")
         try:
-            suffix = cls.CACHE_SUFFIX or cls.__name__
             allow_cache = self.config.allow_cache and not cls.CACHE_DISABLED
-            log.debug("[RESOLV] Cache state: {}")
-            self._log.debug("[RESOLV] Cache state: {}")
+            log.debug("[RESOLV] Cache is enabled: %b", allow_cache)
+            self._log.debug("[RESOLV] Cache is enabled: %b", allow_cache)
             if allow_cache:
-                return self.service.cache.wrap(entity=self.entity, func=self._resolve, day=day, ext=cls.CACHE_EXT,
-                                               suffix=suffix)
+                return self.service.cache.wrap(
+                    entity=self.entity,
+                    func=self._resolve,
+                    day=day,
+                    ext=cls.CACHE_EXT,
+                    suffix=cls.CACHE_SUFFIX or cls.__name__
+                )
 
             return self._resolve(day=day, **kwargs)
         except Exception as ex:

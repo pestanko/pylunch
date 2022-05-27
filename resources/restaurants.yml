@@ -403,7 +403,6 @@ restaurants:
     url: https://na-tahu.cz/
     resolver: url_only
     tags: [ "city", "ns", "cz" ]
-    filters: [ "day", "nl" ]
 
 
   sargam_india:
