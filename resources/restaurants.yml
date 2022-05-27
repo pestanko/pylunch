@@ -3,15 +3,15 @@ restaurants:
     display_name: Nepal
     url: http://nepalbrno.cz/weekly-menu/
     selector: "#Content .the_content_wrapper table"
-    filters: ["day", "cut"]
+    filters: [ "day", "cut" ]
     cut_after: "Seznam alergenů"
-    tags: ["rh", "india", asia]
+    tags: [ "rh", "india", asia ]
 
   globus:
     display_name: Globus
     selector: ".restaurant__menu-table-row--active"
     url: https://www.globus.cz/brno/nabidka/restaurace.html
-    tags: ["rh", "fast"]
+    tags: [ "rh", "fast" ]
 
   kocka:
     display_name: Zelena Kocka
@@ -21,172 +21,159 @@ restaurants:
     language: ces
     disabled: true
     cut_after: "Polední nabídka"
-    filters: ["cut", "nl"]
-    tags: ["rh", "cz"]
+    filters: [ "cut", "nl" ]
+    tags: [ "rh", "cz" ]
 
   purkynka:
     display_name: Purkynka
     url: https://www.menicka.cz/2647-na-purkynce.html
     selector: ".menicka"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
+    filters: [ "day", "nl" ]
+    tags: [ "rh", "cz" ]
 
   asport:
     display_name: A-sport hotel
     url: http://www.a-sporthotel.cz/menu/
     selector: "section .tydenni-menu"
-    filters: ["day"]
-    tags: ["rh", "cz"]
+    filters: [ "day" ]
+    tags: [ "rh", "cz" ]
 
   padthai:
     display_name: Pad Thai
     url: https://www.zomato.com/brno/pad-thai-královo-pole-brno-sever/daily-menu
     selector: 16506806
     resolver: "zomato"
-    tags: ["rh", "zomato", "asia"]
+    tags: [ "rh", "zomato", "asia" ]
 
   buddha:
     display_name: Buddha
     url: "http://www.indian-restaurant-buddha.cz/index.html"
     selector: "#jidelnilisteklong"
-    filters: ["day"]
-    tags: ["city", "india", "asia", "gd"]
-
-  himalaya:
-    display_name: Himalaya
-    url: "https://www.himalayarestaurace.cz/en/daily-menu/"
-    tags: ["city", "india", "asia", "ns"]
-    resolver: url_only
+    filters: [ "day" ]
+    tags: [ "city", "india", "asia", "gd" ]
 
   kytnerka:
     display_name: Pivovarska restaurace moravia
     url: "https://www.pivovarskarestauracemoravia.cz/"
     selector: "#block-dennimenu .active"
-    tags: ["rh", "cz", "medlanky"]
+    tags: [ "rh", "cz", "medlanky" ]
 
   alvin:
     display_name: Alvin
     url: "https://www.alvinrestaurace.cz/obchod/"
     selector: "div.content"
-    filters: ["day", "cut", nl]
-    tags: ["rh", "cz", "medlanky"]
+    filters: [ "day", "cut", nl ]
+    tags: [ "rh", "cz", "medlanky" ]
 
   rubin:
     display_name: Rubin
     url: http://restauracerubin.cz/obedova-menu/
     selector: ".content .page-content"
-    filters: ["day", "nl"]
-    tags: ["rh", "cz"]
+    filters: [ "day", "nl" ]
+    tags: [ "rh", "cz" ]
 
   krava:
     display_name: Monte Bu
     url: "https://www.monte-bu.cz/menu.php#poledni-section"
     selector: ".menu-details .today"
-    filters: ["day"]
-    tags: ["rh", "ns", "cz", "steak"]
+    filters: [ "day" ]
+    tags: [ "rh", "ns", "cz", "steak" ]
 
   sabaidy:
     display_name: "Sabaidy"
     url: "http://www.amphone.eu/restaurace"
     selector: "li:first-child"
-    filters: ["day"]
-    tags: ["city", "asia", gd]
+    filters: [ "day" ]
+    tags: [ "city", "asia", gd ]
 
   charliesmill:
     display_name: "Charlie's mill"
     url: "https://www.charliesmill.cz/"
     selector: "div.entry-content"
-    filters: ["day", "cut", "nl"]
+    filters: [ "day", "cut", "nl" ]
     cut_after: "Nabídka baru"
-    tags: ["rh", "cz"]
+    tags: [ "rh", "cz" ]
 
   charliessquare:
     display_name: "Charlie's square"
     url: "https://www.charliessquare.cz/"
     selector: "div.entry-content"
-    filters: ["day", "cut", "nl"]
+    filters: [ "day", "cut", "nl" ]
     cut_after: "Nabídka baru"
-    tags: ["ns", "city", "cz"]
+    tags: [ "ns", "city", "cz" ]
 
   capone:
     display_name: Al Capone
     url: http://www.pizzaalcapone.cz/cz/poledni-menu
     selector: "section.about-us-block table"
-    filters: ["day", "nl"]
-    tags: ["fi", "italian", "pizza", "ita"]
-
-  beranek:
-    display_name: Beranek
-    url: https://www.menicka.cz/6136-pohostinstvi-u-bileho-beranka.html
-    selector: ".obsah .menicka"
-    filters: ["day", "nl"]
-    tags: ["fi", "cz"]
+    filters: [ "day", "nl" ]
+    tags: [ "fi", "italian", "pizza", "ita" ]
 
   jean-pauls:
     display_name: Jean Pauls Behounska
     url: https://jpbistro.cz/menu/index.php
     selector: "div.denni-menu"
     cut_after: "TÝDENNÍ MENU"
-    filters: ["day", "cut", "nl"]
-    tags: ["ns", "gd", "ita", "city"]
+    filters: [ "day", "cut", "nl" ]
+    tags: [ "ns", "gd", "ita", "city" ]
 
   jp-technopark:
     display_name: Jean Pauls Technopark
     url: https://jpbistro.cz/menu-technopark/index.php
     selector: "div.denni-menu"
     cut_after: "TÝDENNÍ MENU"
-    filters: ["day", "cut", "nl"]
-    tags: ["ita", "rh", "medlanky"]
+    filters: [ "day", "cut", "nl" ]
+    tags: [ "ita", "rh", "medlanky" ]
 
   drevak:
     display_name: Drevak
     url: https://www.udrevaka.cz/
     selector: "#menu .special-menu"
-    filters: ["nl"]
-    tags: ["fi", "cz"]
+    filters: [ "nl" ]
+    tags: [ "fi", "cz" ]
 
   padagali:
     display_name: Padagali
     url: http://padagali.cz/denni-menu/
     selector: "#main .row__wrapper > div.row"
-    filters: ["day", "nl"]
-    tags: ["fi", "india", "asia"]
+    filters: [ "day", "nl" ]
+    tags: [ "fi", "india", "asia" ]
 
   seminar:
     display_name: U seminaru
     url: "http://www.useminaru.cz/menu.php"
     selector: ".maintab .bold"
-    tags: ["city", "cz", "fi", "gd"]
+    tags: [ "city", "cz", "fi", "gd" ]
 
   tripoli:
     display_name: Tripoli Vankovka
     url: http://www.tripolivankovka.cz/denni-menu
     selector: "div.menu-for-one-day"
-    filters: ["day", "cut"]
+    filters: [ "day", "cut" ]
     cut_after: "Nabídka baru"
-    tags: ["city", "ita", "pizza", "vankovka", "ns"]
+    tags: [ "city", "ita", "pizza", "vankovka", "ns" ]
 
   husa:
     display_name: Potrefena husa Vankovka
     url: https://www.potrefenahusabrno.cz/menu/
     selector: "div.menu-for-one-day"
-    filters: ["day", "cut"]
+    filters: [ "day", "cut" ]
     cut_after: "Nabídka baru"
-    tags: ["city", "cz", "vankovka", "ns"]
+    tags: [ "city", "cz", "vankovka", "ns" ]
 
   drindy:
     display_name: Dr Indy
     url: http://www.drindy.cz/
     selector: "div#day-menu .menu-food"
-    filters: ["nl"]
-    tags: ["city", "india", "truck", "ns"]
+    filters: [ "nl" ]
+    tags: [ "city", "india", "truck", "ns" ]
 
   varna:
     display_name: Varna
     url: http://www.restauracevarna.cz/denni-menu/
     selector: "#pravy-sloupec-obsah"
-    tags: ["city", "cz", "gd"]
-    filters: ["cut", "day", "nl"]
+    tags: [ "city", "cz", "gd" ]
+    filters: [ "cut", "day", "nl" ]
     cut_after: "SEZNAM ALERGENŮ"
     cut_before: "PIZZA TÝDNE - Polévka + pizza týdne + Bonaqua"
 
@@ -194,101 +181,77 @@ restaurants:
     display_name: Zlata Lod
     url: http://www.zlatalod.com/menu
     selector: ".menu-for-one-day"
-    filters: ["day", "cut"]
-    cut_after: ["Nabídka baru", "Zvýhodněná cena nápojů se vztahuje"]
-    tags: ["city", "cz", "gd"]
+    filters: [ "day", "cut" ]
+    cut_after: [ "Nabídka baru", "Zvýhodněná cena nápojů se vztahuje" ]
+    tags: [ "city", "cz", "gd" ]
 
-  dreveny-vlk:
-    display_name: Drevenny Vlk
-    url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-vlka-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 16507597
-    tags: ["city", "cz", "ns"]
-    resolver: zomato
 
-  portoriko:
-    display_name: Portoriko
-    url: https://www.zomato.com/brno/portoriko-královo-pole-brno-sever
-    selector: 16506862
-    resolver: zomato
-    tags: ["rh", "cz"]
+  annapurna:
+    display_name: Annapurna
+    url: http://www.indicka-restaurace-annapurna.cz/
+    selector: "div#T_menu"
+    tags: [ "city", "ns", "india", "asia" ]
+    filters: [ "day", nl ]
+
+  avast:
+    display_name: Avast
+    url: "https://nonexisting.local"
+    tags: [ "city", "ns", "avast" ]
+    filters: [ "day", "cut" ]
+    cut_after: "Legenda alergenů"
+    enabled: false
+    disabled: true
+
+  casa-fuego:
+    display_name: Casa Fuego
+    url: "http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188"
+    selector: ".tab-content > .tab-pane"
+    tags: [ "city", "gd", "spain" ]
+    filters: [ "day", "nl" ]
+    disabled: true
 
   padowetz:
     display_name: Padowetz
     url: http://www.restaurant-padowetz.cz/poledni-menu.htm
     selector: ".tydeniMenu"
-    filters: ["day", "cut"]
+    filters: [ "day", "cut" ]
     cut_after: "Nápoje k menu"
-    tags: ["city", "cz", "ns"]
+    tags: [ "city", "cz", "ns" ]
 
-  lokal:
-    display_name: Lokal u Caipla
-    url: https://www.zomato.com/brno/lokál-u-caipla-brno-město-brno-střed
-    selector: 17807425
-    tags: ["city", "cz", "gd"]
-    resolver: zomato
+  mamut-pub:
+    display_name: Mamut Pub
+    url: https://www.mamut-pub.cz/cz/page/nabidka.html
+    selector: "#content"
+    tags: [ "city", "ns", "cz" ]
+    filters: [ "day", "nl" ]
 
-  siwa:
-    display_name: Siwa
-    url: https://www.zomato.com/brno/siwa-veve%C5%99%C3%AD-brno-st%C5%99ed
-    selector: 18578705
-    tags: ["city", "asia", "gd"]
-    resolver: zomato
+  storey:
+    display_name: STOReY
+    url: http://www.storey.cz
+    selector: "ul._denni_menu"
+    tags: [ "city", "ns", "cz" ]
+    filters: [ "day", "nl" ]
 
-  dreveny-orol:
-    display_name: Drevenny Orol
-    url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-orla-1-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 16506896
-    tags: ["city", "cz", "ns"]
-    resolver: zomato
+  montenegro:
+    display_name: Montenegro
+    url: http://www.montenegro-pub.cz/
+    selector: "div.b-content--full.b-content"
+    tags: [ "fi", "cz" ]
+    filters: [ "day", "nl" ]
 
-  4pokoje:
-    display_name: 4 Pokoje
-    url: https://www.zomato.com/brno/4pokoje-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 16506939
-    tags: ["city", "fancy", "gd"]
-    resolver: zomato
+  diva_bara:
+    display_name: Diva bara
+    url: http://www.restauracedivabara.cz/menu__trashed-2/
+    selector: "div.daily-menu"
+    tags: [ "fi", "cz" ]
+    filters: [ "day", "nl" ]
 
-  suzies-pizza:
-    display_name: Suzies italian
-    url: https://www.zomato.com/brno/suzies-veveří-brno-střed
-    selector: 16506939
-    tags: ["city", "pizza", "gd", "ita"]
-    resolver: zomato
-
-  suzies-steak:
-    display_name: Suzies steak
-    url: https://www.zomato.com/brno/suzies-steak-pub-veve%C5%99%C3%AD-brno-st%C5%99ed
-    selector: 18126190
-    tags: ["city", "gd", "cz", "steak"]
-    resolver: zomato
-
-  pivni-opice:
-    display_name: Pivni Opice
-    url: https://www.zomato.com/brno/pivn%C3%AD-opice-brno-m%C4%9Bsto-brno-st%C5%99ed
-    selector: 16506709
-    tags: ["city", "gd", "cz"]
-    resolver: zomato
-
-  vesela-vacice:
-    display_name: Vesela Vacice
-    url: https://www.zomato.com/cs/veselavacice
-    selector: 16505961
-    tags: ["city", "gd", "cz"]
-    resolver: zomato
-
-  selepka:
-    display_name: Selepka
-    url: https://www.zomato.com/cs/brno/%C5%A1elepka-kr%C3%A1lovo-pole-brno-sever
-    selector: 16506040
-    tags: ["fi", "cz"]
-    resolver: zomato
-
-  la-strada:
-    display_name: La Strada
-    url: https://www.zomato.com/cs/brno/la-strada-veve%C5%99%C3%AD-brno-st%C5%99ed
-    selector: 16505874
-    tags: ["fi", "pizza", "ita"]
-    resolver: zomato
+  spravne_misto:
+    display_name: Spravne misto
+    url: https://spravnemisto.cz/denni-menu
+    selector: "div.elementor-container.elementor-column-gap-default"
+    tags: [ "rh" ]
+    filters: [ "day", "nl" ]
 
   statl:
     display_name: Statl
@@ -296,126 +259,161 @@ restaurants:
     url: http://statlbrno.cz/denni-menu/
     resolver: ocr_img
     language: ces
-    tags: ["city", "gd", "cz"]
-    filters: ["day", "nl"]
+    tags: [ "city", "gd", "cz" ]
+    filters: [ "day", "nl" ]
 
-  sargam_india:
-    display_name: "Sargam India"
-    resolved: url_only
-    url: "https://www.facebook.com/sargamrestaurace/"
-    tags: ["city", "ns", "india"]
+  dreveny-vlk:
+    display_name: Drevenny Vlk
+    url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-vlka-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16507597
+    tags: [ "city", "cz", "ns" ]
+    resolver: zomato
+
+  portoriko:
+    display_name: Portoriko
+    url: https://www.zomato.com/brno/portoriko-královo-pole-brno-sever
+    selector: 16506862
+    resolver: zomato
+    tags: [ "rh", "cz" ]
+
+  lokal:
+    display_name: Lokal u Caipla
+    url: https://www.zomato.com/brno/lokál-u-caipla-brno-město-brno-střed
+    selector: 17807425
+    tags: [ "city", "cz", "gd" ]
+    resolver: zomato
+
+  siwa:
+    display_name: Siwa
+    url: https://www.zomato.com/brno/siwa-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 18578705
+    tags: [ "city", "asia", "gd" ]
+    resolver: zomato
+
+  dreveny-orol:
+    display_name: Drevenny Orol
+    url: https://www.zomato.com/brno/u-d%C5%99ev%C4%9Bn%C3%A9ho-orla-1-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506896
+    tags: [ "city", "cz", "ns" ]
+    resolver: zomato
+
+  4pokoje:
+    display_name: 4 Pokoje
+    url: https://www.zomato.com/brno/4pokoje-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506939
+    tags: [ "city", "fancy", "gd" ]
+    resolver: zomato
+
+  suzies-pizza:
+    display_name: Suzies italian
+    url: https://www.zomato.com/brno/suzies-veveří-brno-střed
+    selector: 16506939
+    tags: [ "city", "pizza", "gd", "ita" ]
+    resolver: zomato
+
+  suzies-steak:
+    display_name: Suzies steak
+    url: https://www.zomato.com/brno/suzies-steak-pub-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 18126190
+    tags: [ "city", "gd", "cz", "steak" ]
+    resolver: zomato
+
+  pivni-opice:
+    display_name: Pivni Opice
+    url: https://www.zomato.com/brno/pivn%C3%AD-opice-brno-m%C4%9Bsto-brno-st%C5%99ed
+    selector: 16506709
+    tags: [ "city", "gd", "cz" ]
+    resolver: zomato
+
+  vesela-vacice:
+    display_name: Vesela Vacice
+    url: https://www.zomato.com/cs/veselavacice
+    selector: 16505961
+    tags: [ "city", "gd", "cz" ]
+    resolver: zomato
+
+  selepka:
+    display_name: Selepka
+    url: https://www.zomato.com/cs/brno/%C5%A1elepka-kr%C3%A1lovo-pole-brno-sever
+    selector: 16506040
+    tags: [ "fi", "cz" ]
+    resolver: zomato
+
+  la-strada:
+    display_name: La Strada
+    url: https://www.zomato.com/cs/brno/la-strada-veve%C5%99%C3%AD-brno-st%C5%99ed
+    selector: 16505874
+    tags: [ "fi", "pizza", "ita" ]
+    resolver: zomato
 
   formanka:
     display_name: Formanka
     url: https://www.zomato.com/brno/%C5%A1tatl-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16505875
-    tags: ["city", "gd", "cz"]
+    tags: [ "city", "gd", "cz" ]
     resolver: zomato
 
   certi-dole:
     display_name: Certi Dole
     url: https://www.zomato.com/brno/u-t%C5%99ech-%C4%8Dert%C5%AF-dvo%C5%99%C3%A1kova-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16507255
-    tags: ["city", "gd", "cz"]
+    tags: [ "city", "gd", "cz" ]
     resolver: zomato
 
   certi-hore:
     display_name: Certi Hore
     url: https://www.zomato.com/brno/u-t%C5%99ech-%C4%8Dert%C5%AF-brno-m%C4%9Bsto-brno-st%C5%99ed
     selector: 16506534
-    tags: ["city", "gd", "cz"]
+    tags: [ "city", "gd", "cz" ]
     resolver: zomato
 
   jedna-basen:
     display_name: Jedna Basen
     url: https://www.zomato.com/brno/jedna-báseň-brno-město-brno-střed
     selector: 16506578
-    tags: ["city", "gd", "cz"]
+    tags: [ "city", "gd", "cz" ]
     resolver: zomato
 
   everest:
     display_name: Everest
     url: https://www.zomato.com/brno/everest-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 16506537
-    tags: ["india", "asia"]
+    tags: [ "india", "asia" ]
     resolver: zomato
 
   podloubi:
     display_name: Podloubi
     url: https://www.zomato.com/brno/restaurace-podloub%C3%AD-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 17809249
-    tags: ["cz", "city", "gd"]
+    tags: [ "cz", "city", "gd" ]
     resolver: zomato
 
   sborovna:
     display_name: Sborovna
     url: https://www.zomato.com/brno/sborovna-veve%C5%99%C3%AD-brno-st%C5%99ed
     selector: 18335377
-    tags: ["cz", "city", "gd"]
+    tags: [ "cz", "city", "gd" ]
     resolver: zomato
 
-  annapurna:
-    display_name: Annapurna
-    url: http://www.indicka-restaurace-annapurna.cz/
-    selector: "div#T_menu"
-    tags: ["city", "ns", "india", "asia"]
-    filters: ["day", nl]
 
-  avast:
-    display_name: Avast
-    url: "https://nonexisting.local"
-    tags: ["city", "ns", "avast"]
-    filters: ["day", "cut"]
-    cut_after: "Legenda alergenů"
-    enabled: false
-    disabled: true
-
-  casa-fuego:
-    display_name: Casa Fuego
-    url: http://www.casafuego.cz/index.php?option=com_content&view=article&id=27&Itemid=188
-    selector: ".tab-content > .tab-pane"
-    tags: ["city", "gd", "spain"]
-    filters: ["day", "nl"]
-    disabled: true
-
-  mamut-pub:
-    display_name: Mamut Pub
-    url: https://www.mamut-pub.cz/cz/page/nabidka.html
-    selector: "#content"
-    tags: ["city", "ns", "cz"]
-    filters: ["day", "nl"]
+  # No resolving
 
   na-tahu:
     display_name: Na Tahu
-    url: https://www.na-tahu.cz/cz/page/nabidka.html
-    selector: "#content"
-    tags: ["city", "ns", "cz"]
-    filters: ["day", "nl"]
+    url: https://na-tahu.cz/
+    resolver: url_only
+    tags: [ "city", "ns", "cz" ]
+    filters: [ "day", "nl" ]
 
-  storey:
-    display_name: STOReY
-    url: http://www.storey.cz
-    selector: "ul._denni_menu"
-    tags: ["city", "ns", "cz"]
-    filters: ["day", "nl"]
 
-  montenegro:
-    display_name: Montenegro
-    url: http://www.montenegro-pub.cz/
-    selector: "div.b-content--full.b-content"
-    tags: ["fi", "cz"]
-    filters: ["day", "nl"]
+  sargam_india:
+    display_name: "Sargam India"
+    resolver: url_only
+    url: "https://www.facebook.com/sargamrestaurace/"
+    tags: [ "city", "ns", "india" ]
 
-  diva_bara:
-    display_name: Diva bara
-    url: http://www.restauracedivabara.cz/menu__trashed-2/
-    selector: "div.daily-menu"
-    tags: ["fi", "cz"]
-    filters: ["day", "nl"]
-
-  spravne_misto:
-    display_name: Spravne misto
-    url: https://spravnemisto.cz/denni-menu
-    selector: "div.elementor-container.elementor-column-gap-default"
-    tags: ["rh"]
-    filters: ["day", "nl"]
+  himalaya:
+    display_name: Himalaya
+    url: "https://www.himalayarestaurace.cz/en/daily-menu/"
+    tags: [ "city", "india", "asia", "ns" ]
+    resolver: url_only
